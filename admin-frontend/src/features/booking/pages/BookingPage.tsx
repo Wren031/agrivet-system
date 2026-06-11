@@ -1,28 +1,19 @@
 import { useState, useMemo } from 'react'
-import { CalendarDays, DollarSign, Search, UserCircle, ClipboardList, Plus, Edit2, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarDays, DollarSign, Search, UserCircle, ClipboardList, Eye } from 'lucide-react'
 import { useBookings } from '../hooks/useBookings'
 import { SkeletonCards } from '../../../components/Skeleton'
-import { useApp } from '../../../context/AppContext'
-import Drawer from '../../../components/Drawer'
-import Modal from '../../../components/Modal'
-import type { Booking } from '../../../data/booking/types'
-import BookingForm from '../components/BookingForm'
 
 const statusStyles: Record<string, string> = {
   Pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
+  Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
   Completed: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 }
 
 export default function BookingPage() {
-  const { bookings, loading, add, update, remove } = useBookings()
-  const { addNotification } = useApp()
+  const { bookings, loading } = useBookings()
   const [search, setSearch] = useState('')
-  const [showDrawer, setShowDrawer] = useState(false)
-  const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
-  const [form, setForm] = useState<Partial<Booking>>({})
-  const [saving, setSaving] = useState(false)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const filtered = useMemo(() =>
     bookings.filter(b =>
@@ -35,47 +26,7 @@ export default function BookingPage() {
   const totalAmount = bookings.reduce((sum, b) => sum + b.amount, 0)
   const pendingCount = bookings.filter(b => b.status === 'Pending').length
 
-  function openAdd() {
-    setEditingBooking(null)
-    setForm({ status: 'Pending', date: new Date().toISOString().split('T')[0] })
-    setShowDrawer(true)
-  }
-
-  function openEdit(booking: Booking) {
-    setEditingBooking(booking)
-    setForm({ ...booking })
-    setShowDrawer(true)
-  }
-
-  async function handleSave() {
-    if (!form.customer?.trim() || !form.agent?.trim()) return
-    setSaving(true)
-    try {
-      if (editingBooking) {
-        await update(editingBooking.id, form)
-        addNotification({ message: 'Booking updated', type: 'success' })
-      } else {
-        await add(form as Omit<Booking, 'id' | 'items'>)
-        addNotification({ message: 'Booking created', type: 'success' })
-      }
-      setShowDrawer(false)
-    } catch {
-      addNotification({ message: 'Failed to save booking', type: 'error' })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleDelete() {
-    if (!deleteId) return
-    try {
-      await remove(deleteId)
-      addNotification({ message: 'Booking deleted', type: 'success' })
-      setDeleteId(null)
-    } catch {
-      addNotification({ message: 'Failed to delete booking', type: 'error' })
-    }
-  }
+  // View only — no add/edit/delete on this page
 
   return (
     <div>
@@ -84,10 +35,7 @@ export default function BookingPage() {
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Bookings</h1>
           <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Manage customer bookings and appointments</p>
         </div>
-        <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
-          <Plus size={16} /> Add Booking
-        </button>
+
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -149,14 +97,10 @@ export default function BookingPage() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => openEdit(booking)}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                    title="Edit"><Edit2 size={15} /></button>
-                  <button onClick={() => setDeleteId(booking.id)}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                    title="Delete"><Trash2 size={15} /></button>
-                </div>
+                <Link to={`/bookings/${booking.id}`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-950/50 transition-colors text-xs font-medium">
+                  <Eye size={14} /> View Details
+                </Link>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
@@ -174,31 +118,7 @@ export default function BookingPage() {
         </div>
       )}
 
-      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editingBooking ? 'Edit Booking' : 'Add Booking'}>
-        <BookingForm form={form} onChange={setForm} />
-        <div className="flex gap-3 mt-6">
-          <button onClick={handleSave} disabled={saving || !form.customer?.trim() || !form.agent?.trim()}
-            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-          <button onClick={() => setShowDrawer(false)}
-            className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">
-            Cancel
-          </button>
-        </div>
-      </Drawer>
 
-      <Modal open={deleteId !== null} onClose={() => setDeleteId(null)} title="Delete Booking" size="sm">
-        <div className="text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">Are you sure you want to delete this booking? This action cannot be undone.</p>
-          <div className="flex gap-3">
-            <button onClick={handleDelete}
-              className="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">Delete</button>
-            <button onClick={() => setDeleteId(null)}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">Cancel</button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }

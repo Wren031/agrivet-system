@@ -16,6 +16,10 @@ export interface Customer {
   name: string;
   phone: string;
   email: string;
+  region: string;
+  province: string;
+  city: string;
+  barangay: string;
   address: string;
   avatar?: string;
   createdAt: string;
@@ -31,7 +35,7 @@ export interface Item {
   image?: string;
 }
 
-export type BookingStatus = "Pending" | "Ongoing" | "Success" | "Cancelled";
+export type BookingStatus = "Pending" | "Accepted" | "Ongoing" | "Success" | "Cancelled";
 
 export interface BookingItem {
   itemId: string;

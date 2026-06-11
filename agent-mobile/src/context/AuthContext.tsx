@@ -11,6 +11,7 @@ interface AuthContextType {
   register: (fullName: string, email: string, address: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   approveUser: (userId: string) => void;
+  updateUser: (data: Partial<Pick<User, "fullName" | "email" | "address">>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => ({ success: false, message: "" }),
   logout: () => {},
   approveUser: () => {},
+  updateUser: async () => {},
 });
 
 const USER_STORAGE_KEY = "@agrivet_user";
@@ -90,6 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const updateUser = async (data: Partial<Pick<User, "fullName" | "email" | "address">>) => {
+    if (!user) return;
+    const updated = { ...user, ...data };
+    setUser(updated);
+    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         approveUser,
+        updateUser,
       }}
     >
       {children}

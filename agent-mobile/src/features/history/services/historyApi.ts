@@ -1,5 +1,5 @@
 import { bookingApi } from "../../bookings/services/bookingApi";
-import { Booking } from "../../types";
+import { Booking } from "../../../types";
 
 export const historyApi = {
   async getHistory(): Promise<Booking[]> {

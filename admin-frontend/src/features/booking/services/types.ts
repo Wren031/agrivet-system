@@ -10,6 +10,6 @@ export interface Booking {
   agent: string
   date: string
   amount: number
-  status: 'Pending' | 'Completed' | 'Cancelled'
+  status: 'Pending' | 'Process' | 'Completed' | 'Cancelled'
   items: BookingItem[]
 }

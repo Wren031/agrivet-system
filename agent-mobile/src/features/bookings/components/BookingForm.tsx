@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Customer, Item, BookingItem } from "../../../types";
 import { customerApi } from "../../customers/services/customerApi";
 import { itemApi } from "../../items/services/itemApi";
 import { Button } from "../../../components/Button";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface BookingFormProps {
   onSubmit: (data: {
@@ -16,6 +17,7 @@ interface BookingFormProps {
 }
 
 export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
+  const { isDark } = useTheme();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -23,6 +25,7 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notes, setNotes] = useState("");
+  const [review, setReview] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,7 +65,7 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
     return sum + (item ? item.price * qty : 0);
   }, 0);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedCustomer) {
       setError("Please select a customer");
       return;
@@ -71,6 +74,11 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
       setError("Please select at least one item");
       return;
     }
+    setError("");
+    setReview(true);
+  };
+
+  const handleConfirm = async () => {
     setLoading(true);
     setError("");
     try {
@@ -97,15 +105,102 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
     }
   };
 
+  if (review) {
+    const bookingItems: BookingItem[] = Array.from(selectedItems.entries()).map(([id, qty]) => {
+      const item = items.find((i) => i.id === id)!;
+      return {
+        itemId: id,
+        name: item.name,
+        price: item.price,
+        quantity: qty,
+        subtotal: item.price * qty,
+      };
+    });
+    const total = bookingItems.reduce((sum, i) => sum + i.subtotal, 0);
+
+    return (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Text className={`text-lg font-bold text-${isDark ? "white" : "black"} mb-4`}>
+          Review Booking
+        </Text>
+
+        <View className="bg-brand/5 rounded-2xl p-4 mb-4 border border-brand/20">
+          <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider mb-2`}>
+            Customer
+          </Text>
+          <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
+            {selectedCustomer?.name}
+          </Text>
+        </View>
+
+        <View className="bg-brand/5 rounded-2xl p-4 mb-4 border border-brand/20">
+          <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider mb-3`}>
+            Items
+          </Text>
+          {bookingItems.map((item, index) => (
+            <View
+              key={index}
+              className="flex-row items-center justify-between py-2 border-b border-brand/10 last:border-b-0"
+            >
+              <View className="flex-1">
+                <Text className={`text-sm font-medium text-${isDark ? "white" : "black"}`}>
+                  {item.name}
+                </Text>
+                <Text className={`text-xs text-${isDark ? "white/60" : "black/60"}`}>
+                  {item.quantity} x ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </Text>
+              </View>
+              <Text className={`text-sm font-semibold text-${isDark ? "white/80" : "black/80"}`}>
+                ₱{item.subtotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
+          ))}
+          <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-brand/20">
+            <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
+              Total
+            </Text>
+            <Text className={`text-lg font-bold text-${isDark ? "white" : "black"}`}>
+              ₱{total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+            </Text>
+          </View>
+        </View>
+
+        {notes ? (
+          <View className="bg-brand/5 rounded-2xl p-4 mb-4 border border-brand/20">
+            <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider mb-1`}>
+              Notes
+            </Text>
+            <Text className={`text-sm text-${isDark ? "white/80" : "black/80"}`}>{notes}</Text>
+          </View>
+        ) : null}
+
+        {error ? (
+          <View className="bg-brand/5 rounded-xl p-3 mb-3 border border-brand/20">
+            <Text className={`text-${isDark ? "white/80" : "black/80"} text-sm`}>{error}</Text>
+          </View>
+        ) : null}
+
+        <View className="flex-row gap-3 mb-4">
+          <View className="flex-1">
+            <Button title="Cancel" variant="secondary" onPress={() => setReview(false)} />
+          </View>
+          <View className="flex-1">
+            <Button title="Create Booking" onPress={handleConfirm} loading={loading} />
+          </View>
+        </View>
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {error ? (
-        <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 mb-3">
-          <Text className="text-red-600 dark:text-red-400 text-sm">{error}</Text>
+        <View className="bg-brand/5 rounded-xl p-3 mb-3 border border-brand/20">
+          <Text className={`text-${isDark ? "white/80" : "black/80"} text-sm`}>{error}</Text>
         </View>
       ) : null}
 
-      <Text className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+      <Text className={`text-sm font-bold text-${isDark ? "white/80" : "black/80"} mb-2`}>
         Select Customer
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
@@ -115,16 +210,16 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
               key={customer.id}
               className={`px-4 py-2 rounded-xl border ${
                 selectedCustomer?.id === customer.id
-                  ? "bg-primary-50 border-primary-500 dark:bg-primary-900/20 dark:border-primary-400"
-                  : "bg-white border-surface-200 dark:bg-surface-800 dark:border-surface-700"
+                  ? "bg-brand/20 border-brand/50"
+                  : "bg-brand/5 border-brand/20"
               }`}
               onPress={() => setSelectedCustomer(customer)}
             >
               <Text
                 className={`text-sm font-medium ${
                   selectedCustomer?.id === customer.id
-                    ? "text-primary-600 dark:text-primary-400"
-                    : "text-surface-700 dark:text-surface-300"
+                    ? `text-${isDark ? "white" : "black"}`
+                    : `text-${isDark ? "white/70" : "black/70"}`
                 }`}
               >
                 {customer.name}
@@ -134,7 +229,7 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
         </View>
       </ScrollView>
 
-      <Text className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+      <Text className={`text-sm font-bold text-${isDark ? "white/80" : "black/80"} mb-2`}>
         Select Items
       </Text>
       <View className="gap-2 mb-4">
@@ -146,15 +241,15 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
               key={item.id}
               className={`flex-row items-center p-3 rounded-xl border ${
                 isSelected
-                  ? "bg-primary-50 border-primary-300 dark:bg-primary-900/20 dark:border-primary-700"
-                  : "bg-white border-surface-200 dark:bg-surface-800 dark:border-surface-700"
+                  ? "bg-brand/20 border-brand/50"
+                  : "bg-brand/5 border-brand/20"
               }`}
             >
               <TouchableOpacity
                 className={`w-5 h-5 rounded-md border-2 mr-3 ${
                   isSelected
-                    ? "bg-primary-500 border-primary-500"
-                    : "border-surface-300 dark:border-surface-600"
+                    ? "bg-brand border-brand"
+                    : "border-brand/40"
                 }`}
                 onPress={() => toggleItem(item.id)}
               >
@@ -163,29 +258,29 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
                 )}
               </TouchableOpacity>
               <View className="flex-1">
-                <Text className="text-sm font-medium text-surface-900 dark:text-surface-100">
+                <Text className={`text-sm font-medium text-${isDark ? "white" : "black"}`}>
                   {item.name}
                 </Text>
-                <Text className="text-xs text-surface-500 dark:text-surface-400">
+                <Text className={`text-xs text-${isDark ? "white/60" : "black/60"}`}>
                   ₱{item.price.toLocaleString("en-PH")} - Stock: {item.stock}
                 </Text>
               </View>
               {isSelected && (
                 <View className="flex-row items-center gap-2">
                   <TouchableOpacity
-                    className="w-7 h-7 rounded-lg bg-surface-200 dark:bg-surface-700 items-center justify-center"
+                    className="w-7 h-7 rounded-lg bg-brand/10 items-center justify-center"
                     onPress={() => updateQuantity(item.id, qty - 1)}
                   >
-                    <Text className="text-surface-600 dark:text-surface-300 text-sm">−</Text>
+                    <Text className={`text-${isDark ? "white" : "black"} text-sm`}>−</Text>
                   </TouchableOpacity>
-                  <Text className="w-8 text-center text-sm font-semibold text-surface-900 dark:text-surface-100">
+                  <Text className={`w-8 text-center text-sm font-bold text-${isDark ? "white" : "black"}`}>
                     {qty}
                   </Text>
                   <TouchableOpacity
-                    className="w-7 h-7 rounded-lg bg-surface-200 dark:bg-surface-700 items-center justify-center"
+                    className="w-7 h-7 rounded-lg bg-brand/10 items-center justify-center"
                     onPress={() => updateQuantity(item.id, qty + 1)}
                   >
-                    <Text className="text-surface-600 dark:text-surface-300 text-sm">+</Text>
+                    <Text className={`text-${isDark ? "white" : "black"} text-sm`}>+</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -194,9 +289,9 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
         })}
       </View>
 
-      <View className="bg-surface-50 dark:bg-surface-700/50 rounded-xl p-4 mb-4">
-        <Text className="text-sm text-surface-500 dark:text-surface-400 mb-1">Total Amount</Text>
-        <Text className="text-2xl font-bold text-surface-900 dark:text-surface-100">
+      <View className="bg-brand/5 rounded-xl p-4 mb-4 border border-brand/20">
+        <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} mb-1`}>Total Amount</Text>
+        <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"}`}>
           ₱{total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
         </Text>
       </View>

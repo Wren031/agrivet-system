@@ -1,4 +1,4 @@
-import { Booking, BookingItem, BookingStatus, Customer, Item } from "../../types";
+import { Booking, BookingItem, BookingStatus, Customer, Item } from "../../../types";
 
 let bookings: Booking[] = [
   {
@@ -37,7 +37,7 @@ let bookings: Booking[] = [
       { itemId: "i8", name: "Calcium Supplement", price: 220, quantity: 5, subtotal: 1100 },
     ],
     total: 4700,
-    status: "Pending",
+    status: "Accepted",
     createdAt: "2025-06-05T08:30:00Z",
     updatedAt: "2025-06-05T08:30:00Z",
   },
@@ -119,6 +119,16 @@ export const bookingApi = {
       b.id === id ? { ...b, status, updatedAt: new Date().toISOString() } : b
     );
     return bookings[index];
+  },
+
+  async updateItems(id: string, items: BookingItem[]): Promise<Booking> {
+    await delay(500);
+    const index = bookings.findIndex((b) => b.id === id);
+    if (index === -1) throw new Error("Booking not found");
+    const total = items.reduce((sum, i) => sum + i.subtotal, 0);
+    const updated = { ...bookings[index], items, total, updatedAt: new Date().toISOString() };
+    bookings = bookings.map((b) => (b.id === id ? updated : b));
+    return updated;
   },
 
   async remove(id: string): Promise<void> {

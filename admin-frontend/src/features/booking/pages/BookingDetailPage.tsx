@@ -1,12 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Printer, Trash2 } from 'lucide-react'
+import { ArrowLeft, Printer, Trash2, UserCheck, Package, ChevronDown, ChevronUp, User, Calendar, DollarSign, BadgeCheck, Phone, Mail, CheckCircle } from 'lucide-react'
 import { useBookings } from '../hooks/useBookings'
 import { useApp } from '../../../context/AppContext'
+import { useStaff } from '../../staff/hooks/useStaff'
 import Modal from '../../../components/Modal'
 import { useState } from 'react'
 
 const statusStyles: Record<string, string> = {
   Pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
+  Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
   Completed: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 }
@@ -15,21 +17,15 @@ export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { bookings, loading, update, remove } = useBookings()
+  const { staff } = useStaff()
   const { addNotification } = useApp()
   const [showDelete, setShowDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showAssignTask, setShowAssignTask] = useState(false)
+  const [assigning, setAssigning] = useState(false)
+  const [showItems, setShowItems] = useState(false)
 
   const booking = bookings.find(b => b.id === id)
-
-  async function handleStatusChange(status: string) {
-    if (!id) return
-    try {
-      await update(id, { status: status as 'Pending' | 'Completed' | 'Cancelled' })
-      addNotification({ message: `Booking ${status.toLowerCase()}`, type: 'success' })
-    } catch {
-      addNotification({ message: 'Failed to update status', type: 'error' })
-    }
-  }
 
   async function handleDelete() {
     if (!id) return
@@ -41,6 +37,20 @@ export default function BookingDetailPage() {
     } catch {
       addNotification({ message: 'Failed to delete booking', type: 'error' })
       setDeleting(false)
+    }
+  }
+
+  async function handleAssignTask(staffName: string) {
+    if (!id) return
+    setAssigning(true)
+    try {
+      await update(id, { assignedStaff: staffName, status: 'Process' })
+      addNotification({ message: `Task assigned to ${staffName}`, type: 'success' })
+      setShowAssignTask(false)
+    } catch {
+      addNotification({ message: 'Failed to assign task', type: 'error' })
+    } finally {
+      setAssigning(false)
     }
   }
 
@@ -68,6 +78,7 @@ export default function BookingDetailPage() {
       </button>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
@@ -88,60 +99,211 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
+        {/* Info Grid */}
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Customer</p>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{booking.customer}</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center shrink-0 mt-0.5">
+                <User size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">Customer Name</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{booking.customer}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Agent</p>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{booking.agent}</p>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center shrink-0 mt-0.5">
+                <BadgeCheck size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">Assigned Staff</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{booking.assignedStaff || '—'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Date</p>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center shrink-0 mt-0.5">
+                <User size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">Agent Name</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{booking.agent || '—'}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total Amount</p>
-              <p className="text-sm font-bold text-slate-800 dark:text-white">₱{booking.amount.toLocaleString()}</p>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center shrink-0 mt-0.5">
+                <Calendar size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">Date</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center shrink-0 mt-0.5">
+                <DollarSign size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">Total Amount</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">₱{booking.amount.toLocaleString()}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Status</h3>
-          <select value={booking.status} onChange={e => handleStatusChange(e.target.value)}
-            className="w-full max-w-xs px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+        {/* Items Section */}
+        <div className="border-b border-slate-100 dark:border-slate-700">
+          <button
+            onClick={() => setShowItems(!showItems)}
+            className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
+                <Package size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Booking Items</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{booking.items?.length || 0} item(s)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 dark:text-slate-500">{showItems ? 'Hide' : 'Show'} items</span>
+              {showItems ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+            </div>
+          </button>
+
+          {showItems && (
+            <div className="px-6 pb-5">
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <th className="px-4 py-2.5">Item</th>
+                      <th className="px-4 py-2.5">Qty</th>
+                      <th className="px-4 py-2.5">Price</th>
+                      <th className="px-4 py-2.5 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {(booking.items?.length ?? 0) === 0 ? (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">No items found</td></tr>
+                    ) : (
+                      booking.items?.map((item, i) => {
+                        const total = item.quantity * item.price
+                        return (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                            <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 font-medium">{item.name}</td>
+                            <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{item.quantity}</td>
+                            <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">₱{item.price.toFixed(2)}</td>
+                            <td className="px-4 py-2.5 text-slate-800 dark:text-slate-200 font-medium text-right">₱{total.toFixed(2)}</td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                  <tfoot className="bg-slate-50 dark:bg-slate-800/50">
+                    <tr>
+                      <td colSpan={3} className="px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</td>
+                      <td className="px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white text-right">₱{booking.amount.toLocaleString()}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Assign Task */}
         <div className="px-6 py-5">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Booking Items / Inventory</h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                <th className="px-4 py-2">Item</th><th className="px-4 py-2">Qty</th><th className="px-4 py-2">Price</th><th className="px-4 py-2">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {(booking.items?.length ?? 0) === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">No items found</td></tr>
-              ) : (
-                booking.items?.map((item, i) => (
-                  <tr key={i}>
-                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200">{item.name}</td>
-                    <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">{item.quantity}</td>
-                    <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">₱{item.price.toFixed(2)}</td>
-                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 font-medium">₱{(item.quantity * item.price).toFixed(2)}</td>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
+                <UserCheck size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Assign Task</p>
+                {booking.assignedStaff ? (
+                  <p className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                    <CheckCircle size={12} /> Assigned to <span className="font-semibold">{booking.assignedStaff}</span>
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Assign this booking to a staff member</p>
+                )}
+              </div>
+            </div>
+            <button onClick={() => setShowAssignTask(!showAssignTask)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+              <UserCheck size={16} /> {showAssignTask ? 'Close' : 'Assign Task'}
+            </button>
+          </div>
+
+          {showAssignTask && (
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-4 py-2.5">Name</th>
+                    <th className="px-4 py-2.5">Email</th>
+                    <th className="px-4 py-2.5">Contact</th>
+                    <th className="px-4 py-2.5 text-right">Action</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {staff.length === 0 ? (
+                    <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">No staff available</td></tr>
+                  ) : (
+                    staff.map(member => {
+                      const isAssigned = booking.assignedStaff === member.fullName
+                      return (
+                        <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-xs">
+                                {member.fullName.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="font-medium text-slate-800 dark:text-slate-200">{member.fullName}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                              <Mail size={13} />
+                              <span>{member.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                              <Phone size={13} />
+                              <span>{member.contactNo}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {isAssigned ? (
+                              <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                                <CheckCircle size={13} /> Assigned
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleAssignTask(member.fullName)}
+                                disabled={assigning}
+                                className="px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-950/50 transition-colors disabled:opacity-50"
+                              >
+                                {assigning ? 'Assigning...' : 'Assign'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+              <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <button onClick={() => setShowAssignTask(false)}
+                  className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

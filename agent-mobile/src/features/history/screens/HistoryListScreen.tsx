@@ -1,28 +1,30 @@
 import React from "react";
 import { View, FlatList, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../../../context/ThemeContext";
 import { useHistory } from "../hooks/useHistory";
 import { HistoryCard } from "../components/HistoryCard";
 import { EmptyState } from "../../../components/EmptyState";
 
 export function HistoryListScreen({ navigation }: any) {
+  const { isDark } = useTheme();
   const { history, loading } = useHistory();
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-surface-50 dark:bg-surface-950 items-center justify-center">
-        <Text className="text-surface-400">Loading history...</Text>
+      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"} items-center justify-center`}>
+        <Text className={`text-${isDark ? "white/60" : "black/60"}`}>Loading history...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface-50 dark:bg-surface-950">
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
       <View className="px-6 pt-4 pb-3">
-        <Text className="text-2xl font-bold text-surface-900 dark:text-surface-100">
+        <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"}`}>
           Order History
         </Text>
-        <Text className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
+        <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} mt-0.5`}>
           Completed and cancelled orders
         </Text>
       </View>

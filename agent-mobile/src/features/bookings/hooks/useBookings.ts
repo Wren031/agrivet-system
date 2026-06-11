@@ -41,6 +41,12 @@ export function useBookings() {
     return updated;
   };
 
+  const updateBookingItems = async (id: string, items: BookingItem[]) => {
+    const updated = await bookingApi.updateItems(id, items);
+    setBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    return updated;
+  };
+
   const deleteBooking = async (id: string) => {
     await bookingApi.remove(id);
     setBookings((prev) => prev.filter((b) => b.id !== id));
@@ -53,6 +59,7 @@ export function useBookings() {
     fetchBookings,
     createBooking,
     updateBookingStatus,
+    updateBookingItems,
     deleteBooking,
   };
 }

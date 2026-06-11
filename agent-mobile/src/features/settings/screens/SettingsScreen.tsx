@@ -1,12 +1,26 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Switch, Alert, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Alert, ScrollView, Switch, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "../../../context/ThemeContext";
+import { Moon, LogOut, ChevronRight, X, Check, Info } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
+import { useTheme } from "../../../context/ThemeContext";
 
 export function SettingsScreen() {
-  const { mode, toggleTheme, isDark } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState(user?.fullName || "");
+  const [editEmail, setEditEmail] = useState(user?.email || "");
+  const [editAddress, setEditAddress] = useState(user?.address || "");
+
+  const bg = isDark ? "bg-black" : "bg-white";
+  const cardBg = isDark ? "bg-[#1A1A1A]" : "bg-white";
+  const textPrimary = isDark ? "text-white" : "text-black";
+  const textSecondary = isDark ? "text-white/50" : "text-black/50";
+  const textTertiary = isDark ? "text-white/30" : "text-black/30";
+  const border = isDark ? "border-white/10" : "border-black/10";
+  const inputBg = isDark ? "bg-[#262626]" : "bg-[#F5F5F5]";
+  const divider = isDark ? "bg-white/10" : "bg-black/5";
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -15,89 +29,187 @@ export function SettingsScreen() {
     ]);
   };
 
+  const openEditProfile = () => {
+    setEditName(user?.fullName || "");
+    setEditEmail(user?.email || "");
+    setEditAddress(user?.address || "");
+    setShowEditModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      Alert.alert("Validation", "Name cannot be empty.");
+      return;
+    }
+    await updateUser({
+      fullName: editName.trim(),
+      email: editEmail.trim(),
+      address: editAddress.trim(),
+    });
+    setShowEditModal(false);
+  };
+
+  const initials = user?.fullName
+    ? user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "U";
+
   return (
-    <SafeAreaView className="flex-1 bg-surface-50 dark:bg-surface-950">
-      <ScrollView>
+    <SafeAreaView className={`flex-1 ${bg}`}>
+      <ScrollView className="flex-1">
         <View className="px-6 pt-4 pb-3">
-          <Text className="text-2xl font-bold text-surface-900 dark:text-surface-100">
-            Settings
-          </Text>
-          <Text className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
-            Manage your preferences
-          </Text>
+          <Text className={`text-2xl font-bold ${textPrimary}`}>Settings</Text>
+          <Text className={`text-sm ${textSecondary} mt-0.5`}>Manage your profile & preferences</Text>
         </View>
 
-        <View className="px-6 mt-4">
-          <View className="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-100 dark:border-surface-700 mb-4">
-            <Text className="text-xs text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-4">
-              Appearance
-            </Text>
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-base font-medium text-surface-900 dark:text-surface-100">
-                  Dark Mode
-                </Text>
-                <Text className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
-                  {isDark ? "Currently dark" : "Currently light"}
-                </Text>
+        <View className="px-6 mt-2">
+          {/* Profile Card */}
+          <TouchableOpacity
+            onPress={openEditProfile}
+            className={`flex-row items-center p-4 rounded-2xl ${isDark ? "bg-[#1A1A1A]" : "bg-white"} border ${border} shadow-sm`}
+            activeOpacity={0.7}
+          >
+            <View className="w-14 h-14 rounded-full bg-brand items-center justify-center">
+              <Text className="text-white text-xl font-bold">{initials}</Text>
+            </View>
+            <View className="flex-1 ml-4">
+              <Text className={`text-base font-bold ${textPrimary}`}>{user?.fullName}</Text>
+              <Text className={`text-sm ${textSecondary} mt-0.5`}>{user?.email}</Text>
+              {user?.address ? (
+                <Text className={`text-xs ${textTertiary} mt-0.5`}>{user.address}</Text>
+              ) : null}
+            </View>
+            <View className="ml-2">
+              <ChevronRight size={18} color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"} />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Appearance Section */}
+        <View className="px-6 mt-8">
+          <Text className={`text-xs font-bold ${textTertiary} uppercase tracking-widest mb-3`}>Appearance</Text>
+          <View className={`rounded-2xl ${isDark ? "bg-[#1A1A1A]" : "bg-white"} border ${border} shadow-sm overflow-hidden`}>
+            <View className="flex-row items-center justify-between px-4 py-4">
+              <View className="flex-row items-center gap-3">
+                <Moon size={20} color={isDark ? "rgba(255,255,255,0.7)" : "#1877F2"} />
+                <Text className={`text-base font-medium ${textPrimary}`}>Dark Mode</Text>
               </View>
               <Switch
                 value={isDark}
                 onValueChange={toggleTheme}
-                trackColor={{ false: "#e2e8f0", true: "#0ea5e9" }}
-                thumbColor={isDark ? "#ffffff" : "#f1f5f9"}
+                trackColor={{ false: "#D1D5DB", true: "rgba(24,119,242,0.4)" }}
+                thumbColor={isDark ? "#1877F2" : "#F9FAFB"}
               />
             </View>
           </View>
+        </View>
 
-          <View className="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-100 dark:border-surface-700 mb-4">
-            <Text className="text-xs text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-4">
-              Account
-            </Text>
-            <View className="mb-3">
-              <Text className="text-sm text-surface-500 dark:text-surface-400">Name</Text>
-              <Text className="text-base font-medium text-surface-900 dark:text-surface-100">
-                {user?.fullName}
-              </Text>
-            </View>
-            <View className="mb-3">
-              <Text className="text-sm text-surface-500 dark:text-surface-400">Email</Text>
-              <Text className="text-base font-medium text-surface-900 dark:text-surface-100">
-                {user?.email}
-              </Text>
-            </View>
-            <View className="mb-4">
-              <Text className="text-sm text-surface-500 dark:text-surface-400">Role</Text>
-              <Text className="text-base font-medium text-surface-900 dark:text-surface-100 capitalize">
-                {user?.role}
-              </Text>
+        {/* App Info Section */}
+        <View className="px-6 mt-8">
+          <Text className={`text-xs font-bold ${textTertiary} uppercase tracking-widest mb-3`}>About</Text>
+          <View className={`rounded-2xl ${isDark ? "bg-[#1A1A1A]" : "bg-white"} border ${border} shadow-sm`}>
+            <View className="flex-row items-center px-4 py-4">
+              <Info size={20} color={isDark ? "rgba(255,255,255,0.7)" : "#1877F2"} />
+              <View className="flex-1 ml-3">
+                <Text className={`text-base font-medium ${textPrimary}`}>Agrivet</Text>
+                <Text className={`text-xs ${textTertiary} mt-0.5`}>Agriculture Management</Text>
+              </View>
+              <Text className={`text-sm ${textSecondary}`}>1.0.0</Text>
             </View>
           </View>
+        </View>
 
-          <View className="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-100 dark:border-surface-700 mb-4">
-            <Text className="text-xs text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-4">
-              App Info
-            </Text>
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-sm text-surface-600 dark:text-surface-400">Version</Text>
-              <Text className="text-sm text-surface-900 dark:text-surface-100">1.0.0</Text>
-            </View>
-            <View className="flex-row justify-between">
-              <Text className="text-sm text-surface-600 dark:text-surface-400">Build</Text>
-              <Text className="text-sm text-surface-900 dark:text-surface-100">2025.06</Text>
-            </View>
-          </View>
-
+        {/* Logout */}
+        <View className="px-6 mt-8 mb-12">
           <TouchableOpacity
             onPress={handleLogout}
-            className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-800 mb-8"
+            className={`flex-row items-center justify-center py-4 rounded-2xl border ${border} shadow-sm ${isDark ? "bg-[#1A1A1A]" : "bg-white"}`}
+            activeOpacity={0.7}
           >
-            <Text className="text-center text-red-600 dark:text-red-400 font-semibold">
-              Logout
-            </Text>
+            <LogOut size={20} color="#EF4444" />
+            <Text className="ml-2.5 text-base font-bold text-[#EF4444]">Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <View className={`absolute inset-0 ${isDark ? "bg-black/70" : "bg-black/40"}`}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="flex-1 justify-end"
+          >
+            <TouchableOpacity
+              className="flex-1"
+              activeOpacity={1}
+              onPress={() => setShowEditModal(false)}
+            />
+            <View
+              className={`rounded-t-3xl p-6 ${isDark ? "bg-[#1A1A1A]" : "bg-white"}`}
+              style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+            >
+              <View className="flex-row items-center justify-between mb-6">
+                <Text className={`text-xl font-bold ${textPrimary}`}>Edit Profile</Text>
+                <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                  <X size={22} color={isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)"} />
+                </TouchableOpacity>
+              </View>
+
+              <View className={inputBg + " rounded-xl px-4 py-1 mb-4"}>
+                <Text className={`text-xs ${textTertiary} mt-2 mb-0.5`}>Full Name</Text>
+                <TextInput
+                  className={`text-base ${textPrimary} py-2`}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
+                  placeholder="Enter your name"
+                />
+              </View>
+
+              <View className={inputBg + " rounded-xl px-4 py-1 mb-4"}>
+                <Text className={`text-xs ${textTertiary} mt-2 mb-0.5`}>Email</Text>
+                <TextInput
+                  className={`text-base ${textPrimary} py-2`}
+                  value={editEmail}
+                  onChangeText={setEditEmail}
+                  placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
+                  placeholder="Enter your email"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+
+              <View className={inputBg + " rounded-xl px-4 py-1 mb-6"}>
+                <Text className={`text-xs ${textTertiary} mt-2 mb-0.5`}>Address</Text>
+                <TextInput
+                  className={`text-base ${textPrimary} py-2`}
+                  value={editAddress}
+                  onChangeText={setEditAddress}
+                  placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
+                  placeholder="Enter your address"
+                />
+              </View>
+
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => setShowEditModal(false)}
+                  className={`flex-1 py-3.5 rounded-xl border ${border} items-center`}
+                  activeOpacity={0.7}
+                >
+                  <Text className={`text-base font-bold ${textSecondary}`}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSaveProfile}
+                  className="flex-1 py-3.5 rounded-xl bg-brand items-center flex-row justify-center"
+                  activeOpacity={0.85}
+                >
+                  <Check size={18} color="#FFFFFF" />
+                  <Text className="text-white text-base font-bold ml-2">Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

@@ -1,6 +1,8 @@
-import React, { useState } from "react";
-import { View, FlatList, Alert, Text } from "react-native";
+import React, { useState, useMemo } from "react";
+import { View, FlatList, Text, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Search } from "lucide-react-native";
+import { useTheme } from "../../../context/ThemeContext";
 import { useCustomers } from "../hooks/useCustomers";
 import { CustomerCard } from "../components/CustomerCard";
 import { CustomerForm } from "../components/CustomerForm";
@@ -10,28 +12,32 @@ import { Modal } from "../../../components/Modal";
 import { Customer } from "../../../types";
 
 export function CustomerListScreen() {
+  const { isDark } = useTheme();
   const { customers, loading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [search, setSearch] = useState("");
+
+  const filteredCustomers = useMemo(() => {
+    if (!search.trim()) return customers;
+    const query = search.toLowerCase();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        c.phone.toLowerCase().includes(query)
+    );
+  }, [customers, search]);
 
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
     setShowForm(true);
   };
 
-  const handleDelete = (customer: Customer) => {
-    Alert.alert("Delete Customer", `Are you sure you want to delete ${customer.name}?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteCustomer(customer.id);
-          } catch {}
-        },
-      },
-    ]);
+  const handleDelete = async (customer: Customer) => {
+    try {
+      await deleteCustomer(customer.id);
+    } catch {}
   };
 
   const handleFormSubmit = async (data: Omit<Customer, "id" | "createdAt">) => {
@@ -50,21 +56,38 @@ export function CustomerListScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface-50 dark:bg-surface-950">
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
       <PageHeader
         title="Customers"
-        subtitle={`${customers.length} customer${customers.length !== 1 ? "s" : ""}`}
+        subtitle={
+          search
+            ? `${filteredCustomers.length} of ${customers.length} customer${customers.length !== 1 ? "s" : ""}`
+            : `${customers.length} customer${customers.length !== 1 ? "s" : ""}`
+        }
         action={{ label: "+ Add", onPress: () => setShowForm(true) }}
       />
-      {customers.length === 0 ? (
+      <View className="px-6 mb-3">
+        <View className="flex-row items-center bg-brand/5 rounded-xl px-4 border border-brand/20">
+          <Search size={18} color="rgba(24,119,242,0.4)" />
+          <TextInput
+            className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
+            placeholder="Search customers..."
+            placeholderTextColor="rgba(24,119,242,0.4)"
+            value={search}
+            onChangeText={setSearch}
+            clearButtonMode="while-editing"
+          />
+        </View>
+      </View>
+      {filteredCustomers.length === 0 ? (
         <EmptyState
           icon="👥"
-          title="No Customers"
-          description="Add your first customer to get started."
+          title={search ? "No Results" : "No Customers"}
+          description={search ? "Try a different search term." : "Add your first customer to get started."}
         />
       ) : (
         <FlatList
-          data={customers}
+          data={filteredCustomers}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <CustomerCard customer={item} onEdit={handleEdit} onDelete={handleDelete} />

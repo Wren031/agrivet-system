@@ -1,55 +1,42 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ThemeMode } from "../types";
 
 interface ThemeContextType {
-  mode: ThemeMode;
-  toggleTheme: () => void;
   isDark: boolean;
+  toggleTheme: () => void;
 }
-
-const ThemeContext = createContext<ThemeContextType>({
-  mode: "light",
-  toggleTheme: () => {},
-  isDark: false,
-});
 
 const THEME_STORAGE_KEY = "@agrivet_theme";
 
+const ThemeContext = createContext<ThemeContextType>({
+  isDark: false,
+  toggleTheme: () => {},
+});
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const systemColorScheme = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>("light");
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     loadTheme();
   }, []);
 
-  useEffect(() => {
-    if (systemColorScheme) {
-      setMode(systemColorScheme as ThemeMode);
-    }
-  }, [systemColorScheme]);
-
   const loadTheme = async () => {
     try {
       const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (saved) {
-        setMode(saved as ThemeMode);
+      if (saved !== null) {
+        setIsDark(JSON.parse(saved));
       }
     } catch {}
   };
 
   const toggleTheme = async () => {
-    const newMode = mode === "light" ? "dark" : "light";
-    setMode(newMode);
-    try {
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, newMode);
-    } catch {}
+    const next = !isDark;
+    setIsDark(next);
+    await AsyncStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(next));
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, toggleTheme, isDark: mode === "dark" }}>
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

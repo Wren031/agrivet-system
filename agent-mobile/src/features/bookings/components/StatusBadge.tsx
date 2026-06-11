@@ -1,47 +1,60 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { BookingStatus } from "../../../types";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface StatusBadgeProps {
   status: BookingStatus;
   size?: "sm" | "md";
 }
 
-const statusStyles: Record<BookingStatus, { bg: string; text: string; dot: string }> = {
-  Pending: {
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    text: "text-amber-700 dark:text-amber-400",
-    dot: "bg-amber-500",
-  },
-  Ongoing: {
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    text: "text-blue-700 dark:text-blue-400",
-    dot: "bg-blue-500",
-  },
-  Success: {
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-    text: "text-emerald-700 dark:text-emerald-400",
-    dot: "bg-emerald-500",
-  },
-  Cancelled: {
-    bg: "bg-red-50 dark:bg-red-900/20",
-    text: "text-red-700 dark:text-red-400",
-    dot: "bg-red-500",
-  },
-};
-
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
+  const { isDark } = useTheme();
+
+  const statusStyles: Record<BookingStatus, { bg: string; text: string; dot: string; label: string }> = {
+    Pending: {
+      bg: "bg-brand/10",
+      text: `text-${isDark ? "white/70" : "black/70"}`,
+      dot: "bg-brand/40",
+      label: "Pending",
+    },
+    Accepted: {
+      bg: "bg-brand/20",
+      text: `text-${isDark ? "white" : "black"}`,
+      dot: "bg-brand/70",
+      label: "Accepted",
+    },
+    Ongoing: {
+      bg: "bg-brand/20",
+      text: `text-${isDark ? "white" : "black"}`,
+      dot: "bg-brand",
+      label: "Ongoing",
+    },
+    Success: {
+      bg: "bg-brand/30",
+      text: `text-${isDark ? "white" : "black"}`,
+      dot: "bg-brand",
+      label: "Success",
+    },
+    Cancelled: {
+      bg: "bg-brand/5",
+      text: `text-${isDark ? "white/50" : "black/50"}`,
+      dot: "bg-brand/30",
+      label: "Cancelled",
+    },
+  };
+
   const style = statusStyles[status];
 
   return (
-    <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${style.bg}`}>
+    <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full border border-brand/20 ${style.bg}`}>
       <View className={`w-2 h-2 rounded-full ${style.dot}`} />
       <Text
         className={`font-semibold ${
           size === "sm" ? "text-[10px]" : "text-xs"
         } ${style.text}`}
       >
-        {status}
+        {style.label}
       </Text>
     </View>
   );
