@@ -7,7 +7,7 @@ import { Input } from "../../../components/Input";
 import { Button } from "../../../components/Button";
 
 export function LoginScreen({ navigation }: any) {
-  const { login } = useAuth();
+  const { login, logout, isPendingApproval } = useAuth();
   const { isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +33,7 @@ export function LoginScreen({ navigation }: any) {
     }
   };
 
-  if (showPending) {
+  if (showPending || isPendingApproval) {
     return (
       <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
         <View className="flex-1 items-center justify-center px-8">
@@ -49,6 +49,7 @@ export function LoginScreen({ navigation }: any) {
           </Text>
           <TouchableOpacity
             onPress={() => {
+              logout();
               setShowPending(false);
               setEmail("");
               setPassword("");

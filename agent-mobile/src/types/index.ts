@@ -2,6 +2,8 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
+  contactNumber: string;
+  idVerificationUrl?: string;
   address: string;
   password: string;
   avatar?: string;

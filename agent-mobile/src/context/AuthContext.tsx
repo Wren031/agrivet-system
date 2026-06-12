@@ -1,17 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
-import { MOCK_USERS } from "../features/auth/services/authApi";
+import { authApi } from "../features/auth/services/authApi";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isPendingApproval: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (fullName: string, email: string, address: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
-  approveUser: (userId: string) => void;
-  updateUser: (data: Partial<Pick<User, "fullName" | "email" | "address">>) => Promise<void>;
+  updateUser: (data: Partial<Pick<User, "fullName" | "email" | "address" | "contactNumber">>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,15 +20,15 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => ({ success: false, message: "" }),
   register: async () => ({ success: false, message: "" }),
   logout: () => {},
-  approveUser: () => {},
   updateUser: async () => {},
 });
 
 const USER_STORAGE_KEY = "@agrivet_user";
+const TOKEN_STORAGE_KEY = "@agrivet_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>(MOCK_USERS);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     loadUser();
@@ -45,58 +44,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    const found = allUsers.find((u) => u.email === email && u.password === password);
-    if (!found) {
-      return { success: false, message: "Invalid email or password" };
+    try {
+      const { user: apiUser, token } = await authApi.login(email, password);
+      const loggedInUser: User = {
+        id: apiUser.id,
+        fullName: apiUser.fullName,
+        email: apiUser.email,
+        contactNumber: apiUser.contactNumber || "",
+        idVerificationUrl: apiUser.idVerificationUrl,
+        role: apiUser.role?.toLowerCase() === "admin" ? "admin" : "user",
+        address: "",
+        password: "",
+        pending_admin_approval: false,
+        isApproved: true,
+        createdAt: new Date().toISOString(),
+      };
+      setUser(loggedInUser);
+      setPendingEmail(null);
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(loggedInUser));
+      await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+      return { success: true, message: "Login successful" };
+    } catch (error: any) {
+      const message = error.message || "Invalid email or password";
+      if (message.toLowerCase().includes("not approved")) {
+        setPendingEmail(email);
+        return { success: false, message: "pending_approval" };
+      }
+      return { success: false, message };
     }
-    if (found.pending_admin_approval && !found.isApproved) {
-      setUser(found);
-      return { success: false, message: "pending_approval" };
-    }
-    setUser(found);
-    await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(found));
-    return { success: true, message: "Login successful" };
   };
 
-  const register = async (fullName: string, email: string, address: string, password: string) => {
-    const exists = allUsers.find((u) => u.email === email);
-    if (exists) {
-      return { success: false, message: "Email already registered" };
+  const register = async (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl?: string) => {
+    try {
+      const { user: apiUser, token } = await authApi.register(fullName, email, contactNumber, password, idVerificationUrl);
+
+      if (apiUser.status === 'PENDING') {
+        setPendingEmail(apiUser.email);
+        await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+        return { success: true, message: "pending_approval" };
+      }
+
+      const newUser: User = {
+        id: apiUser.id,
+        fullName: apiUser.fullName,
+        email: apiUser.email,
+        contactNumber: apiUser.contactNumber || contactNumber,
+        idVerificationUrl: apiUser.idVerificationUrl || idVerificationUrl,
+        role: apiUser.role?.toLowerCase() === "admin" ? "admin" : "user",
+        address: "",
+        password: "",
+        pending_admin_approval: false,
+        isApproved: true,
+        createdAt: new Date().toISOString(),
+      };
+      setUser(newUser);
+      setPendingEmail(null);
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+      await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+      return { success: true, message: "Registration successful" };
+    } catch (error: any) {
+      return { success: false, message: error.message || "Registration failed" };
     }
-    const newUser: User = {
-      id: Date.now().toString(),
-      fullName,
-      email,
-      address,
-      password,
-      role: "user",
-      pending_admin_approval: true,
-      isApproved: false,
-      createdAt: new Date().toISOString(),
-    };
-    setAllUsers((prev) => [...prev, newUser]);
-    setUser(newUser);
-    return { success: true, message: "Registration successful" };
   };
 
   const logout = async () => {
     setUser(null);
+    setPendingEmail(null);
     await AsyncStorage.removeItem(USER_STORAGE_KEY);
+    await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
   };
 
-  const approveUser = (userId: string) => {
-    setAllUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId ? { ...u, pending_admin_approval: false, isApproved: true } : u
-      )
-    );
-  };
-
-  const updateUser = async (data: Partial<Pick<User, "fullName" | "email" | "address">>) => {
+  const updateUser = async (data: Partial<Pick<User, "fullName" | "email" | "address" | "contactNumber">>) => {
     if (!user) return;
     const updated = { ...user, ...data };
     setUser(updated);
-    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
   };
 
@@ -105,11 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
-        isPendingApproval: !!user?.pending_admin_approval && !user?.isApproved,
+        isPendingApproval: !!pendingEmail,
         login,
         register,
         logout,
-        approveUser,
         updateUser,
       }}
     >

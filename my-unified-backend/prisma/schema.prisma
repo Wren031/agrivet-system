@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum AgentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  password     String
+  role         Role          @default(AGENT)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  adminProfile AdminProfile?
+  agentProfile AgentProfile?
+
+  @@map("users")
+}
+
+model AdminProfile {
+  id            String   @id @default(uuid())
+  fullName      String   @map("full_name")
+  contactNumber String   @map("contact_number")
+  email         String   @unique
+  createdAt     DateTime @default(now()) @map("created_at")
+  userId        String   @unique @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("categories")
+}
+
+model AgentProfile {
+  id                String        @id @default(uuid())
+  fullName          String        @map("full_name")
+  contactNumber     String        @map("contact_number")
+  email             String        @unique
+  idVerificationUrl String?       @map("id_verification_url")
+  status            AgentStatus   @default(PENDING)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  userId            String        @unique @map("user_id")
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("agent_profiles")
+}
