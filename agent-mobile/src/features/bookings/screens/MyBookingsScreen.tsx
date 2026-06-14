@@ -28,13 +28,13 @@ export function MyBookingsScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-10 h-10 items-center justify-center -ml-2"
         >
-          <ArrowLeft size={22} color="#1877F2" />
+          <ArrowLeft size={22} color="#2d6a4f" />
         </TouchableOpacity>
         <Text className={`flex-1 text-lg font-bold text-${isDark ? "white" : "black"} text-center mr-6`}>
           My Bookings
@@ -43,11 +43,11 @@ export function MyBookingsScreen({ navigation }: any) {
       <ScrollView
         className="flex-1 px-4 pt-4"
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1877F2" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
       >
         {bookings.length === 0 ? (
           <View className="flex-1 items-center justify-center pt-20">
-            <Calendar size={48} color="rgba(24,119,242,0.3)" />
+            <Calendar size={48} color="rgba(45,106,79,0.3)" />
             <Text className={`text-${isDark ? "white/50" : "black/50"} text-base mt-4`}>No bookings yet</Text>
           </View>
         ) : (

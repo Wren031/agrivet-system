@@ -22,7 +22,7 @@ export function ItemGridScreen() {
   }, [items, selectedCategory]);
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`} edges={["top", "left", "right"]}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`} edges={["top", "left", "right"]}>
       <View className="px-6 pt-5 pb-4">
         <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"} tracking-tight`}>
           Items Directory
@@ -36,7 +36,7 @@ export function ItemGridScreen() {
         <TextInput
           className={`w-full px-4 py-3.5 rounded-xl text-base text-${isDark ? "white" : "black"} bg-brand/5 border border-brand/20`}
           placeholder="Search items..."
-          placeholderTextColor="rgba(24,119,242,0.4)"
+          placeholderTextColor="rgba(45,106,79,0.4)"
           value={searchQuery}
           onChangeText={searchItems}
           clearButtonMode="while-editing"
@@ -120,7 +120,7 @@ export function ItemGridScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#1877F2" />
+          <ActivityIndicator size="large" color="#2d6a4f" />
           <Text className={`text-${isDark ? "white/50" : "black/50"} mt-3 font-medium`}>
             Loading catalog data...
           </Text>

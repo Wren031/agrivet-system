@@ -44,3 +44,12 @@ export interface UpdateAgentData {
 export interface UpdateAgentStatusData {
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
 }
+
+export interface AgentCustomer {
+  id: string
+  fullName: string
+  phone: string
+  email: string | null
+  address: string
+  createdAt: string
+}

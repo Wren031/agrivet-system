@@ -36,6 +36,10 @@ export function useCustomers() {
     return updated;
   };
 
+  const getCustomerById = async (id: string) => {
+    return customerApi.getById(id);
+  };
+
   const deleteCustomer = async (id: string) => {
     await customerApi.remove(id);
     setCustomers((prev) => prev.filter((c) => c.id !== id));
@@ -48,6 +52,7 @@ export function useCustomers() {
     fetchCustomers,
     addCustomer,
     updateCustomer,
+    getCustomerById,
     deleteCustomer,
   };
 }

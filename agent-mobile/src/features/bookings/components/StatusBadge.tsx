@@ -13,9 +13,9 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
 
   const statusStyles: Record<BookingStatus, { bg: string; text: string; dot: string; label: string }> = {
     Pending: {
-      bg: "bg-brand/10",
-      text: `text-${isDark ? "white/70" : "black/70"}`,
-      dot: "bg-brand/40",
+      bg: "bg-accent/15",
+      text: `text-${isDark ? "white" : "black"}`,
+      dot: "bg-accent",
       label: "Pending",
     },
     Accepted: {
@@ -25,7 +25,7 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
       label: "Accepted",
     },
     Ongoing: {
-      bg: "bg-brand/20",
+      bg: "bg-brand/15",
       text: `text-${isDark ? "white" : "black"}`,
       dot: "bg-brand",
       label: "Ongoing",

@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { agriColors } from "../theme/colors";
 
 interface ThemeContextType {
   isDark: boolean;
   toggleTheme: () => void;
+  colors: typeof agriColors;
 }
 
 const THEME_STORAGE_KEY = "@agrivet_theme";
@@ -11,6 +13,7 @@ const THEME_STORAGE_KEY = "@agrivet_theme";
 const ThemeContext = createContext<ThemeContextType>({
   isDark: false,
   toggleTheme: () => {},
+  colors: agriColors,
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -36,7 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDark, toggleTheme, colors: agriColors }}>
       {children}
     </ThemeContext.Provider>
   );

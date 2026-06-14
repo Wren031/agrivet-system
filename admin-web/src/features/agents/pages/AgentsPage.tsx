@@ -71,36 +71,53 @@ export default function AgentsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {paginated.map(agent => (
-              <div key={agent.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
-                    {agent.fullName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{agent.fullName}</p>
-                    <p className={`text-xs font-medium ${statusConfig[agent.status]?.card}`}>
-                      {statusConfig[agent.status]?.label}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <Mail size={14} /><span className="truncate">{agent.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <Phone size={14} /><span>{agent.contactNumber}</span>
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-                  <button onClick={() => setSelectedAgent(agent)}
-                    className="flex items-center justify-center gap-1.5 w-full px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                    <Eye size={14} /> View Details
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
+                  <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Name</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Email</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Phone</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Status</th>
+                  <th className="text-right py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(agent => (
+                  <tr key={agent.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors last:border-b-0">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-xs shrink-0">
+                          {agent.fullName.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{agent.fullName}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <Mail size={14} className="shrink-0" /><span className="truncate">{agent.email}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <Phone size={14} className="shrink-0" /><span>{agent.contactNumber}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig[agent.status]?.card}`}>
+                        {statusConfig[agent.status]?.label}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button onClick={() => setSelectedAgent(agent)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <Eye size={14} /> View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {totalPages > 1 && (

@@ -56,7 +56,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "primary" ? "#FFFFFF" : "#1877F2"} size="small" />
+        <ActivityIndicator color={variant === "primary" ? "#FFFFFF" : "#2d6a4f"} size="small" />
       ) : (
         <Text className={`${textClasses[variant]} ${sizeTextClasses[size]}`}>{title}</Text>
       )}

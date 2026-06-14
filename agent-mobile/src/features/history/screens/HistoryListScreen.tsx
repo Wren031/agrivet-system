@@ -12,14 +12,14 @@ export function HistoryListScreen({ navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"} items-center justify-center`}>
+      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} items-center justify-center`}>
         <Text className={`text-${isDark ? "white/60" : "black/60"}`}>Loading history...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <View className="px-6 pt-4 pb-3">
         <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"}`}>
           Order History

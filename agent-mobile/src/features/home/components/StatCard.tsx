@@ -12,7 +12,7 @@ export function StatCard({ icon, label, value }: StatCardProps) {
   const { isDark } = useTheme();
 
   return (
-    <View className={`bg-${isDark ? "[#1A1A1A]" : "white"} rounded-2xl p-4 flex-1 shadow-sm border border-${isDark ? "white/5" : "black/5"}`}>
+    <View className={`bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} rounded-2xl p-4 flex-1 shadow-sm border border-${isDark ? "white/5" : "black/5"}`}>
       <View className="flex-row items-start">
         <View className="w-[3px] h-10 rounded-full bg-brand mr-3 mt-1" />
         <View className="flex-1">

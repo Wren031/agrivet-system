@@ -24,7 +24,7 @@ export function RegisterScreen({ navigation }: any) {
   } = useRegisterForm();
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -34,7 +34,7 @@ export function RegisterScreen({ navigation }: any) {
             onPress={() => navigation.goBack()}
             className="w-10 h-10 items-center justify-center rounded-full bg-brand/5 mb-6"
           >
-            <ArrowLeft size={20} color="#1877F2" />
+            <ArrowLeft size={20} color="#2d6a4f" />
           </TouchableOpacity>
 
           <View className="mb-8">
@@ -87,7 +87,7 @@ export function RegisterScreen({ navigation }: any) {
               idImageUri
                 ? "border-brand bg-brand/5"
                 : isDark
-                  ? "border-white/20 bg-[#2A2A2A]"
+                  ? "border-white/20 bg-[#1e293b]"
                   : "border-black/10 bg-gray-50"
             }`}
             activeOpacity={0.7}
@@ -106,7 +106,7 @@ export function RegisterScreen({ navigation }: any) {
             ) : (
               <View className="items-center py-8">
                 <View className="w-12 h-12 rounded-full bg-brand/10 items-center justify-center mb-3">
-                  <Camera size={22} color="#1877F2" />
+                  <Camera size={22} color="#2d6a4f" />
                 </View>
                 <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} font-medium`}>
                   Upload Government ID

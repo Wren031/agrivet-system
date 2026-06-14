@@ -6,8 +6,8 @@ import { useTheme } from "../../../context/ThemeContext";
 
 interface CustomerCardProps {
   customer: Customer;
-  onEdit: (customer: Customer) => void;
-  onDelete: (customer: Customer) => void;
+  onEdit?: (customer: Customer) => void;
+  onDelete?: (customer: Customer) => void;
 }
 
 function formatAddress(c: Customer): string {
@@ -43,20 +43,26 @@ export function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) 
             {customer.phone}
           </Text>
         </View>
-        <View className="flex-row gap-2">
-          <TouchableOpacity
-            onPress={() => onEdit(customer)}
-            className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
-          >
-            <Text className={`text-${isDark ? "white" : "black"} text-xs`}>✎</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => onDelete(customer)}
-            className="w-8 h-8 rounded-lg bg-brand/5 items-center justify-center"
-          >
-            <Text className={`text-${isDark ? "white/70" : "black/70"} text-xs`}>✕</Text>
-          </TouchableOpacity>
-        </View>
+        {onEdit || onDelete ? (
+          <View className="flex-row gap-2">
+            {onEdit && (
+              <TouchableOpacity
+                onPress={() => onEdit(customer)}
+                className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
+              >
+                <Text className={`text-${isDark ? "white" : "black"} text-xs`}>✎</Text>
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity
+                onPress={() => onDelete(customer)}
+                className="w-8 h-8 rounded-lg bg-brand/5 items-center justify-center"
+              >
+                <Text className={`text-${isDark ? "white/70" : "black/70"} text-xs`}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null}
       </View>
       <View className="mt-3 pt-3 border-t border-brand/10">
         <Text className={`text-xs text-${isDark ? "white/50" : "black/50"}`}>

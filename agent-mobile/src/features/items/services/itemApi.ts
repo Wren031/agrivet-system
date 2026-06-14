@@ -1,115 +1,140 @@
 import { Item } from "../../../types";
+import { API_BASE_URL } from "@/config/api.config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const MOCK_ITEMS: Item[] = [
-  {
-    id: "i1",
-    name: "Premium Chicken Feed",
-    description: "High-protein feed for layers, 50kg bag",
-    price: 2850.0,
-    stock: 142,
-    category: "Poultry",
-    image: undefined,
-  },
-  {
-    id: "i2",
-    name: "Vitamin Premix",
-    description: "Essential vitamin supplement for livestock",
-    price: 450.0,
-    stock: 89,
-    category: "Supplements",
-    image: undefined,
-  },
-  {
-    id: "i3",
-    name: "Dewormer Solution",
-    description: "Broad-spectrum dewormer for cattle",
-    price: 320.0,
-    stock: 67,
-    category: "Medicine",
-    image: undefined,
-  },
-  {
-    id: "i4",
-    name: "Fish Meal Pellets",
-    description: "Nutritious pellets for aquaculture, 25kg",
-    price: 1950.0,
-    stock: 45,
-    category: "Aquaculture",
-    image: undefined,
-  },
-  {
-    id: "i5",
-    name: "Corn Gluten Feed",
-    description: "Animal feed ingredient, high energy",
-    price: 1200.0,
-    stock: 230,
-    category: "Feed",
-    image: undefined,
-  },
-  {
-    id: "i6",
-    name: "Pig Grower Mix",
-    description: "Complete grower feed for pigs 40-70kg",
-    price: 2100.0,
-    stock: 38,
-    category: "Swine",
-    image: undefined,
-  },
-  {
-    id: "i7",
-    name: "Electrolyte Powder",
-    description: "Stress relief electrolyte for poultry",
-    price: 180.0,
-    stock: 156,
-    category: "Supplements",
-    image: undefined,
-  },
-  {
-    id: "i8",
-    name: "Calcium Supplement",
-    description: "Calcium carbonate for eggshell quality",
-    price: 220.0,
-    stock: 95,
-    category: "Supplements",
-    image: undefined,
-  },
-  {
-    id: "i9",
-    name: "Goat Mineral Block",
-    description: "Trace mineral salt block for goats",
-    price: 150.0,
-    stock: 200,
-    category: "Livestock",
-    image: undefined,
-  },
-  {
-    id: "i10",
-    name: "Antibiotic Ointment",
-    description: "Topical wound treatment for livestock",
-    price: 280.0,
-    stock: 12,
-    category: "Medicine",
-    image: undefined,
-  },
-];
+interface InventoryResponse {
+  id: string;
+  productName: string;
+  unit: string;
+  costPrice: number;
+  sellingPrice: number;
+  stockLevel: number;
+  reorderPoint: number;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  expiryDate?: string | null;
+  imageUrl?: string | null;
+  category?: { id: string; name: string } | null;
+  subcategory?: { id: string; name: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export interface CreateItemData {
+  productName: string;
+  unit: string;
+  costPrice: number;
+  sellingPrice: number;
+  stockLevel: number;
+  reorderPoint: number;
+  categoryId?: string;
+  subcategoryId?: string;
+  expiryDate?: string;
+  imageUrl?: string;
+}
+
+export interface UpdateItemData {
+  productName?: string;
+  unit?: string;
+  costPrice?: number;
+  sellingPrice?: number;
+  stockLevel?: number;
+  reorderPoint?: number;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  expiryDate?: string | null;
+  imageUrl?: string | null;
+}
+
+function mapItem(inventory: InventoryResponse): Item {
+  return {
+    id: inventory.id,
+    name: inventory.productName,
+    description: "",
+    price: inventory.sellingPrice,
+    stock: inventory.stockLevel,
+    category: inventory.category?.name || "",
+    image: inventory.imageUrl ?? undefined,
+    unit: inventory.unit,
+    costPrice: inventory.costPrice,
+    reorderPoint: inventory.reorderPoint,
+    categoryId: inventory.categoryId ?? undefined,
+    subcategoryId: inventory.subcategoryId ?? undefined,
+    expiryDate: inventory.expiryDate ?? undefined,
+    createdAt: inventory.createdAt,
+    updatedAt: inventory.updatedAt,
+  };
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await AsyncStorage.getItem("@agrivet_token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || `Request failed with status ${response.status}`);
+  }
+  return data;
+}
 
 export const itemApi = {
   async getAll(): Promise<Item[]> {
-    await delay(500);
-    return [...MOCK_ITEMS];
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/inventory`, { headers });
+    const data: InventoryResponse[] = await handleResponse(response);
+    return data.map(mapItem);
   },
 
-  async getById(id: string): Promise<Item | undefined> {
-    await delay(300);
-    return MOCK_ITEMS.find((i) => i.id === id);
+  async getById(id: string): Promise<Item> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/inventory/${id}`, { headers });
+    const data: InventoryResponse = await handleResponse(response);
+    return mapItem(data);
+  },
+
+  async create(dto: CreateItemData): Promise<Item> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/inventory`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(dto),
+    });
+    const data: InventoryResponse = await handleResponse(response);
+    return mapItem(data);
+  },
+
+  async update(id: string, dto: UpdateItemData): Promise<Item> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(dto),
+    });
+    const data: InventoryResponse = await handleResponse(response);
+    return mapItem(data);
+  },
+
+  async remove(id: string): Promise<void> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
+      method: "DELETE",
+      headers,
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to delete item");
+    }
   },
 
   async search(query: string): Promise<Item[]> {
-    await delay(400);
+    const allItems = await this.getAll();
     const lower = query.toLowerCase();
-    return MOCK_ITEMS.filter(
+    return allItems.filter(
       (i) =>
         i.name.toLowerCase().includes(lower) ||
         i.category.toLowerCase().includes(lower) ||

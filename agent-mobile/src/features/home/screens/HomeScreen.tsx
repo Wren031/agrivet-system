@@ -21,10 +21,10 @@ export function HomeScreen({ navigation }: any) {
     .slice(0, 2) || "U";
 
   const statCards = [
-    { icon: <Calendar size={20} color="#1877F2" />, label: "Total Bookings", value: homeData?.bookingCount ?? 0 },
-    { icon: <Package size={20} color="#1877F2" />, label: "Total Products", value: homeData?.productCount ?? 0 },
-    { icon: <Users size={20} color="#1877F2" />, label: "Total Customers", value: homeData?.customerCount ?? 0 },
-    { icon: <TrendingUp size={20} color="#1877F2" />, label: "Today's Bookings", value: homeData?.todayBookingCount ?? 0 },
+    { icon: <Calendar size={20} color="#2d6a4f" />, label: "Total Bookings", value: homeData?.bookingCount ?? 0 },
+    { icon: <Package size={20} color="#2d6a4f" />, label: "Total Products", value: homeData?.productCount ?? 0 },
+    { icon: <Users size={20} color="#2d6a4f" />, label: "Total Customers", value: homeData?.customerCount ?? 0 },
+    { icon: <TrendingUp size={20} color="#2d6a4f" />, label: "Today's Bookings", value: homeData?.todayBookingCount ?? 0 },
   ];
 
   const getStatusOpacity = (status: string) => {
@@ -38,10 +38,10 @@ export function HomeScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1877F2" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
       >
         <View className="px-6 pt-8 pb-6">
           <View className="flex-row items-center justify-between">
@@ -94,12 +94,12 @@ export function HomeScreen({ navigation }: any) {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"} rounded-2xl py-4 px-4 flex-row items-center gap-3 border border-black/10 shadow-sm`}
+              className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} rounded-2xl py-4 px-4 flex-row items-center gap-3 border border-black/10 shadow-sm`}
               activeOpacity={0.85}
               onPress={() => navigation.navigate("MyBookings")}
             >
               <View className="w-9 h-9 rounded-xl bg-brand/10 items-center justify-center">
-                <ListOrdered size={20} color="#1877F2" />
+                <ListOrdered size={20} color="#2d6a4f" />
               </View>
               <View className="flex-1">
                 <Text className={`text-${isDark ? "white" : "black"} font-bold text-sm`}>My Bookings</Text>
@@ -119,13 +119,13 @@ export function HomeScreen({ navigation }: any) {
               className="flex-row items-center gap-1"
             >
               <Text className={`text-sm text-${isDark ? "white" : "black"} font-bold`}>See All</Text>
-              <ArrowRight size={14} color="#1877F2" />
+              <ArrowRight size={14} color="#2d6a4f" />
             </TouchableOpacity>
           </View>
 
           {recentBookings.length === 0 ? (
             <View className="bg-brand/5 rounded-2xl py-12 border border-brand/20 items-center">
-              <Calendar size={40} color="rgba(24,119,242,0.3)" />
+              <Calendar size={40} color="rgba(45,106,79,0.3)" />
               <Text className={`text-${isDark ? "white/50" : "black/50"} mt-3 text-base font-medium`}>No transactions yet</Text>
               <Text className={`text-${isDark ? "white/40" : "black/40"} text-xs mt-1`}>Create your first booking to get started</Text>
             </View>

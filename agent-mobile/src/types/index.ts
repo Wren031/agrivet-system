@@ -24,6 +24,7 @@ export interface Customer {
   barangay: string;
   address: string;
   avatar?: string;
+  agentProfileId?: string;
   createdAt: string;
 }
 
@@ -35,6 +36,14 @@ export interface Item {
   stock: number;
   category: string;
   image?: string;
+  unit: string;
+  costPrice: number;
+  reorderPoint: number;
+  categoryId?: string;
+  subcategoryId?: string;
+  expiryDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type BookingStatus = "Pending" | "Accepted" | "Ongoing" | "Success" | "Cancelled";

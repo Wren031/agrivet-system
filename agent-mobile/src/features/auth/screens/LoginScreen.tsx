@@ -36,7 +36,7 @@ export function LoginScreen({ navigation }: any) {
 
   if (showPending || isPendingApproval) {
     return (
-      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
         <View className="flex-1 items-center justify-center px-8">
           <View className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 items-center justify-center mb-6">
             <Text className="text-3xl">⏳</Text>
@@ -66,7 +66,7 @@ export function LoginScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -76,7 +76,7 @@ export function LoginScreen({ navigation }: any) {
             onPress={() => navigation.goBack()}
             className="w-10 h-10 items-center justify-center rounded-full bg-brand/5 mb-6"
           >
-            <ArrowLeft size={20} color="#1877F2" />
+            <ArrowLeft size={20} color="#2d6a4f" />
           </TouchableOpacity>
 
           <View className="mb-8">

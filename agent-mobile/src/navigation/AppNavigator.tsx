@@ -27,8 +27,8 @@ import { SettingsScreen } from "../features/settings/screens/SettingsScreen";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const brand = "#1877F2";
-const brand60 = "rgba(24,119,242,0.6)";
+const brand = "#2d6a4f";
+const brand60 = "rgba(45,106,79,0.6)";
 
 function MainTabs() {
   const { isDark } = useTheme();
@@ -45,10 +45,10 @@ function MainTabs() {
           marginBottom: Platform.OS === "ios" ? 0 : 6,
         },
         tabBarStyle: {
-          backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
-          borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(24,119,242,0.15)",
+          backgroundColor: isDark ? "#1e293b" : "#f4f7f5",
+          borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(45,106,79,0.15)",
           elevation: 10,
-          shadowColor: isDark ? "#000" : "#1877F2",
+          shadowColor: isDark ? "#000" : "#2d6a4f",
           shadowOffset: { width: 0, height: -3 },
           shadowOpacity: 0.08,
           shadowRadius: 6,
@@ -96,16 +96,16 @@ function MainTabs() {
                   width: 58,
                   height: 58,
                   borderRadius: 29,
-                  backgroundColor: focused ? brand : "rgba(24,119,242,0.08)",
+                  backgroundColor: focused ? brand : "rgba(45,106,79,0.08)",
                   justifyContent: "center",
                   alignItems: "center",
-                  shadowColor: focused ? brand : "#1877F2",
+                  shadowColor: focused ? brand : "#2d6a4f",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: focused ? 0.4 : 0.08,
                   shadowRadius: 5,
                   elevation: 6,
                   borderWidth: 3,
-                  borderColor: isDark ? "#1A1A1A" : "#FFFFFF",
+                  borderColor: isDark ? "#1e293b" : "#FFFFFF",
                 }}
               >
                 <Package

@@ -1,94 +1,143 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BASE_URL } from "../../../config/api.config";
 import { Customer } from "../../../types";
 
-let customers: Customer[] = [
-  {
-    id: "c1",
-    name: "Pedro Garcia",
-    phone: "+63 917 123 4567",
-    email: "pedro.garcia@email.com",
-    region: "13",
-    province: "miso",
-    city: "cdo",
-    barangay: "cdo-1",
-    address: "12 Rizal Street, Cagayan de Oro City",
-    avatar: undefined,
-    createdAt: "2025-01-10T08:00:00Z",
-  },
-  {
-    id: "c2",
-    name: "Ana Reyes",
-    phone: "+63 918 234 5678",
-    email: "ana.reyes@email.com",
-    region: "14",
-    province: "davs",
-    city: "dvo",
-    barangay: "dvo-1",
-    address: "45 Mabini Avenue, Davao City",
-    avatar: undefined,
-    createdAt: "2025-02-15T10:00:00Z",
-  },
-  {
-    id: "c3",
-    name: "Carlos Mendoza",
-    phone: "+63 919 345 6789",
-    email: "carlos.mendoza@email.com",
-    region: "15",
-    province: "sco",
-    city: "gensan",
-    barangay: "gensan-1",
-    address: "89 Bonifacio Drive, General Santos City",
-    avatar: undefined,
-    createdAt: "2025-03-01T14:00:00Z",
-  },
-  {
-    id: "c4",
-    name: "Sofia Cruz",
-    phone: "+63 920 456 7890",
-    email: "sofia.cruz@email.com",
-    region: "12",
-    province: "zss",
-    city: "zambo",
-    barangay: "zambo-1",
-    address: "23 Veterans Avenue, Zamboanga City",
-    avatar: undefined,
-    createdAt: "2025-04-20T09:00:00Z",
-  },
-];
+const TOKEN_KEY = "@agrivet_token";
+const ADDR_DELIMITER = "||";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+interface CustomerResponse {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string | null;
+  address: string;
+  agentProfileId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function getHeaders(token?: string): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
+async function getToken(): Promise<string | undefined> {
+  try {
+    return (await AsyncStorage.getItem(TOKEN_KEY)) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Server returned ${res.status}. Could not parse response.`);
+  }
+  if (!res.ok) {
+    const msg = Array.isArray(data.message) ? data.message[0] : data.message;
+    throw new Error(msg || `Request failed (${res.status})`);
+  }
+  return data;
+}
+
+function toBackendAddress(c: {
+  region: string;
+  province: string;
+  city: string;
+  barangay: string;
+  address: string;
+}): string {
+  return [c.region, c.province, c.city, c.barangay, c.address].join(ADDR_DELIMITER);
+}
+
+function fromBackendCustomer(raw: CustomerResponse): Customer {
+  const parts = (raw.address || "").split(ADDR_DELIMITER);
+  return {
+    id: raw.id,
+    name: raw.fullName,
+    phone: raw.phone,
+    email: raw.email ?? "",
+    region: parts[0] ?? "",
+    province: parts[1] ?? "",
+    city: parts[2] ?? "",
+    barangay: parts[3] ?? "",
+    address: parts[4] ?? raw.address ?? "",
+    agentProfileId: raw.agentProfileId ?? undefined,
+    createdAt: raw.createdAt,
+  };
+}
 
 export const customerApi = {
   async getAll(): Promise<Customer[]> {
-    await delay(600);
-    return [...customers];
+    const token = await getToken();
+    const res = await fetch(`${API_BASE_URL}/customers`, {
+      headers: getHeaders(token),
+    });
+    const data = await handleResponse<CustomerResponse[]>(res);
+    return (data ?? []).map(fromBackendCustomer);
   },
 
   async getById(id: string): Promise<Customer | undefined> {
-    await delay(400);
-    return customers.find((c) => c.id === id);
+    const token = await getToken();
+    const res = await fetch(`${API_BASE_URL}/customers/${id}`, {
+      headers: getHeaders(token),
+    });
+    const data = await handleResponse<CustomerResponse>(res);
+    return fromBackendCustomer(data);
   },
 
   async create(data: Omit<Customer, "id" | "createdAt">): Promise<Customer> {
-    await delay(800);
-    const newCustomer: Customer = {
-      ...data,
-      id: "c" + Date.now(),
-      createdAt: new Date().toISOString(),
+    const token = await getToken();
+    const body: Record<string, any> = {
+      fullName: data.name,
+      phone: data.phone,
+      email: data.email || undefined,
+      address: toBackendAddress(data),
     };
-    customers = [...customers, newCustomer];
-    return newCustomer;
+    if (data.agentProfileId) body.agentProfileId = data.agentProfileId;
+    const res = await fetch(`${API_BASE_URL}/customers`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify(body),
+    });
+    const raw = await handleResponse<CustomerResponse>(res);
+    return fromBackendCustomer(raw);
   },
 
   async update(id: string, data: Partial<Customer>): Promise<Customer> {
-    await delay(600);
-    const index = customers.findIndex((c) => c.id === id);
-    if (index === -1) throw new Error("Customer not found");
-    customers = customers.map((c) => (c.id === id ? { ...c, ...data } : c));
-    return customers[index];
+    const token = await getToken();
+    const body: Record<string, any> = {};
+    if (data.name) body.fullName = data.name;
+    if (data.phone) body.phone = data.phone;
+    if (data.email !== undefined) body.email = data.email || undefined;
+    if (data.region || data.province || data.city || data.barangay || data.address) {
+      body.address = toBackendAddress({
+        region: data.region ?? "",
+        province: data.province ?? "",
+        city: data.city ?? "",
+        barangay: data.barangay ?? "",
+        address: data.address ?? "",
+      });
+    }
+    const res = await fetch(`${API_BASE_URL}/customers/${id}`, {
+      method: "PATCH",
+      headers: getHeaders(token),
+      body: JSON.stringify(body),
+    });
+    const raw = await handleResponse<CustomerResponse>(res);
+    return fromBackendCustomer(raw);
   },
 
   async remove(id: string): Promise<void> {
-    await delay(500);
-    customers = customers.filter((c) => c.id !== id);
+    const token = await getToken();
+    const res = await fetch(`${API_BASE_URL}/customers/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(token),
+    });
+    await handleResponse<any>(res);
   },
 };

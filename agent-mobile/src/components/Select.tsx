@@ -56,7 +56,7 @@ export function Select({
         <Text className={value ? `text-base text-${isDark ? "white" : "black"}` : `text-base text-${isDark ? "white/40" : "black/40"}`}>
           {selectedName || placeholder}
         </Text>
-        <ChevronDown size={18} color="rgba(24,119,242,0.4)" />
+        <ChevronDown size={18} color="rgba(45,106,79,0.4)" />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade">
@@ -68,14 +68,14 @@ export function Select({
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => {}}
-            className={`bg-${isDark ? "[#1A1A1A]" : "white"} rounded-2xl max-h-[70%]`}
+            className={`bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} rounded-2xl max-h-[70%]`}
           >
             <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
-              <Search size={18} color="rgba(24,119,242,0.4)" />
+              <Search size={18} color="rgba(45,106,79,0.4)" />
               <TextInput
                 className={`flex-1 ml-2 py-1 text-base text-${isDark ? "white" : "black"}`}
                 placeholder="Search..."
-                placeholderTextColor="rgba(24,119,242,0.4)"
+                placeholderTextColor="rgba(45,106,79,0.4)"
                 value={search}
                 onChangeText={setSearch}
                 autoFocus

@@ -79,6 +79,7 @@ export function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
   };
 
   const handleConfirm = async () => {
+    if (!selectedCustomer) return;
     setLoading(true);
     setError("");
     try {

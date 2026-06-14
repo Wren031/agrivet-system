@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, ShoppingCart, X } from 'lucide-react'
-import { fetchCustomers } from '../../customers/services/customerService'
-import type { Agent } from '../services/types'
-import type { Customer } from '../../customers/services/types'
+import { Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, MapPin, X } from 'lucide-react'
+import { fetchAgentCustomers } from '../services/agentService'
+import type { Agent, AgentCustomer } from '../services/types'
 
 type AgentStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
@@ -20,16 +19,10 @@ interface AgentDrawerProps {
   onDelete: (id: string) => Promise<void>
 }
 
-function assignCustomers(agentId: string, all: Customer[]): Customer[] {
-  const hash = agentId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  const count = (hash % 4) + 2
-  return all.slice(0, count)
-}
-
 export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDelete }: AgentDrawerProps) {
   const [updating, setUpdating] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const [customers, setCustomers] = useState<AgentCustomer[]>([])
   const [customersLoading, setCustomersLoading] = useState(false)
 
   // Cache the last available agent details to prevent visual glitches/emptying layout content while sliding shut
@@ -44,10 +37,7 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
   useEffect(() => {
     if (open && activeAgent?.status === 'APPROVED') {
       setCustomersLoading(true)
-      fetchCustomers().then(all => {
-        setCustomers(assignCustomers(activeAgent.id, all))
-        setCustomersLoading(false)
-      })
+      fetchAgentCustomers(activeAgent.id).then(setCustomers).finally(() => setCustomersLoading(false))
     } else if (!open) {
       const timer = setTimeout(() => setCustomers([]), 300) // Clear out content after transition finishes
       return () => clearTimeout(timer)
@@ -264,26 +254,26 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
                 ) : customers.length === 0 ? (
                   <div className="text-center py-20 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
                     <Building2 size={32} className="mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                    <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">No active accounts assigned</p>
+                    <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">No customers assigned</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {customers.map(c => (
                       <div key={c.id} className="bg-white dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80 p-4 hover:border-indigo-500/20 dark:hover:border-indigo-400/20 hover:shadow-md hover:shadow-slate-100/40 dark:hover:shadow-none transition-all duration-200 group">
-                        <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-start gap-2 mb-3">
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{c.name}</p>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">{c.contactPerson}</p>
+                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{c.fullName}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5 flex items-center gap-1">
+                              <MapPin size={11} className="shrink-0" /> {c.address}
+                            </p>
                           </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 ${c.status === 'Active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-                            {c.status}
-                          </span>
                         </div>
                         <div className="space-y-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border-t border-slate-50 dark:border-slate-800/50 pt-3">
-                          <p className="truncate text-[11px]">{c.email}</p>
-                          <p className="text-[11px]">{c.phone}</p>
-                          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 mt-1">
-                            <ShoppingCart size={12} className="text-slate-400" /> {c.totalOrders} total sales orders
+                          <p className="truncate text-[11px] flex items-center gap-1.5">
+                            <Mail size={11} className="shrink-0" /> {c.email || 'N/A'}
+                          </p>
+                          <p className="text-[11px] flex items-center gap-1.5">
+                            <Phone size={11} className="shrink-0" /> {c.phone}
                           </p>
                         </div>
                       </div>

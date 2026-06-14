@@ -73,8 +73,23 @@ model AgentProfile {
   createdAt         DateTime      @default(now()) @map("created_at")
   userId            String        @unique @map("user_id")
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers         Customer[]
 
   @@map("agent_profiles")
+}
+
+model Customer {
+  id             String        @id @default(uuid())
+  fullName       String        @map("full_name")
+  phone          String
+  email          String?
+  address        String
+  agentProfileId String?       @map("agent_profile_id")
+  agentProfile   AgentProfile? @relation(fields: [agentProfileId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("customers")
 }
 
 model Inventory {

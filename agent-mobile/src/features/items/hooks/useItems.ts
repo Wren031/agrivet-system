@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Item } from "../../../types";
-import { itemApi } from "../services/itemApi";
+import { itemApi, CreateItemData, UpdateItemData } from "../services/itemApi";
 
 export function useItems() {
   const [items, setItems] = useState<Item[]>([]);
@@ -41,6 +41,23 @@ export function useItems() {
     }
   }, [fetchItems]);
 
+  const createItem = async (data: CreateItemData) => {
+    const newItem = await itemApi.create(data);
+    setItems((prev) => [newItem, ...prev]);
+    return newItem;
+  };
+
+  const updateItem = async (id: string, data: UpdateItemData) => {
+    const updated = await itemApi.update(id, data);
+    setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
+    return updated;
+  };
+
+  const deleteItem = async (id: string) => {
+    await itemApi.remove(id);
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
   return {
     items,
     loading,
@@ -48,5 +65,8 @@ export function useItems() {
     searchQuery,
     searchItems,
     fetchItems,
+    createItem,
+    updateItem,
+    deleteItem,
   };
 }

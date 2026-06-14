@@ -3,6 +3,7 @@ import { View, FlatList, Text, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
 import { useCustomers } from "../hooks/useCustomers";
 import { CustomerCard } from "../components/CustomerCard";
 import { CustomerForm } from "../components/CustomerForm";
@@ -13,6 +14,8 @@ import { Customer } from "../../../types";
 
 export function CustomerListScreen() {
   const { isDark } = useTheme();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { customers, loading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -56,7 +59,7 @@ export function CustomerListScreen() {
   };
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <PageHeader
         title="Customers"
         subtitle={
@@ -68,11 +71,11 @@ export function CustomerListScreen() {
       />
       <View className="px-6 mb-3">
         <View className="flex-row items-center bg-brand/5 rounded-xl px-4 border border-brand/20">
-          <Search size={18} color="rgba(24,119,242,0.4)" />
+          <Search size={18} color="rgba(45,106,79,0.4)" />
           <TextInput
             className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
             placeholder="Search customers..."
-            placeholderTextColor="rgba(24,119,242,0.4)"
+            placeholderTextColor="rgba(45,106,79,0.4)"
             value={search}
             onChangeText={setSearch}
             clearButtonMode="while-editing"

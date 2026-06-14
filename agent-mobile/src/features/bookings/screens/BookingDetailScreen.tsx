@@ -110,7 +110,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
 
   if (!booking) {
     return (
-      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"} items-center justify-center`}>
+      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} items-center justify-center`}>
         <Text className={`text-${isDark ? "white/60" : "black/60"}`}>Loading...</Text>
       </SafeAreaView>
     );
@@ -125,13 +125,13 @@ export function BookingDetailScreen({ route, navigation }: any) {
   const editTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0);
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-10 h-10 items-center justify-center -ml-2"
         >
-          <ArrowLeft size={22} color="#1877F2" />
+          <ArrowLeft size={22} color="#2d6a4f" />
         </TouchableOpacity>
         <Text className={`flex-1 text-lg font-bold text-${isDark ? "white" : "black"} text-center mr-6`}>
           Booking Details
@@ -358,7 +358,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
       </ScrollView>
 
       <Modal visible={editModalVisible} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+        <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
           <View className="flex-row items-center justify-between px-4 py-3 border-b border-brand/20">
             <TouchableOpacity onPress={() => setEditModalVisible(false)}>
               <Text className={`text-${isDark ? "white" : "black"} font-bold`}>Cancel</Text>
@@ -406,7 +406,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
                     onPress={() => handleRemoveItem(item.itemId)}
                     className="w-7 h-7 items-center justify-center rounded-full bg-brand/5"
                   >
-                    <X size={14} color="#1877F2" />
+                    <X size={14} color="#2d6a4f" />
                   </TouchableOpacity>
                 </View>
                 <View className="flex-row items-center justify-between mt-3">
@@ -415,7 +415,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
                       className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
                       onPress={() => handleQuantityChange(item.itemId, -1)}
                     >
-                      <Minus size={16} color="#1877F2" />
+                      <Minus size={16} color="#2d6a4f" />
                     </TouchableOpacity>
                     <Text className={`text-base font-bold text-${isDark ? "white" : "black"} min-w-[24px] text-center`}>
                       {item.quantity}
@@ -424,7 +424,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
                       className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
                       onPress={() => handleQuantityChange(item.itemId, 1)}
                     >
-                      <Plus size={16} color="#1877F2" />
+                      <Plus size={16} color="#2d6a4f" />
                     </TouchableOpacity>
                   </View>
                   <Text className={`text-sm font-bold text-${isDark ? "white" : "black"}`}>
@@ -450,7 +450,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
       </Modal>
 
       <Modal visible={addItemModal} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+        <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
           <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
             <TouchableOpacity onPress={() => setAddItemModal(false)}>
               <Text className={`text-${isDark ? "white" : "black"} font-bold`}>Back</Text>

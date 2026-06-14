@@ -9,10 +9,10 @@ import { AuthProvider } from "./src/context/AuthContext";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 
 function AppContent() {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
 
   return (
-    <View className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+    <View className={`flex-1 ${isDark ? "bg-surface-dark" : "bg-surface-light"}`}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <AppNavigator />
     </View>

@@ -1,4 +1,4 @@
-import type { Agent, AgentApiResponse, CreateAgentData, UpdateAgentData, UpdateAgentStatusData } from './types'
+import type { Agent, AgentApiResponse, CreateAgentData, UpdateAgentData, UpdateAgentStatusData, AgentCustomer } from './types'
 import { apiFetch } from '../../../config/apiClient'
 
 function fromApi(item: AgentApiResponse): Agent {
@@ -49,4 +49,8 @@ export async function updateStatus(id: string, data: UpdateAgentStatusData): Pro
 
 export async function deleteAgent(id: string): Promise<void> {
   await apiFetch<void>(`/agents/${id}`, { method: 'DELETE' })
+}
+
+export async function fetchAgentCustomers(id: string): Promise<AgentCustomer[]> {
+  return apiFetch<AgentCustomer[]>(`/agents/${id}/customers`)
 }

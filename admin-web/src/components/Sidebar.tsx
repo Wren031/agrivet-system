@@ -6,9 +6,10 @@ import {
 import { useApp } from '../context/AppContext'
 
 // Fully flattened, sequentially itemized navigation architecture split by categorical labels
+// Semantically mapped navigation architecture aligned to exact item scopes
 const navigationConfig = [
   { 
-    groupLabel: 'Core Business',
+    groupLabel: 'Sales & Inventory',
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard },
       { to: '/orders', label: 'Orders & Sales', icon: ShoppingCart },
@@ -17,7 +18,7 @@ const navigationConfig = [
     ]
   },
   {
-    groupLabel: 'Team & Operations',
+    groupLabel: 'Personnel & Compliance',
     items: [
       { to: '/customers', label: 'Customers', icon: UserCircle },
       { to: '/agents', label: 'Agents', icon: Users },
@@ -27,7 +28,7 @@ const navigationConfig = [
     ]
   },
   {
-    groupLabel: 'System Setup',
+    groupLabel: 'Infrastructure & Settings',
     items: [
       { to: '/categories', label: 'Categories', icon: Tags },
       { to: '/branches', label: 'Branches', icon: Store },
@@ -48,29 +49,29 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-zinc-50/80 dark:bg-slate-900/90 text-zinc-600 dark:text-slate-300 flex flex-col h-screen sticky top-0 shrink-0 font-sans antialiased border-r border-zinc-200/80 dark:border-slate-800/80 backdrop-blur-md select-none">
+    <aside className="w-64 bg-zinc-900 text-zinc-400 flex flex-col h-screen sticky top-0 shrink-0 font-sans antialiased border-r border-zinc-800 select-none dark:bg-slate-950 dark:border-slate-900 z-[41]">
       
       {/* Brand Header */}
-      <div className="p-5 flex items-center gap-3 border-b border-zinc-200/50 dark:border-slate-800/50">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-600/20 shrink-0">
-          <Package size={18} className="text-white" />
+      <div className="p-6 flex items-center gap-3 border-b border-zinc-800/60 dark:border-slate-900">
+        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/10 shrink-0">
+          <Package size={16} className="text-white" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-sm font-semibold text-zinc-900 dark:text-white truncate tracking-tight">
+          <h1 className="text-sm font-semibold text-zinc-100 dark:text-white truncate tracking-tight">
             {settings.storeName || 'Enterprise OS'}
           </h1>
-          <p className="text-[10px] font-semibold text-zinc-400 dark:text-slate-500 tracking-wider uppercase">
+          <p className="text-[10px] font-medium text-zinc-500 dark:text-slate-500 tracking-wider uppercase">
             Management Portal
           </p>
         </div>
       </div>
 
-      {/* Main Navigation Scroll Space */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6 custom-scrollbar">
+      {/* Main Navigation - Scrollable but scrollbar hidden */}
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-7 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {navigationConfig.map((group, groupIdx) => (
-          <div key={groupIdx} className="space-y-1.5">
+          <div key={groupIdx} className="space-y-1">
             {/* Structural Group Label */}
-            <p className="px-3.5 text-[10px] font-bold text-zinc-400 dark:text-slate-500 uppercase tracking-wider">
+            <p className="px-3 text-[10px] font-semibold text-zinc-500 dark:text-slate-600 uppercase tracking-widest mb-2">
               {group.groupLabel}
             </p>
 
@@ -81,30 +82,23 @@ export default function Sidebar() {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) => `
-                    group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 w-full text-sm font-medium
-                    hover:translate-x-0.5
+                    group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full text-xs font-medium tracking-wide
                     ${isActive
-                      ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm shadow-zinc-200/50 dark:shadow-none'
-                      : 'hover:bg-zinc-200/50 dark:hover:bg-slate-800/60 text-zinc-500 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white'
+                      ? 'bg-zinc-800 text-zinc-100 dark:bg-slate-900 dark:text-indigo-400'
+                      : 'hover:bg-zinc-800/40 hover:text-zinc-200 dark:hover:bg-slate-900/40 dark:hover:text-slate-300 text-zinc-400 dark:text-slate-500'
                     }
                   `}
                 >
                   {({ isActive }) => (
                     <>
-                      {/* Floating Modern Active Line Badge */}
-                      <span className={`absolute left-0 w-1 bg-indigo-600 dark:bg-indigo-500 rounded-r-full transition-all duration-200 ${
-                        isActive ? 'top-3.5 bottom-3.5 opacity-100' : 'top-1/2 bottom-1/2 opacity-0'
-                      }`} />
-
                       <Icon
-                        size={18}
-                        className={`shrink-0 transition-colors duration-200 ${
+                        size={16}
+                        className={`shrink-0 transition-colors duration-150 ${
                           isActive 
-                            ? 'text-indigo-600 dark:text-indigo-400' 
-                            : 'text-zinc-400 dark:text-slate-500 group-hover:text-zinc-700 dark:group-hover:text-slate-300'
+                            ? 'text-indigo-500 dark:text-indigo-400' 
+                            : 'text-zinc-500 dark:text-slate-600 group-hover:text-zinc-400 dark:group-hover:text-slate-400'
                         }`}
                       />
-
                       <span className="truncate">{link.label}</span>
                     </>
                   )}
@@ -116,15 +110,15 @@ export default function Sidebar() {
       </div>
 
       {/* Profile & Footer Action */}
-      <div className="p-3 border-t border-zinc-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
-        <div className="flex items-center justify-between p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-slate-800/50 transition-colors duration-200">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-slate-800 border border-zinc-200 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
-              <UserCircle size={20} className="text-zinc-400 dark:text-slate-400" />
+      <div className="p-4 border-t border-zinc-800/60 dark:border-slate-900 bg-zinc-900/50 dark:bg-slate-950/50">
+        <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/30 dark:bg-slate-900/20 border border-zinc-800/50 dark:border-slate-900/60">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-zinc-800 dark:bg-slate-800 border border-zinc-700 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+              <UserCircle size={18} className="text-zinc-400 dark:text-slate-500" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-zinc-800 dark:text-slate-200 truncate">Administrator</span>
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1">
+              <span className="text-xs font-medium text-zinc-200 dark:text-slate-300 truncate">Administrator</span>
+              <span className="text-[9px] font-medium text-emerald-500 dark:text-emerald-400 truncate flex items-center gap-1.5">
                 <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                 Active Session
               </span>
@@ -134,10 +128,10 @@ export default function Sidebar() {
           <button
             onClick={handleLogout}
             title="Log Out"
-            className="p-2 rounded-lg text-zinc-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
+            className="p-2 rounded-md text-zinc-500 dark:text-slate-500 hover:text-red-400 dark:hover:text-red-400 hover:bg-red-950/20 transition-all duration-150"
             aria-label="Log Out"
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
           </button>
         </div>
       </div>

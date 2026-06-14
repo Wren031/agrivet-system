@@ -54,6 +54,12 @@ export class AgentsController {
     return this.agentsService.updateStatus(id, dto);
   }
 
+  @Get(':id/customers')
+  @Roles('ADMIN')
+  findCustomers(@Param('id') id: string) {
+    return this.agentsService.findCustomersByAgent(id);
+  }
+
   @Delete(':id')
   @Roles('ADMIN')
   remove(@Param('id') id: string) {

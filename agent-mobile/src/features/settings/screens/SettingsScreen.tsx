@@ -7,19 +7,20 @@ import { useTheme } from "../../../context/ThemeContext";
 
 export function SettingsScreen() {
   const { user, logout, updateUser } = useAuth();
+  
   const { isDark, toggleTheme } = useTheme();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState(user?.fullName || "");
   const [editEmail, setEditEmail] = useState(user?.email || "");
   const [editAddress, setEditAddress] = useState(user?.address || "");
 
-  const bg = isDark ? "bg-black" : "bg-white";
-  const cardBg = isDark ? "bg-[#1A1A1A]" : "bg-white";
+  const bg = isDark ? "bg-[#1e293b]" : "bg-[#f4f7f5]";
+  const cardBg = isDark ? "bg-[#1e293b]" : "bg-[#f4f7f5]";
   const textPrimary = isDark ? "text-white" : "text-black";
   const textSecondary = isDark ? "text-white/50" : "text-black/50";
   const textTertiary = isDark ? "text-white/30" : "text-black/30";
   const border = isDark ? "border-white/10" : "border-black/10";
-  const inputBg = isDark ? "bg-[#262626]" : "bg-[#F5F5F5]";
+  const inputBg = isDark ? "bg-[#1e293b]" : "bg-[#e8ece9]";
   const divider = isDark ? "bg-white/10" : "bg-black/5";
 
   const handleLogout = () => {
@@ -65,7 +66,7 @@ export function SettingsScreen() {
           {/* Profile Card */}
           <TouchableOpacity
             onPress={openEditProfile}
-            className={`flex-row items-center p-4 rounded-2xl ${isDark ? "bg-[#1A1A1A]" : "bg-white"} border ${border} shadow-sm`}
+            className={`flex-row items-center p-4 rounded-2xl ${cardBg} border ${border} shadow-sm`}
             activeOpacity={0.7}
           >
             <View className="w-14 h-14 rounded-full bg-brand items-center justify-center">
@@ -87,17 +88,17 @@ export function SettingsScreen() {
         {/* Appearance Section */}
         <View className="px-6 mt-8">
           <Text className={`text-xs font-bold ${textTertiary} uppercase tracking-widest mb-3`}>Appearance</Text>
-          <View className={`rounded-2xl ${isDark ? "bg-[#1A1A1A]" : "bg-white"} border ${border} shadow-sm overflow-hidden`}>
+          <View className={`rounded-2xl ${cardBg} border ${border} shadow-sm overflow-hidden`}>
             <View className="flex-row items-center justify-between px-4 py-4">
               <View className="flex-row items-center gap-3">
-                <Moon size={20} color={isDark ? "rgba(255,255,255,0.7)" : "#1877F2"} />
+                <Moon size={20} color={isDark ? "rgba(255,255,255,0.7)" : "#2d6a4f"} />
                 <Text className={`text-base font-medium ${textPrimary}`}>Dark Mode</Text>
               </View>
               <Switch
                 value={isDark}
                 onValueChange={toggleTheme}
-                trackColor={{ false: "#D1D5DB", true: "rgba(24,119,242,0.4)" }}
-                thumbColor={isDark ? "#1877F2" : "#F9FAFB"}
+                trackColor={{ false: "#D1D5DB", true: "rgba(45,106,79,0.4)" }}
+                thumbColor={isDark ? "#2d6a4f" : "#F9FAFB"}
               />
             </View>
           </View>
@@ -106,9 +107,9 @@ export function SettingsScreen() {
         {/* App Info Section */}
         <View className="px-6 mt-8">
           <Text className={`text-xs font-bold ${textTertiary} uppercase tracking-widest mb-3`}>About</Text>
-          <View className={`rounded-2xl ${isDark ? "bg-[#1A1A1A]" : "bg-white"} border ${border} shadow-sm`}>
+          <View className={`rounded-2xl ${cardBg} border ${border} shadow-sm`}>
             <View className="flex-row items-center px-4 py-4">
-              <Info size={20} color={isDark ? "rgba(255,255,255,0.7)" : "#1877F2"} />
+              <Info size={20} color={isDark ? "rgba(255,255,255,0.7)" : "#2d6a4f"} />
               <View className="flex-1 ml-3">
                 <Text className={`text-base font-medium ${textPrimary}`}>Agrivet</Text>
                 <Text className={`text-xs ${textTertiary} mt-0.5`}>Agriculture Management</Text>
@@ -122,7 +123,7 @@ export function SettingsScreen() {
         <View className="px-6 mt-8 mb-12">
           <TouchableOpacity
             onPress={handleLogout}
-            className={`flex-row items-center justify-center py-4 rounded-2xl border ${border} shadow-sm ${isDark ? "bg-[#1A1A1A]" : "bg-white"}`}
+            className={`flex-row items-center justify-center py-4 rounded-2xl border ${border} shadow-sm ${cardBg}`}
             activeOpacity={0.7}
           >
             <LogOut size={20} color="#EF4444" />
@@ -144,7 +145,7 @@ export function SettingsScreen() {
               onPress={() => setShowEditModal(false)}
             />
             <View
-              className={`rounded-t-3xl p-6 ${isDark ? "bg-[#1A1A1A]" : "bg-white"}`}
+              className={`rounded-t-3xl p-6 ${cardBg}`}
               style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
             >
               <View className="flex-row items-center justify-between mb-6">

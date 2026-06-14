@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, Plus, Minus, ShoppingCart, ArrowRight, ArrowLeft, X, PackageCheck } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
@@ -8,6 +8,7 @@ import { customerApi } from "../../customers/services/customerApi";
 import { getCityName, getProvinceName } from "../../../data/philippineAddress";
 import { itemApi } from "../../items/services/itemApi";
 import { bookingApi } from "../services/bookingApi";
+import { ItemCard } from "../../items/components/ItemCard";
 import { Button } from "../../../components/Button";
 
 type Step = "customer" | "items" | "cart" | "review";
@@ -154,11 +155,11 @@ export function CreateBookingScreen({ navigation }: any) {
       </Text>
 
       <View className="flex-row items-center bg-brand/5 rounded-xl px-4 border border-brand/20 mb-4">
-        <Search size={18} color="rgba(24,119,242,0.4)" />
+        <Search size={18} color="rgba(45,106,79,0.4)" />
         <TextInput
           className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
           placeholder="Search customers..."
-          placeholderTextColor="rgba(24,119,242,0.4)"
+          placeholderTextColor="rgba(45,106,79,0.4)"
           value={customerSearch}
           onChangeText={setCustomerSearch}
         />
@@ -228,7 +229,7 @@ export function CreateBookingScreen({ navigation }: any) {
           className="flex-row items-center gap-1"
           onPress={() => goToStep("cart")}
         >
-          <ShoppingCart size={18} color="#1877F2" />
+          <ShoppingCart size={18} color="#2d6a4f" />
           <Text className={`text-${isDark ? "white" : "black"} font-bold`}>{cart.size}</Text>
         </TouchableOpacity>
       </View>
@@ -237,76 +238,44 @@ export function CreateBookingScreen({ navigation }: any) {
       </Text>
 
       <View className="flex-row items-center bg-brand/5 rounded-xl px-4 border border-brand/20 mb-3">
-        <Search size={18} color="rgba(24,119,242,0.4)" />
+        <Search size={18} color="rgba(45,106,79,0.4)" />
         <TextInput
           className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
           placeholder="Search items..."
-          placeholderTextColor="rgba(24,119,242,0.4)"
+          placeholderTextColor="rgba(45,106,79,0.4)"
           value={itemSearch}
           onChangeText={setItemSearch}
         />
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {filteredItems.length === 0 ? (
-          <View className="items-center py-12">
-            <Text className={`text-${isDark ? "white/50" : "black/50"} text-base`}>No items found</Text>
-          </View>
-        ) : (
-          <View className="gap-2 pb-6">
-            {filteredItems.map((item) => {
-              const qty = cart.get(item.id) || 0;
-              return (
-                <View
-                  key={item.id}
-                  className="bg-brand/5 rounded-2xl p-4 border border-brand/20"
-                >
-                  <View className="flex-row items-center">
-                    <View className="flex-1">
-                      <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
-                        {item.name}
-                      </Text>
-                      <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} mt-0.5`}>{item.description}</Text>
-                      <View className="flex-row items-center gap-3 mt-2">
-                        <Text className={`text-sm font-bold text-${isDark ? "white" : "black"}`}>
-                          ₱{item.price.toLocaleString("en-PH")}
-                        </Text>
-                        <Text className={`text-xs text-${isDark ? "white/50" : "black/50"}`}>Stock: {item.stock}</Text>
-                      </View>
-                    </View>
-                    {qty > 0 ? (
-                      <View className="flex-row items-center gap-2">
-                        <TouchableOpacity
-                          className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
-                          onPress={() => updateQty(item.id, qty - 1)}
-                        >
-                          <Minus size={16} color="#1877F2" />
-                        </TouchableOpacity>
-                        <Text className={`w-8 text-center text-base font-bold text-${isDark ? "white" : "black"}`}>
-                          {qty}
-                        </Text>
-                        <TouchableOpacity
-                          className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
-                          onPress={() => updateQty(item.id, qty + 1)}
-                        >
-                          <Plus size={16} color="#1877F2" />
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        className="w-20 h-9 rounded-xl bg-brand items-center justify-center"
-                        onPress={() => addToCart(item.id)}
-                      >
-                        <Text className="text-white text-sm font-bold">Add</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
+      {filteredItems.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className={`text-${isDark ? "white/50" : "black/50"} text-base`}>No items found</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredItems}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
+            const qty = cart.get(item.id) || 0;
+            return (
+              <View className="flex-1 max-w-[50%]">
+                <ItemCard
+                  item={item}
+                  cartQuantity={qty}
+                  onPress={(it) => addToCart(it.id)}
+                  onIncrement={(id) => updateQty(id, (cart.get(id) || 0) + 1)}
+                  onDecrement={(id) => updateQty(id, (cart.get(id) || 0) - 1)}
+                />
+              </View>
+            );
+          }}
+          numColumns={2}
+          columnWrapperClassName="gap-3 pb-3"
+          contentContainerClassName="pb-4"
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       <View className="flex-row gap-3 py-4">
         <View className="flex-1">
@@ -334,7 +303,7 @@ export function CreateBookingScreen({ navigation }: any) {
 
       {cartItems.length === 0 ? (
         <View className="flex-1 items-center justify-center">
-          <ShoppingCart size={48} color="rgba(24,119,242,0.3)" />
+          <ShoppingCart size={48} color="rgba(45,106,79,0.3)" />
           <Text className={`text-${isDark ? "white/50" : "black/50"} mt-3 text-base`}>Your cart is empty</Text>
         </View>
       ) : (
@@ -361,7 +330,7 @@ export function CreateBookingScreen({ navigation }: any) {
                     className="w-8 h-8 rounded-lg bg-brand/5 items-center justify-center"
                     onPress={() => removeFromCart(item.id)}
                   >
-                    <X size={16} color="#1877F2" />
+                    <X size={16} color="#2d6a4f" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -482,13 +451,13 @@ export function CreateBookingScreen({ navigation }: any) {
   );
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
+    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-10 h-10 items-center justify-center -ml-2"
         >
-          <ArrowLeft size={22} color="#1877F2" />
+          <ArrowLeft size={22} color="#2d6a4f" />
         </TouchableOpacity>
         <Text className={`flex-1 text-lg font-bold text-${isDark ? "white" : "black"} text-center mr-6`}>
           Create Booking
@@ -534,9 +503,9 @@ export function CreateBookingScreen({ navigation }: any) {
 
       {showSuccess && (
         <View className="absolute inset-0 bg-black/40 items-center justify-center p-4">
-          <View className={`w-full max-w-sm bg-${isDark ? "[#1A1A1A]" : "white"} rounded-2xl p-6 border border-brand/20 items-center`}>
+          <View className={`w-full max-w-sm bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} rounded-2xl p-6 border border-brand/20 items-center`}>
             <View className="w-16 h-16 rounded-full bg-brand/10 items-center justify-center mb-4">
-              <PackageCheck size={32} color="#1877F2" />
+              <PackageCheck size={32} color="#2d6a4f" />
             </View>
             <Text className={`text-xl font-bold text-${isDark ? "white" : "black"} text-center tracking-tight`}>
               Booking Submitted

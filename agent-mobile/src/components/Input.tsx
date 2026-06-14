@@ -29,7 +29,7 @@ export function Input({ label, error, ...props }: InputProps) {
             ? "border-brand/50"
             : "border-brand/20"
         }`}
-        placeholderTextColor="rgba(24,119,242,0.4)"
+        placeholderTextColor="rgba(45,106,79,0.4)"
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         {...props}
