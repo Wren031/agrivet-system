@@ -1,16 +1,37 @@
 import { useState } from 'react'
-import { Plus, Edit2, Trash2, Search, AlertTriangle, Clock } from 'lucide-react'
+import { Plus, Edit2, Trash2, Search, AlertTriangle, Clock, Package } from 'lucide-react'
 import { useItems } from '../hooks/useItems'
 import { useCategories } from '../../categories/hooks/useCategories'
 import { createItem, updateItem, deleteItem } from '../services/itemService'
+import { uploadFile } from '../../../config/apiClient'
 import { useApp } from '../../../context/AppContext'
 import Drawer from '../../../components/Drawer'
 import Modal from '../../../components/Modal'
-import { SkeletonTable } from '../../../components/Skeleton'
+import { SkeletonCards } from '../../../components/Skeleton'
 import ItemForm from '../components/ItemForm'
 import type { Item } from '../services/types'
 
 import { getUnitLabel, getExpiryStatus } from '../services/types'
+
+const CATEGORY_SKU_MAP: Record<string, string> = {
+  'Feeds & Nutrition': 'FED',
+  'Veterinary Drugs & Biologics': 'VET',
+  'Agricultural Inputs': 'AGR',
+  'Farm Equipment & Hardware': 'EQP',
+}
+
+function generateSku(category: string, existing: Item[]): string {
+  const prefix = CATEGORY_SKU_MAP[category] || 'GEN'
+  const nums = existing
+    .filter(i => i.sku?.startsWith(prefix))
+    .map(i => {
+      const parts = i.sku.split('-')
+      return parseInt(parts[1], 10)
+    })
+    .filter(n => !isNaN(n))
+  const next = nums.length ? Math.max(...nums) + 1 : 1
+  return `${prefix}-${String(next).padStart(3, '0')}`
+}
 
 export default function InventoryPage() {
   const { items, loading, reload } = useItems()
@@ -22,26 +43,29 @@ export default function InventoryPage() {
 
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [form, setForm] = useState<Partial<Item>>({})
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const filtered = items.filter(p =>
-    (!categoryFilter || p.category === categoryFilter) &&
+    (!categoryFilter || p.category.some(c => c.name === categoryFilter)) &&
     (p.name.toLowerCase().includes(search.toLowerCase()) ||
-     p.category.toLowerCase().includes(search.toLowerCase()) ||
+     p.category.some(c => c.name.toLowerCase().includes(search.toLowerCase())) ||
      p.sku.toLowerCase().includes(search.toLowerCase()))
   )
 
   function openAdd() {
     setEditingItem(null)
     setForm({})
+    setImageFile(null)
     setShowDrawer(true)
   }
 
   function openEdit(item: Item) {
     setEditingItem(item)
     setForm({ ...item })
+    setImageFile(null)
     setShowDrawer(true)
   }
 
@@ -49,12 +73,36 @@ export default function InventoryPage() {
     if (!form.name?.trim()) return
     setSaving(true)
     try {
-      const payload = { ...form }
+      let imageUrl = form.image || ''
+      if (imageFile) {
+        imageUrl = await uploadFile(imageFile)
+      }
+
+      const categoryId = form.category?.[0]?.id
+      const selectedCategory = categories.find(c => c.id === categoryId)
+      const subcategoryId = selectedCategory?.subcategories?.find(s => s.name === form.subcategory)?.id
+
       if (editingItem) {
-        await updateItem(editingItem.id, payload)
+        const { id, createdAt, category, subcategory, sku, ...updates } = form
+        await updateItem(editingItem.id, { ...updates, image: imageUrl, categoryId, subcategoryId })
         addNotification({ message: 'Item updated', type: 'success' })
       } else {
-        await createItem(payload as Omit<Item, 'id'>)
+        const categoryName = form.category?.[0]?.name || ''
+        await createItem({
+          name: form.name || '',
+          sku: form.sku || generateSku(categoryName, items),
+          category: form.category || [],
+          subcategory: form.subcategory || '',
+          packagingUnit: form.packagingUnit || '',
+          costPrice: form.costPrice || 0,
+          expiryDate: form.expiryDate || null,
+          reorderLevel: form.reorderLevel || 0,
+          price: form.price || 0,
+          stock: form.stock || 0,
+          image: imageUrl,
+          categoryId,
+          subcategoryId,
+        })
         addNotification({ message: 'Item created', type: 'success' })
       }
       setShowDrawer(false)
@@ -97,28 +145,7 @@ export default function InventoryPage() {
     )
   }
 
-  function StockDisplay({ item }: { item: Item }) {
-    const isLow = item.reorderLevel > 0 && item.stock <= item.reorderLevel
-    const unitLabel = getUnitLabel(item.packagingUnit)
 
-    return (
-      <div className="flex items-center gap-2">
-        <span className={isLow ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-700 dark:text-slate-300'}>
-          {item.stock} {unitLabel}
-        </span>
-        {isLow && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
-            Low Stock
-          </span>
-        )}
-      </div>
-    )
-  }
-
-  function formatDate(dateStr: string | null): string {
-    if (!dateStr) return '—'
-    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-  }
 
   return (
     <div>
@@ -150,73 +177,90 @@ export default function InventoryPage() {
         </div>
 
         {loading ? (
-          <div className="p-5"><SkeletonTable rows={8} /></div>
+          <div className="p-5"><SkeletonCards count={8} /></div>
         ) : filtered.length === 0 ? (
           <div className="px-5 py-12 text-center text-slate-400 dark:text-slate-500">
+            <Package size={40} className="mx-auto mb-3 opacity-40" />
             <p>No products found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">SKU</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Product</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Category</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Packaging</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Stock</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Reorder</th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Expiry</th>
-                  <th className="text-right px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Price</th>
-                  <th className="text-right px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                {filtered.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 font-mono text-xs">{item.sku}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <img src={item.image} alt={item.name}
-                          className="w-9 h-9 rounded-lg object-cover bg-slate-50 dark:bg-slate-700 flex-shrink-0"
-                          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/36x36/eee/999?text=N/A' }} />
-                        <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[220px]">{item.name}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-5">
+            {filtered.map(item => (
+              <div key={item.id} className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-200">
+                <div className="relative h-40 bg-slate-50 dark:bg-slate-700">
+                  <img src={item.image} alt={item.name}
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/200x160/eee/999?text=N/A' }} />
+                  <div className="absolute top-2 right-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-200 shadow-sm text-right leading-tight">
+                    <div>{settings.currencySymbol}{item.price.toFixed(2)}</div>
+                    {item.costPrice > 0 && (
+                      <div className="text-xs font-normal text-slate-400 dark:text-slate-500">
+                        Cost: {settings.currencySymbol}{item.costPrice.toFixed(2)}
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-slate-700 dark:text-slate-300">{item.category}</div>
-                      <div className="text-xs text-slate-400 dark:text-slate-500">{item.subcategory}</div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{item.packagingUnit || '—'}</td>
-                    <td className="px-4 py-3"><StockDisplay item={item} /></td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{item.reorderLevel || '—'}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-slate-600 dark:text-slate-300">{formatDate(item.expiryDate)}</span>
-                        <ExpiryBadge expiryDate={item.expiryDate} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">{settings.currencySymbol}{item.price.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => openEdit(item)}
-                          className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                          title="Edit"><Edit2 size={15} /></button>
-                        <button onClick={() => setDeleteId(item.id)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                          title="Delete"><Trash2 size={15} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )}
+                  </div>
+                  {item.reorderLevel > 0 && item.stock <= item.reorderLevel && (
+                    <div className="absolute top-2 left-2">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white shadow-sm">
+                        Low Stock
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 space-y-2.5">
+                  <div>
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 truncate leading-snug">{item.name}</h3>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">{item.sku}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="truncate">{item.category.map(c => c.name).join(', ')}</span>
+                    {item.subcategory && (
+                      <>
+                        <span className="text-slate-300 dark:text-slate-600">›</span>
+                        <span className="truncate">{item.subcategory}</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className={item.stock <= item.reorderLevel ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-700 dark:text-slate-300'}>
+                      {item.stock} {getUnitLabel(item.packagingUnit)}
+                    </span>
+                    {item.reorderLevel > 0 && (
+                      <span className="text-xs text-slate-400 dark:text-slate-500">
+                        Reorder at {item.reorderLevel}
+                      </span>
+                    )}
+                  </div>
+
+                  <ExpiryBadge expiryDate={item.expiryDate} />
+
+                  {item.packagingUnit && (
+                    <div className="text-xs text-slate-400 dark:text-slate-500">
+                      {item.packagingUnit}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-700">
+                    <button onClick={() => openEdit(item)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors">
+                      <Edit2 size={13} /> Edit
+                    </button>
+                    <button onClick={() => setDeleteId(item.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                      <Trash2 size={13} /> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
-      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editingItem ? 'Edit Product' : 'Add Product'}>
-        <ItemForm form={form} onChange={setForm} categories={categories.map(c => c.name)} currencySymbol={settings.currencySymbol} />
+      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editingItem ? 'Edit Product' : 'Add Product'} className="max-w-[700px]">
+        <ItemForm form={form} onChange={setForm} categories={categories} currencySymbol={settings.currencySymbol} onImageFileChange={setImageFile} />
         <div className="flex gap-3 mt-6">
           <button onClick={handleSave} disabled={saving}
             className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50">

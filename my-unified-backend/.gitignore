@@ -3,3 +3,8 @@ dist/
 .env
 *.log
 coverage/
+uploads/*
+!uploads/.gitkeep
+!uploads/inventory/
+uploads/inventory/*
+!uploads/inventory/.gitkeep

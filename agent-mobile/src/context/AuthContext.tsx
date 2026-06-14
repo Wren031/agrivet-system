@@ -8,7 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isPendingApproval: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl?: string) => Promise<{ success: boolean; message: string }>;
+  register: (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   updateUser: (data: Partial<Pick<User, "fullName" | "email" | "address" | "contactNumber">>) => Promise<void>;
 }
@@ -18,7 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isPendingApproval: false,
   login: async () => ({ success: false, message: "" }),
-  register: async () => ({ success: false, message: "" }),
+  register: async () => ({ success: false, message: "" } as any),
   logout: () => {},
   updateUser: async () => {},
 });
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl?: string) => {
+  const register = async (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) => {
     try {
       const { user: apiUser, token } = await authApi.register(fullName, email, contactNumber, password, idVerificationUrl);
 

@@ -15,6 +15,7 @@ import BookingPage from './features/booking/pages/BookingPage'
 import BookingDetailPage from './features/booking/pages/BookingDetailPage'
 import BranchPage from './features/branch/pages/BranchPage'
 import StaffPage from './features/staff/pages/StaffPage'
+import VerificationPage from './features/verification/pages/VerificationPage'
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="bookings/:id" element={<BookingDetailPage />} />
             <Route path="branches" element={<BranchPage />} />
             <Route path="staff" element={<StaffPage />} />
+            <Route path="verification" element={<VerificationPage />} />
           </Route>
         </Routes>
       </AppProvider>

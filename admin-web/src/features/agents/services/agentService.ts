@@ -1,51 +1,52 @@
-import type { Agent } from './types'
+import type { Agent, AgentApiResponse, CreateAgentData, UpdateAgentData, UpdateAgentStatusData } from './types'
+import { apiFetch } from '../../../config/apiClient'
 
-const STORAGE_KEY = 'inventory_agents'
-
-function delay(ms = 400): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function getAll(): Agent[] {
-  const data = localStorage.getItem(STORAGE_KEY)
-  if (!data) {
-    const defaults: Agent[] = [
-      { id: crypto.randomUUID(), name: 'Maria Santos', email: 'maria@agrivet.com', phone: '0917-123-4567', region: 'NCR', status: 'Approved' },
-      { id: crypto.randomUUID(), name: 'Juan Dela Cruz', email: 'juan@agrivet.com', phone: '0918-234-5678', region: 'Region III', status: 'Approved' },
-      { id: crypto.randomUUID(), name: 'Ana Gonzales', email: 'ana@agrivet.com', phone: '0919-345-6789', region: 'Region IV-A', status: 'Pending' },
-    ]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults))
-    return defaults
+function fromApi(item: AgentApiResponse): Agent {
+  return {
+    id: item.id,
+    fullName: item.fullName,
+    contactNumber: item.contactNumber,
+    email: item.email,
+    idVerificationUrl: item.idVerificationUrl || undefined,
+    status: item.status as Agent['status'],
+    createdAt: item.user.createdAt,
   }
-  return JSON.parse(data)
 }
 
 export async function fetchAgents(): Promise<Agent[]> {
-  await delay()
-  return getAll()
+  const data = await apiFetch<AgentApiResponse[]>('/agents')
+  return data.map(fromApi)
 }
 
-export async function createAgent(agent: Omit<Agent, 'id'>): Promise<Agent> {
-  await delay()
-  const items = getAll()
-  const newAgent: Agent = { ...agent, id: crypto.randomUUID() }
-  items.push(newAgent)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  return newAgent
+export async function fetchAgent(id: string): Promise<Agent> {
+  const data = await apiFetch<AgentApiResponse>(`/agents/${id}`)
+  return fromApi(data)
 }
 
-export async function updateAgent(id: string, updates: Partial<Agent>): Promise<Agent> {
-  await delay()
-  const items = getAll()
-  const index = items.findIndex(a => a.id === id)
-  if (index === -1) throw new Error('Agent not found')
-  items[index] = { ...items[index], ...updates }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  return items[index]
+export async function createAgent(data: CreateAgentData): Promise<Agent> {
+  const res = await apiFetch<AgentApiResponse>('/agents', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  return fromApi(res)
+}
+
+export async function updateAgent(id: string, data: UpdateAgentData): Promise<Agent> {
+  const res = await apiFetch<AgentApiResponse>(`/agents/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+  return fromApi(res)
+}
+
+export async function updateStatus(id: string, data: UpdateAgentStatusData): Promise<Agent> {
+  const res = await apiFetch<AgentApiResponse>(`/agents/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+  return fromApi(res)
 }
 
 export async function deleteAgent(id: string): Promise<void> {
-  await delay()
-  const items = getAll().filter(a => a.id !== id)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+  await apiFetch<void>(`/agents/${id}`, { method: 'DELETE' })
 }

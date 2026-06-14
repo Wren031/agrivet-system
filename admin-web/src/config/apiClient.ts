@@ -46,3 +46,23 @@ export async function apiFetch<T>(
   if (res.status === 204) return undefined as T
   return res.json()
 }
+
+export async function uploadFile(file: File): Promise<string> {
+  const token = getToken()
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch(`${API_BASE_URL}/upload`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.message || 'Upload failed')
+  }
+
+  const data = await res.json()
+  return data.url
+}

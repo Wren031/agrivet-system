@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchAgents, createAgent, updateAgent, deleteAgent } from '../services/agentService'
-import type { Agent } from '../services/types'
+import { fetchAgents, createAgent, updateAgent, deleteAgent, updateStatus } from '../services/agentService'
+import type { Agent, CreateAgentData, UpdateAgentData, UpdateAgentStatusData } from '../services/types'
 
 export function useAgents() {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -15,14 +15,20 @@ export function useAgents() {
 
   useEffect(() => { load() }, [load])
 
-  const add = useCallback(async (agent: Omit<Agent, 'id'>) => {
-    const created = await createAgent(agent)
+  const add = useCallback(async (data: CreateAgentData) => {
+    const created = await createAgent(data)
     setAgents(prev => [...prev, created])
     return created
   }, [])
 
-  const update = useCallback(async (id: string, updates: Partial<Agent>) => {
-    const updated = await updateAgent(id, updates)
+  const update = useCallback(async (id: string, data: UpdateAgentData) => {
+    const updated = await updateAgent(id, data)
+    setAgents(prev => prev.map(a => a.id === id ? updated : a))
+    return updated
+  }, [])
+
+  const changeStatus = useCallback(async (id: string, data: UpdateAgentStatusData) => {
+    const updated = await updateStatus(id, data)
     setAgents(prev => prev.map(a => a.id === id ? updated : a))
     return updated
   }, [])
@@ -32,5 +38,5 @@ export function useAgents() {
     setAgents(prev => prev.filter(a => a.id !== id))
   }, [])
 
-  return { agents, loading, add, update, remove, reload: load }
+  return { agents, loading, add, update, changeStatus, remove, reload: load }
 }

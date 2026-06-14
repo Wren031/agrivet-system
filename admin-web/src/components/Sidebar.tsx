@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, UserCircle, ShoppingCart, Settings, 
-  Tags, LogOut, Store, ClipboardList, ClipboardCheck, BadgeCheck
+  Tags, LogOut, Store, ClipboardList, ClipboardCheck, BadgeCheck, ShieldCheck
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
@@ -23,6 +23,7 @@ const navigationConfig = [
       { to: '/agents', label: 'Agents', icon: Users },
       { to: '/staff', label: 'Admin Staff', icon: BadgeCheck },
       { to: '/tasks', label: 'Staff Punch', icon: ClipboardCheck },
+      { to: '/verification', label: 'Verification', icon: ShieldCheck },
     ]
   },
   {

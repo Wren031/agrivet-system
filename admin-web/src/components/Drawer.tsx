@@ -6,9 +6,10 @@ interface DrawerProps {
   onClose: () => void
   title: string
   children: ReactNode
+  className?: string
 }
 
-export default function Drawer({ open, onClose, title, children }: DrawerProps) {
+export default function Drawer({ open, onClose, title, children, className = '' }: DrawerProps) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden'
@@ -35,9 +36,9 @@ export default function Drawer({ open, onClose, title, children }: DrawerProps) 
         onClick={onClose}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-lg bg-white dark:bg-slate-900 shadow-xl z-50 transform transition-transform duration-200 ease-out ${
+        className={`fixed top-0 right-0 h-full w-full bg-white dark:bg-slate-900 shadow-xl z-50 transform transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        } ${className}`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h2>

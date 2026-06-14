@@ -7,8 +7,8 @@ import { useApp } from '../../../context/AppContext'
 export default function LoginPage() {
   const { setUser, addNotification } = useApp()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@agrivet.com')
-  const [password, setPassword] = useState('admin123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -57,9 +57,6 @@ export default function LoginPage() {
             className="w-full py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-          <p className="text-xs text-slate-400 dark:text-slate-500 text-center pt-1 border-t border-slate-100 dark:border-slate-800">
-            Demo: admin@agrivet.com / admin123
-          </p>
         </form>
       </div>
     </div>

@@ -1,41 +1,27 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import React from "react";
+import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft } from "lucide-react-native";
-import { useAuth } from "../../../context/AuthContext";
+import { ArrowLeft, Camera, UserPlus } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input } from "../../../components/Input";
 import { Button } from "../../../components/Button";
+import { Select } from "../../../components/Select";
+import { useRegisterForm } from "../hooks/useRegisterForm";
 
 export function RegisterScreen({ navigation }: any) {
-  const { register } = useAuth();
   const { isDark } = useTheme();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
-  const [idVerificationUrl, setIdVerificationUrl] = useState("");
-  const [address, setAddress] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleRegister = async () => {
-    if (!fullName || !email || !contactNumber || !password) {
-      setError("Please fill in all required fields");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    const result = await register(fullName, email, contactNumber, password, idVerificationUrl || undefined);
-    setLoading(false);
-    if (!result.success) {
-      setError(result.message);
-    }
-  };
+  const {
+    fullName, setFullName,
+    email, setEmail,
+    contactNumber, setContactNumber,
+    idImageUri, pickImage,
+    password, setPassword,
+    loading, error, handleRegister,
+    regions, regionCode, onRegionSelect,
+    provinces, provinceCode, onProvinceSelect,
+    cities, cityCode, onCitySelect,
+    barangays, barangayCode, onBarangaySelect,
+  } = useRegisterForm();
 
   return (
     <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
@@ -43,30 +29,29 @@ export function RegisterScreen({ navigation }: any) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
+        <ScrollView contentContainerClassName="flex-grow px-6 pt-6 pb-8">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="w-10 h-10 items-center justify-center -ml-2"
+            className="w-10 h-10 items-center justify-center rounded-full bg-brand/5 mb-6"
           >
-            <ArrowLeft size={22} color="#1877F2" />
+            <ArrowLeft size={20} color="#1877F2" />
           </TouchableOpacity>
-          <Text className={`flex-1 text-lg font-bold text-${isDark ? "white" : "black"} text-center mr-6`}>
-            Create Account
-          </Text>
-        </View>
-        <ScrollView contentContainerClassName="flex-grow px-8 pt-8 pb-8">
+
           <View className="mb-8">
-            <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"}`}>
-              Join Agrivet
+            <View className="w-14 h-14 rounded-2xl bg-brand items-center justify-center mb-6">
+              <UserPlus size={28} color="white" />
+            </View>
+            <Text className={`text-3xl font-bold text-${isDark ? "white" : "black"}`}>
+              Create Account
             </Text>
-            <Text className={`text-base text-${isDark ? "white/60" : "black/60"} mt-1`}>
-              Fill in your details to register
+            <Text className={`text-base text-${isDark ? "white/50" : "black/50"} mt-1.5`}>
+              Fill in your details to get started
             </Text>
           </View>
 
           {error ? (
-            <View className="bg-brand/5 rounded-xl p-4 mb-4 border border-brand/20">
-              <Text className={`text-${isDark ? "white/80" : "black/80"} text-sm`}>{error}</Text>
+            <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mb-5 border border-red-200 dark:border-red-800">
+              <Text className="text-red-600 dark:text-red-400 text-sm">{error}</Text>
             </View>
           ) : null}
 
@@ -92,19 +77,89 @@ export function RegisterScreen({ navigation }: any) {
             onChangeText={setContactNumber}
             keyboardType="phone-pad"
           />
-          <Input
-            label="ID Verification URL (optional)"
-            placeholder="Link to your ID image"
-            value={idVerificationUrl}
-            onChangeText={setIdVerificationUrl}
-            autoCapitalize="none"
+
+          <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"} mb-1.5 mt-2`}>
+            ID Verification Image <Text className="text-red-500">*</Text>
+          </Text>
+          <TouchableOpacity
+            onPress={pickImage}
+            className={`border-2 border-dashed rounded-xl items-center justify-center mb-4 overflow-hidden ${
+              idImageUri
+                ? "border-brand bg-brand/5"
+                : isDark
+                  ? "border-white/20 bg-[#2A2A2A]"
+                  : "border-black/10 bg-gray-50"
+            }`}
+            activeOpacity={0.7}
+          >
+            {idImageUri ? (
+              <View className="w-full">
+                <Image
+                  source={{ uri: idImageUri }}
+                  className="w-full h-44"
+                  resizeMode="cover"
+                />
+                <View className="absolute bottom-0 left-0 right-0 bg-black/50 px-4 py-2">
+                  <Text className="text-white text-xs text-center">Tap to change image</Text>
+                </View>
+              </View>
+            ) : (
+              <View className="items-center py-8">
+                <View className="w-12 h-12 rounded-full bg-brand/10 items-center justify-center mb-3">
+                  <Camera size={22} color="#1877F2" />
+                </View>
+                <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} font-medium`}>
+                  Upload Government ID
+                </Text>
+                <Text className={`text-xs text-${isDark ? "white/40" : "black/40"} mt-1`}>
+                  JPG, PNG or WEBP
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"} mb-3 mt-2`}>
+            Address <Text className="text-red-500">*</Text>
+          </Text>
+
+          <Select
+            label="Region"
+            options={regions}
+            value={regionCode}
+            onSelect={onRegionSelect}
+            placeholder="Select region"
           />
-          <Input
-            label="Address"
-            placeholder="Enter your address"
-            value={address}
-            onChangeText={setAddress}
-          />
+
+          {provinces.length > 0 && (
+            <Select
+              label="Province"
+              options={provinces}
+              value={provinceCode}
+              onSelect={onProvinceSelect}
+              placeholder="Select province"
+            />
+          )}
+
+          {cities.length > 0 && (
+            <Select
+              label="City / Municipality"
+              options={cities}
+              value={cityCode}
+              onSelect={onCitySelect}
+              placeholder="Select city"
+            />
+          )}
+
+          {barangays.length > 0 && (
+            <Select
+              label="Barangay"
+              options={barangays}
+              value={barangayCode}
+              onSelect={onBarangaySelect}
+              placeholder="Select barangay"
+            />
+          )}
+
           <Input
             label="Password"
             placeholder="Minimum 6 characters"
@@ -113,26 +168,26 @@ export function RegisterScreen({ navigation }: any) {
             secureTextEntry
           />
 
-          <View className="mt-2 mb-6">
+          <View className="mt-6 mb-6">
             <Button title="Create Account" onPress={handleRegister} loading={loading} size="lg" />
           </View>
 
-          <View className="flex-row items-center justify-center gap-1">
-            <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>
+          <View className="flex-row items-center justify-center gap-1.5">
+            <Text className={`text-sm text-${isDark ? "white/50" : "black/50"}`}>
               Already have an account?
             </Text>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Text className={`text-sm text-${isDark ? "white" : "black"} font-bold`}>
+              <Text className="text-sm text-brand font-bold">
                 Sign In
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View className="mt-8 bg-brand/5 rounded-xl p-4 border border-brand/20">
-            <Text className={`text-xs font-bold text-${isDark ? "white/60" : "black/60"} mb-1`}>
+          <View className="mt-8 bg-amber-50 dark:bg-amber-900/10 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+            <Text className={`text-xs font-bold text-amber-700 dark:text-amber-400 mb-1`}>
               Note
             </Text>
-            <Text className={`text-xs text-${isDark ? "white/70" : "black/70"}`}>
+            <Text className={`text-xs text-amber-600 dark:text-amber-500`}>
               New accounts require admin approval before you can access the application.
             </Text>
           </View>

@@ -1,8 +1,9 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { UpdateAgentDto } from './dto/update-agent.dto';
+import { UpdateAgentStatusDto } from './dto/update-agent-status.dto';
 
 @Injectable()
 export class AgentsService {
@@ -81,6 +82,23 @@ export class AgentsService {
     return this.prisma.agentProfile.update({
       where: { id },
       data,
+      include: { user: { select: { id: true, role: true, createdAt: true } } },
+    });
+  }
+
+  async updateStatus(id: string, dto: UpdateAgentStatusDto) {
+    const agent = await this.prisma.agentProfile.findUnique({ where: { id } });
+    if (!agent) {
+      throw new NotFoundException('Agent not found');
+    }
+
+    if (agent.status === dto.status) {
+      return agent;
+    }
+
+    return this.prisma.agentProfile.update({
+      where: { id },
+      data: { status: dto.status },
       include: { user: { select: { id: true, role: true, createdAt: true } } },
     });
   }

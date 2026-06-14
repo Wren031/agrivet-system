@@ -1,23 +1,31 @@
 import { useState, useMemo } from 'react'
-import { Users, Mail, Phone, MapPin, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { Users, Mail, Phone, ChevronLeft, ChevronRight, Search, Eye } from 'lucide-react'
 import { useAgents } from '../hooks/useAgents'
-import { updateAgent } from '../services/agentService'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
+import AgentDrawer from '../components/AgentDrawer'
+import type { Agent } from '../services/types'
 
 const PAGE_SIZE = 8
 
+const statusConfig: Record<string, { label: string; card: string }> = {
+  PENDING: { label: 'Pending', card: 'text-amber-600 dark:text-amber-400' },
+  APPROVED: { label: 'Approved', card: 'text-green-600 dark:text-green-400' },
+  REJECTED: { label: 'Rejected', card: 'text-red-600 dark:text-red-400' },
+}
+
 export default function AgentsPage() {
-  const { agents, loading, reload } = useAgents()
+  const { agents, loading, changeStatus, remove, reload } = useAgents()
   const { addNotification } = useApp()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
 
   const filtered = useMemo(() =>
     agents.filter(a =>
-      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.fullName.toLowerCase().includes(search.toLowerCase()) ||
       a.email.toLowerCase().includes(search.toLowerCase()) ||
-      a.region.toLowerCase().includes(search.toLowerCase())
+      a.contactNumber.toLowerCase().includes(search.toLowerCase())
     ),
     [agents, search]
   )
@@ -25,15 +33,15 @@ export default function AgentsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  async function handleStatusChange(id: string, status: 'Pending' | 'Approved' | 'Rejected') {
-    try {
-      await updateAgent(id, { status })
-      const label = { Pending: 'set to pending', Approved: 'approved', Rejected: 'rejected' }[status]
-      addNotification({ message: `Agent ${label}`, type: 'success' })
-      reload()
-    } catch {
-      addNotification({ message: 'Failed to update agent status', type: 'error' })
-    }
+  async function handleStatusChange(id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED') {
+    await changeStatus(id, { status })
+    addNotification({ message: `Agent ${statusConfig[status].label.toLowerCase()}`, type: 'success' })
+  }
+
+  async function handleDelete(id: string) {
+    await remove(id)
+    addNotification({ message: 'Agent deleted', type: 'success' })
+    setSelectedAgent(null)
   }
 
   return (
@@ -68,12 +76,12 @@ export default function AgentsPage() {
               <div key={agent.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
-                    {agent.name.charAt(0).toUpperCase()}
+                    {agent.fullName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{agent.name}</p>
-                    <p className={`text-xs font-medium ${agent.status === 'Approved' ? 'text-green-600 dark:text-green-400' : agent.status === 'Rejected' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                      {agent.status}
+                    <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{agent.fullName}</p>
+                    <p className={`text-xs font-medium ${statusConfig[agent.status]?.card}`}>
+                      {statusConfig[agent.status]?.label}
                     </p>
                   </div>
                 </div>
@@ -82,21 +90,14 @@ export default function AgentsPage() {
                     <Mail size={14} /><span className="truncate">{agent.email}</span>
                   </div>
                   <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <Phone size={14} /><span>{agent.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <MapPin size={14} /><span>{agent.region}</span>
+                    <Phone size={14} /><span>{agent.contactNumber}</span>
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-                  <select value={agent.status}
-                    onChange={e => handleStatusChange(agent.id, e.target.value as 'Pending' | 'Approved' | 'Rejected')}
-                    className="w-full px-3 py-1.5 rounded-lg text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer bg-transparent text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
+                  <button onClick={() => setSelectedAgent(agent)}
+                    className="flex items-center justify-center gap-1.5 w-full px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <Eye size={14} /> View Details
+                  </button>
                 </div>
               </div>
             ))}
@@ -121,6 +122,14 @@ export default function AgentsPage() {
           )}
         </>
       )}
+
+      <AgentDrawer
+        agent={selectedAgent}
+        open={!!selectedAgent}
+        onClose={() => setSelectedAgent(null)}
+        onStatusChange={handleStatusChange}
+        onDelete={handleDelete}
+      />
     </div>
   )
 }

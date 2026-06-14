@@ -19,7 +19,29 @@ export const authApi = {
     };
   },
 
-  async register(fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl?: string) {
+  async uploadIdImage(imageUri: string) {
+    const formData = new FormData();
+    const filename = imageUri.split("/").pop() || "id.jpg";
+    const ext = filename.split(".").pop() || "jpg";
+    formData.append("file", {
+      uri: imageUri,
+      name: filename,
+      type: `image/${ext}`,
+    } as any);
+
+    const response = await fetch(`${API_BASE_URL}/upload/public/id-verification`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Image upload failed");
+    }
+    return data.url as string;
+  },
+
+  async register(fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) {
     const response = await fetch(`${API_BASE_URL}/auth/agent/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

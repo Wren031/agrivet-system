@@ -1,10 +1,31 @@
+import type { Category } from '../../categories/services/types'
+
+export interface InventoryApiResponse {
+  id: string
+  productName: string
+  unit: string
+  costPrice: number
+  sellingPrice: number
+  stockLevel: number
+  reorderPoint: number
+  expiryDate: string | null
+  imageUrl: string | null
+  createdAt: string
+  updatedAt: string
+  categoryId: string | null
+  subcategoryId: string | null
+  category: { id: string; name: string } | null
+  subcategory: { id: string; name: string; categoryId: string } | null
+}
+
 export interface Item {
   id: string
   name: string
   sku: string
-  category: string
+  category: Category[]
   subcategory: string
   packagingUnit: string
+  costPrice: number
   expiryDate: string | null
   reorderLevel: number
   price: number
@@ -15,13 +36,6 @@ export interface Item {
 
 export interface Product extends Item {
   currency?: string
-}
-
-export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
-  'Feeds & Nutrition': ['Swine/Hog', 'Poultry', 'Gamefowl', 'Pet/Specialty', 'Aqua'],
-  'Veterinary Drugs & Biologics': ['Antibiotics', 'Vitamins/Supplements', 'Dewormers', 'Ectoparasiticides'],
-  'Agricultural Inputs': ['Fertilizers', 'Crop Protection/Chemicals', 'Seeds'],
-  'Farm Equipment & Hardware': ['Sprayers', 'Poultry/Hog Equipment', 'Gardening Tools', 'Veterinary Tools'],
 }
 
 export const PACKAGING_UNITS = [

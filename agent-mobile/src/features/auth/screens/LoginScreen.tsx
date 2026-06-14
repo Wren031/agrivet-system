@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ArrowLeft, LogIn } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input } from "../../../components/Input";
@@ -37,15 +38,14 @@ export function LoginScreen({ navigation }: any) {
     return (
       <SafeAreaView className={`flex-1 bg-${isDark ? "[#1A1A1A]" : "white"}`}>
         <View className="flex-1 items-center justify-center px-8">
-          <View className="w-20 h-20 rounded-full bg-brand/5 items-center justify-center mb-6 border border-brand/20">
-            <Text className="text-4xl opacity-40">⏳</Text>
+          <View className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 items-center justify-center mb-6">
+            <Text className="text-3xl">⏳</Text>
           </View>
           <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"} text-center mb-3`}>
-            Awaiting Admin Approval
+            Awaiting Approval
           </Text>
-          <Text className={`text-base text-${isDark ? "white/60" : "black/60"} text-center mb-8`}>
-            Your account is pending approval from an administrator. You will be able to access the
-            application once your account has been reviewed.
+          <Text className={`text-base text-${isDark ? "white/60" : "black/60"} text-center leading-6 mb-8`}>
+            Your account is pending approval from an administrator. You will be notified once your account has been reviewed.
           </Text>
           <TouchableOpacity
             onPress={() => {
@@ -71,19 +71,29 @@ export function LoginScreen({ navigation }: any) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView contentContainerClassName="flex-grow px-8 pt-12 pb-8">
-          <View className="mb-10">
-            <Text className={`text-4xl font-bold text-${isDark ? "white" : "black"}`}>
-              Welcome back
+        <ScrollView contentContainerClassName="flex-grow px-6 pt-6 pb-8">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-brand/5 mb-6"
+          >
+            <ArrowLeft size={20} color="#1877F2" />
+          </TouchableOpacity>
+
+          <View className="mb-8">
+            <View className="w-14 h-14 rounded-2xl bg-brand items-center justify-center mb-6">
+              <LogIn size={28} color="white" />
+            </View>
+            <Text className={`text-3xl font-bold text-${isDark ? "white" : "black"}`}>
+              Welcome Back
             </Text>
-            <Text className={`text-base text-${isDark ? "white/60" : "black/60"} mt-2`}>
-              Sign in to your Agrivet account
+            <Text className={`text-base text-${isDark ? "white/50" : "black/50"} mt-1.5`}>
+              Sign in to continue
             </Text>
           </View>
 
           {error ? (
-            <View className="bg-brand/5 rounded-xl p-4 mb-4 border border-brand/20">
-              <Text className={`text-${isDark ? "white/80" : "black/80"} text-sm`}>{error}</Text>
+            <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mb-5 border border-red-200 dark:border-red-800">
+              <Text className="text-red-600 dark:text-red-400 text-sm">{error}</Text>
             </View>
           ) : null}
 
@@ -103,36 +113,19 @@ export function LoginScreen({ navigation }: any) {
             secureTextEntry
           />
 
-          <View className="mt-4 mb-6">
+          <View className="mt-6 mb-6">
             <Button title="Sign In" onPress={handleLogin} loading={loading} size="lg" />
           </View>
 
-          <View className="flex-row items-center justify-center gap-1">
-            <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>
+          <View className="flex-row items-center justify-center gap-1.5">
+            <Text className={`text-sm text-${isDark ? "white/50" : "black/50"}`}>
               Don't have an account?
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text className={`text-sm text-${isDark ? "white" : "black"} font-bold`}>
-                Sign Up
+              <Text className="text-sm text-brand font-bold">
+                Create One
               </Text>
             </TouchableOpacity>
-          </View>
-
-          <View className="mt-12 bg-brand/5 rounded-xl p-4 border border-brand/20">
-            <Text className={`text-xs font-bold text-${isDark ? "white/60" : "black/60"} mb-2 uppercase tracking-wider`}>
-              Demo Accounts
-            </Text>
-            <View className="gap-1">
-              <Text className={`text-xs text-${isDark ? "white/70" : "black/70"}`}>
-                Approved: admin@agrivet.com / admin123
-              </Text>
-              <Text className={`text-xs text-${isDark ? "white/70" : "black/70"}`}>
-                Approved: maria@agrivet.com / maria123
-              </Text>
-              <Text className={`text-xs text-${isDark ? "white/70" : "black/70"}`}>
-                Pending: juan@agrivet.com / juan123
-              </Text>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

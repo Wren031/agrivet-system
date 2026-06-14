@@ -42,11 +42,25 @@ model AdminProfile {
 }
 
 model Category {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
+  id           String         @id @default(uuid())
+  name         String         @unique
+  createdAt    DateTime       @default(now()) @map("created_at")
+  subcategories SubCategory[]
+  inventory    Inventory[]
 
   @@map("categories")
+}
+
+model SubCategory {
+  id         String      @id @default(uuid())
+  name       String
+  createdAt  DateTime    @default(now()) @map("created_at")
+  categoryId String      @map("category_id")
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  inventory  Inventory[]
+
+  @@unique([name, categoryId])
+  @@map("sub_categories")
 }
 
 model AgentProfile {
@@ -61,4 +75,24 @@ model AgentProfile {
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("agent_profiles")
+}
+
+model Inventory {
+  id             String        @id @default(uuid())
+  productName    String        @map("product_name")
+  unit           String
+  costPrice      Decimal       @map("cost_price") @db.Decimal(10, 2)
+  sellingPrice   Decimal       @map("selling_price") @db.Decimal(10, 2)
+  stockLevel     Int           @map("stock_level")
+  reorderPoint   Int           @map("reorder_point")
+  expiryDate     DateTime?     @map("expiry_date")
+  imageUrl       String?       @map("image_url")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  categoryId     String?       @map("category_id")
+  category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subcategoryId  String?       @map("subcategory_id")
+  subcategory    SubCategory?  @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+
+  @@map("inventory")
 }

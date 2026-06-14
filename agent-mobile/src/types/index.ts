@@ -3,7 +3,7 @@ export interface User {
   fullName: string;
   email: string;
   contactNumber: string;
-  idVerificationUrl?: string;
+  idVerificationUrl: string;
   address: string;
   password: string;
   avatar?: string;

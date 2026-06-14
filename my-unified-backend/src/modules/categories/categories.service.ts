@@ -20,11 +20,17 @@ export class CategoriesService {
   }
 
   async findAll() {
-    return this.prisma.category.findMany({ orderBy: { name: 'asc' } });
+    return this.prisma.category.findMany({
+      orderBy: { name: 'asc' },
+      include: { subcategories: { orderBy: { name: 'asc' } } },
+    });
   }
 
   async findOne(id: string) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: { subcategories: { orderBy: { name: 'asc' } } },
+    });
 
     if (!category) {
       throw new NotFoundException('Category not found');

@@ -11,6 +11,7 @@ import {
 import { AgentsService } from './agents.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { UpdateAgentDto } from './dto/update-agent.dto';
+import { UpdateAgentStatusDto } from './dto/update-agent-status.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -42,6 +43,15 @@ export class AgentsController {
   @Roles('ADMIN')
   update(@Param('id') id: string, @Body() dto: UpdateAgentDto) {
     return this.agentsService.update(id, dto);
+  }
+
+  @Patch(':id/status')
+  @Roles('ADMIN')
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateAgentStatusDto,
+  ) {
+    return this.agentsService.updateStatus(id, dto);
   }
 
   @Delete(':id')
