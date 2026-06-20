@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchStaff, createStaff, updateStaff, deleteStaff } from '../services/staffService'
-import type { Staff } from '../services/types'
+import type { AdminStaff, CreateAdminStaffData, UpdateAdminStaffData } from '../services/types'
 
 export function useStaff() {
-  const [staff, setStaff] = useState<Staff[]>([])
+  const [staff, setStaff] = useState<AdminStaff[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -15,13 +15,13 @@ export function useStaff() {
 
   useEffect(() => { load() }, [load])
 
-  const add = useCallback(async (member: Omit<Staff, 'id'>) => {
+  const add = useCallback(async (member: CreateAdminStaffData) => {
     const created = await createStaff(member)
     setStaff(prev => [...prev, created])
     return created
   }, [])
 
-  const update = useCallback(async (id: string, updates: Partial<Staff>) => {
+  const update = useCallback(async (id: string, updates: UpdateAdminStaffData) => {
     const updated = await updateStaff(id, updates)
     setStaff(prev => prev.map(s => s.id === id ? updated : s))
     return updated

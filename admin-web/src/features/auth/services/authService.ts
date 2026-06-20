@@ -1,6 +1,7 @@
 import { apiFetch, setToken, clearToken } from '../../../config/apiClient'
 
 export interface AuthUser {
+  id: string
   email: string
   name: string
 }
@@ -17,13 +18,17 @@ function removeUser() {
 }
 
 export async function login(email: string, password: string): Promise<AuthUser> {
-  const data = await apiFetch<{ accessToken: string; user: AuthUser }>('/auth/login', {
+  const data = await apiFetch<{
+    accessToken: string
+    user: { id: string; email: string; fullName: string; role: string }
+  }>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   })
   setToken(data.accessToken)
-  storeUser(data.user)
-  return data.user
+  const user: AuthUser = { id: data.user.id, email: data.user.email, name: data.user.fullName }
+  storeUser(user)
+  return user
 }
 
 export async function logout(): Promise<void> {

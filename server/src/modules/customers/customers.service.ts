@@ -23,7 +23,7 @@ export class CustomersService {
 
     return this.prisma.customer.create({
       data,
-      include: { agentProfile: true },
+      include: { agentProfile: true, _count: { select: { orders: true } } },
     });
   }
 
@@ -45,14 +45,14 @@ export class CustomersService {
     return this.prisma.customer.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { agentProfile: true },
+      include: { agentProfile: true, _count: { select: { orders: true } } },
     });
   }
 
   async findOne(id: string) {
     const customer = await this.prisma.customer.findUnique({
       where: { id },
-      include: { agentProfile: true },
+      include: { agentProfile: true, _count: { select: { orders: true } } },
     });
 
     if (!customer) {
@@ -78,7 +78,7 @@ export class CustomersService {
     return this.prisma.customer.update({
       where: { id },
       data: dto,
-      include: { agentProfile: true },
+      include: { agentProfile: true, _count: { select: { orders: true } } },
     });
   }
 

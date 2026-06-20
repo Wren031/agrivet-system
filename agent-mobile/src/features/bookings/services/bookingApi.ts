@@ -1,94 +1,127 @@
-import { Booking, BookingItem, BookingStatus, Customer, Item } from "../../../types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BASE_URL } from "../../../config/api.config";
+import { Booking, BookingItem, BookingStatus } from "../../../types";
 
-let bookings: Booking[] = [
-  {
-    id: "b1",
-    customerId: "c1",
-    customerName: "Pedro Garcia",
-    items: [
-      { itemId: "i1", name: "Premium Chicken Feed", price: 2850, quantity: 2, subtotal: 5700 },
-      { itemId: "i3", name: "Dewormer Solution", price: 320, quantity: 3, subtotal: 960 },
-    ],
-    total: 6660,
-    status: "Success",
-    notes: "Delivered on time",
-    createdAt: "2025-05-10T09:00:00Z",
-    updatedAt: "2025-05-12T14:00:00Z",
-  },
-  {
-    id: "b2",
-    customerId: "c2",
-    customerName: "Ana Reyes",
-    items: [
-      { itemId: "i6", name: "Pig Grower Mix", price: 2100, quantity: 1, subtotal: 2100 },
-    ],
-    total: 2100,
-    status: "Ongoing",
-    createdAt: "2025-06-01T11:00:00Z",
-    updatedAt: "2025-06-01T11:00:00Z",
-  },
-  {
-    id: "b3",
-    customerId: "c3",
-    customerName: "Carlos Mendoza",
-    items: [
-      { itemId: "i2", name: "Vitamin Premix", price: 450, quantity: 4, subtotal: 1800 },
-      { itemId: "i7", name: "Electrolyte Powder", price: 180, quantity: 10, subtotal: 1800 },
-      { itemId: "i8", name: "Calcium Supplement", price: 220, quantity: 5, subtotal: 1100 },
-    ],
-    total: 4700,
-    status: "Accepted",
-    createdAt: "2025-06-05T08:30:00Z",
-    updatedAt: "2025-06-05T08:30:00Z",
-  },
-  {
-    id: "b4",
-    customerId: "c4",
-    customerName: "Sofia Cruz",
-    items: [
-      { itemId: "i4", name: "Fish Meal Pellets", price: 1950, quantity: 2, subtotal: 3900 },
-    ],
-    total: 3900,
-    status: "Cancelled",
-    notes: "Customer cancelled - no longer needed",
-    createdAt: "2025-05-20T10:00:00Z",
-    updatedAt: "2025-05-21T09:00:00Z",
-  },
-  {
-    id: "b5",
-    customerId: "c1",
-    customerName: "Pedro Garcia",
-    items: [
-      { itemId: "i5", name: "Corn Gluten Feed", price: 1200, quantity: 3, subtotal: 3600 },
-      { itemId: "i9", name: "Goat Mineral Block", price: 150, quantity: 6, subtotal: 900 },
-    ],
-    total: 4500,
-    status: "Success",
-    createdAt: "2025-04-15T13:00:00Z",
-    updatedAt: "2025-04-18T16:00:00Z",
-  },
-];
+const TOKEN_KEY = "@agrivet_token";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+interface BackendOrderItem {
+  id: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  orderId: string;
+  inventoryId: string | null;
+  inventory: { id: string; productName: string; sellingPrice: number } | null;
+}
+
+interface BackendCustomer {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string | null;
+  address: string;
+}
+
+interface BackendOrder {
+  id: string;
+  orderDate: string;
+  totalAmount: number;
+  status: "PENDING" | "APPROVED" | "COMPLETED";
+  notes: string | null;
+  customerId: string;
+  agentProfileId: string | null;
+  customer: BackendCustomer;
+  items: BackendOrderItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+const STATUS_MAP: Record<string, BookingStatus> = {
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  COMPLETED: "Delivered",
+};
+
+const STATUS_MAP_REVERSE: Record<BookingStatus, string> = {
+  Pending: "PENDING",
+  Approved: "APPROVED",
+  Delivered: "COMPLETED",
+};
+
+function mapStatus(status: string): BookingStatus {
+  return STATUS_MAP[status] || "Pending";
+}
+
+function mapItem(item: BackendOrderItem): BookingItem {
+  return {
+    itemId: item.inventoryId || item.id,
+    name: item.inventory?.productName ?? "Unknown Item",
+    price: item.unitPrice,
+    quantity: item.quantity,
+    subtotal: item.subtotal,
+  };
+}
+
+function fromBackendOrder(order: BackendOrder): Booking {
+  return {
+    id: order.id,
+    customerId: order.customerId,
+    customerName: order.customer?.fullName ?? "Unknown",
+    items: (order.items ?? []).map(mapItem),
+    total: order.totalAmount,
+    status: mapStatus(order.status),
+    notes: order.notes ?? undefined,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+  };
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Server returned ${response.status}: ${text}`);
+  }
+  if (!response.ok) {
+    const msg = Array.isArray(data.message) ? data.message[0] : data.message;
+    throw new Error(msg || `Request failed (${response.status})`);
+  }
+  return data;
+}
 
 export const bookingApi = {
   async getAll(): Promise<Booking[]> {
-    await delay(600);
-    return [...bookings].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE_URL}/orders`, { headers });
+    const data: BackendOrder[] = await handleResponse(res);
+    return (data ?? []).map(fromBackendOrder);
   },
 
-  async getCompletedOrCancelled(): Promise<Booking[]> {
-    await delay(500);
-    return bookings
-      .filter((b) => b.status === "Success" || b.status === "Cancelled")
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  async getCompleted(): Promise<Booking[]> {
+    const all = await this.getAll();
+    return all
+      .filter((b) => b.status === "Delivered")
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
   },
 
   async getById(id: string): Promise<Booking | undefined> {
-    await delay(400);
-    return bookings.find((b) => b.id === id);
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE_URL}/orders/${id}`, { headers });
+    const data: BackendOrder = await handleResponse(res);
+    return fromBackendOrder(data);
   },
 
   async create(data: {
@@ -97,42 +130,81 @@ export const bookingApi = {
     items: BookingItem[];
     notes?: string;
   }): Promise<Booking> {
-    await delay(800);
-    const total = data.items.reduce((sum, i) => sum + i.subtotal, 0);
-    const newBooking: Booking = {
-      id: "b" + Date.now(),
-      ...data,
-      total,
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const headers = await getAuthHeaders();
+    const body: Record<string, any> = {
+      customerId: data.customerId,
     };
-    bookings = [newBooking, ...bookings];
-    return newBooking;
+    if (data.notes) body.notes = data.notes;
+    if (data.items && data.items.length > 0) {
+      body.items = data.items.map((item) => {
+        const entry: Record<string, any> = {
+          quantity: Math.floor(Number(item.quantity)) || 1,
+          unitPrice: Number(item.price) || 0,
+        };
+        if (item.itemId) entry.inventoryId = item.itemId;
+        return entry;
+      });
+    }
+    const res = await fetch(`${API_BASE_URL}/orders`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const order: BackendOrder = await handleResponse(res);
+    const booking = fromBackendOrder(order);
+    import("../../history/services/historyApi").then(({ historyApi }) =>
+      historyApi.recordChange(booking.id, "Pending")
+    );
+    return booking;
   },
 
-  async updateStatus(id: string, status: BookingStatus): Promise<Booking> {
-    await delay(500);
-    const index = bookings.findIndex((b) => b.id === id);
-    if (index === -1) throw new Error("Booking not found");
-    bookings = bookings.map((b) =>
-      b.id === id ? { ...b, status, updatedAt: new Date().toISOString() } : b
+  async updateStatus(
+    id: string,
+    status: BookingStatus
+  ): Promise<Booking> {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE_URL}/orders/${id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ status: STATUS_MAP_REVERSE[status] }),
+    });
+    const order: BackendOrder = await handleResponse(res);
+    const booking = fromBackendOrder(order);
+    import("../../history/services/historyApi").then(({ historyApi }) =>
+      historyApi.recordChange(id, status)
     );
-    return bookings[index];
+    return booking;
   },
 
   async updateItems(id: string, items: BookingItem[]): Promise<Booking> {
-    await delay(500);
-    const index = bookings.findIndex((b) => b.id === id);
-    if (index === -1) throw new Error("Booking not found");
-    const total = items.reduce((sum, i) => sum + i.subtotal, 0);
-    const updated = { ...bookings[index], items, total, updatedAt: new Date().toISOString() };
-    bookings = bookings.map((b) => (b.id === id ? updated : b));
-    return updated;
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE_URL}/orders/${id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        items: items.map((item) => {
+          const entry: Record<string, any> = {
+            quantity: Math.floor(Number(item.quantity)) || 1,
+            unitPrice: Number(item.price) || 0,
+          };
+          if (item.itemId) entry.inventoryId = item.itemId;
+          return entry;
+        }),
+      }),
+    });
+    const updated: BackendOrder = await handleResponse(res);
+    return fromBackendOrder(updated);
   },
 
   async remove(id: string): Promise<void> {
-    await delay(500);
-    bookings = bookings.filter((b) => b.id !== id);
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE_URL}/orders/${id}`, {
+      method: "DELETE",
+      headers,
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to delete booking");
+    }
   },
 };

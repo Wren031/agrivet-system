@@ -1,26 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, Minus, Plus, X } from "lucide-react-native";
+import {
+  ArrowLeft, Minus, Plus, X,
+  Clock, CheckCircle2, Circle,
+  Package, Truck, XCircle,
+} from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { StatusBadge } from "../components/StatusBadge";
 import { bookingApi } from "../services/bookingApi";
 import { customerApi } from "../../customers/services/customerApi";
 import { itemApi } from "../../items/services/itemApi";
-import { Booking, BookingItem, Customer, Item } from "../../../types";
+import { Booking, BookingItem, Customer, Item, BookingStatus } from "../../../types";
 import { getCityName, getProvinceName } from "../../../data/philippineAddress";
 import { Button } from "../../../components/Button";
 
+const STATUS_CONFIG: Record<BookingStatus, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
+  Pending: {
+    icon: <Clock size={20} color="#f59e0b" />,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    label: "Awaiting approval",
+  },
+  Approved: {
+    icon: <CheckCircle2 size={20} color="#16a34a" />,
+    color: "text-green-600",
+    bg: "bg-green-500/10",
+    label: "Ready for delivery",
+  },
+  Delivered: {
+    icon: <Truck size={20} color="#16a34a" />,
+    color: "text-green-600",
+    bg: "bg-green-500/10",
+    label: "Completed successfully",
+  },
+};
+
 const STEPS = [
-  { key: "Pending", label: "Pending", description: "Awaiting approval" },
-  { key: "Ongoing", label: "Approved", description: "Confirmed" },
-  { key: "Success", label: "Delivered", description: "Completed" },
+  { key: "PENDING", label: "Pending" },
+  { key: "APPROVED", label: "Approved" },
+  { key: "COMPLETED", label: "Delivered" },
 ];
 
 function getCurrentStep(status: string): number {
-  if (status === "Pending") return 0;
-  if (status === "Accepted" || status === "Ongoing") return 1;
-  if (status === "Success") return 2;
+  if (status === "PENDING" || status === "Pending") return 0;
+  if (status === "APPROVED" || status === "Approved") return 1;
+  if (status === "COMPLETED" || status === "Delivered") return 2;
   return -1;
 }
 
@@ -51,7 +76,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
   const handleDeliver = async () => {
     if (!booking) return;
     setLoading(true);
-    await bookingApi.updateStatus(booking.id, "Success");
+    await bookingApi.updateStatus(booking.id, "Delivered");
     await loadBooking();
     setLoading(false);
   };
@@ -59,7 +84,7 @@ export function BookingDetailScreen({ route, navigation }: any) {
   const handleCancel = async () => {
     if (!booking) return;
     setLoading(true);
-    await bookingApi.updateStatus(booking.id, "Cancelled");
+    await bookingApi.updateStatus(booking.id, "Pending");
     await loadBooking();
     setLoading(false);
   };
@@ -116,11 +141,11 @@ export function BookingDetailScreen({ route, navigation }: any) {
     );
   }
 
+  const statusCfg = STATUS_CONFIG[booking.status];
   const currentStep = getCurrentStep(booking.status);
   const isPending = booking.status === "Pending";
-  const isOngoing = booking.status === "Accepted" || booking.status === "Ongoing";
-  const isSuccess = booking.status === "Success";
-  const isCancelled = booking.status === "Cancelled";
+  const isApproved = booking.status === "Approved";
+  const isDelivered = booking.status === "Delivered";
 
   const editTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0);
 
@@ -138,113 +163,91 @@ export function BookingDetailScreen({ route, navigation }: any) {
         </Text>
       </View>
 
-      <ScrollView contentContainerClassName="p-6">
-        <View className="flex-row items-center justify-between mb-6">
-          <View>
-            <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"}`}>
-              Booking Receipt
-            </Text>
-            <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>
-              #{booking.id}
-            </Text>
+      <ScrollView contentContainerClassName="p-4 pb-8">
+        <View className={`rounded-2xl p-4 mb-4 ${statusCfg.bg} border border-brand/10`}>
+          <View className="flex-row items-center gap-3">
+            <View className={`w-10 h-10 rounded-full items-center justify-center ${statusCfg.bg}`}>
+              {statusCfg.icon}
+            </View>
+            <View className="flex-1">
+              <Text className={`text-lg font-bold ${statusCfg.color}`}>
+                {booking.status}
+              </Text>
+              <Text className={`text-sm ${isDark ? "text-white/60" : "text-black/60"}`}>
+                {statusCfg.label}
+              </Text>
+            </View>
+            <StatusBadge status={booking.status} size="sm" />
           </View>
-          <StatusBadge status={booking.status} />
         </View>
 
-        {!isCancelled && (
-          <View className="bg-brand/5 rounded-2xl p-5 mb-4 border border-brand/20">
-            <View className="flex-row items-center justify-between mb-4">
-              {STEPS.map((step, index) => (
-                <React.Fragment key={step.key}>
-                  <View className="items-center flex-1">
-                    <View
-                      className={`w-8 h-8 rounded-full items-center justify-center ${
-                        index < currentStep
-                          ? "bg-brand"
-                          : index === currentStep
-                          ? "bg-brand/40"
-                          : "bg-brand/20"
-                      }`}
-                    >
-                      {index < currentStep ? (
-                        <Text className="text-white text-xs font-bold">✓</Text>
-                      ) : (
-                        <Text
-                          className={`text-xs font-bold ${
-                            index === currentStep
-                              ? "text-white"
-                              : `text-${isDark ? "white/50" : "black/50"}`
-                          }`}
-                        >
-                          {index + 1}
-                        </Text>
-                      )}
-                    </View>
-                    <Text
-                      className={`text-xs font-semibold mt-1 ${
-                        index <= currentStep
-                          ? `text-${isDark ? "white" : "black"}`
-                          : `text-${isDark ? "white/50" : "black/50"}`
-                      }`}
-                    >
-                      {step.label}
-                    </Text>
-                  </View>
-                  {index < STEPS.length - 1 && (
-                    <View
-                      className={`flex-1 h-0.5 mx-1 ${
-                        index < currentStep
-                          ? "bg-brand"
-                          : "bg-brand/20"
-                      }`}
-                    />
-                  )}
-                </React.Fragment>
-              ))}
-            </View>
-
-            {isPending && (
-              <View className="bg-brand/5 rounded-xl p-4">
-                <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"}`}>
-                  Please wait until the admin accepts this booking.
-                </Text>
-              </View>
-            )}
-            {isOngoing && (
-              <View className="bg-brand/5 rounded-xl p-4">
-                <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"}`}>
-                  Your booking has been approved!
-                </Text>
-              </View>
-            )}
-            {isSuccess && (
-              <View className="bg-brand/5 rounded-xl p-4">
-                <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"}`}>
-                  This booking has been delivered successfully.
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {isCancelled && (
-          <View className="bg-brand/3 rounded-xl p-4 mb-4 border border-brand/20">
-            <Text className={`text-sm font-medium text-${isDark ? "white/60" : "black/60"}`}>
-              This booking has been cancelled.
+        <View className={`rounded-2xl p-5 mb-4 border ${isDark ? "bg-[#1e293b] border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className={`text-xs uppercase tracking-widest font-semibold ${isDark ? "text-white/50" : "text-black/40"}`}>
+              Order Progress
             </Text>
           </View>
-        )}
+          <View className="flex-row items-center">
+            {STEPS.map((step, index) => (
+              <React.Fragment key={step.key}>
+                <View className="items-center flex-1">
+                  <View
+                    className={`w-9 h-9 rounded-full items-center justify-center ${
+                      index < currentStep
+                        ? "bg-brand"
+                        : index === currentStep
+                        ? "bg-brand"
+                        : `${isDark ? "bg-white/10" : "bg-black/5"}`
+                    }`}
+                  >
+                    {index < currentStep ? (
+                      <CheckCircle2 size={16} color="#fff" />
+                    ) : (
+                      <Circle
+                        size={16}
+                        color={index === currentStep ? "#fff" : isDark ? "#ffffff50" : "#00000050"}
+                      />
+                    )}
+                  </View>
+                  <Text
+                    className={`text-[10px] font-semibold mt-1.5 ${
+                      index <= currentStep
+                        ? "text-brand"
+                        : isDark ? "text-white/40" : "text-black/40"
+                    }`}
+                  >
+                    {step.label}
+                  </Text>
+                </View>
+                {index < STEPS.length - 1 && (
+                  <View
+                    className={`flex-1 h-[2px] mx-1 rounded-full ${
+                      index < currentStep
+                        ? "bg-brand"
+                        : isDark ? "bg-white/10" : "bg-black/10"
+                    }`}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
 
-        <View className="bg-brand/5 rounded-2xl p-5 mb-4 border border-brand/20">
-          <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider mb-2`}>
-            Customer
-          </Text>
-          <Text className={`text-lg font-bold text-${isDark ? "white" : "black"}`}>
-            {booking.customerName}
-          </Text>
+        <View className={`rounded-2xl p-5 mb-4 border ${isDark ? "bg-[#1e293b] border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+          <View className="flex-row items-center gap-3 mb-1">
+            <View className={`w-1 h-10 rounded-full bg-brand`} />
+            <View>
+              <Text className={`text-xs uppercase tracking-widest font-semibold ${isDark ? "text-white/50" : "text-black/40"}`}>
+                Customer
+              </Text>
+              <Text className={`text-base font-bold text-${isDark ? "white" : "black"} mt-0.5`}>
+                {booking.customerName}
+              </Text>
+            </View>
+          </View>
           {customer?.address && (
-            <View className="flex-row items-center gap-2 mt-2">
-              <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} flex-1`}>
+            <View className="ml-4 mt-2">
+              <Text className={`text-sm ${isDark ? "text-white/60" : "text-black/60"} leading-5`}>
                 {customer.address}
                 {customer.address ? ", " : ""}
                 {getCityName(customer.city)}
@@ -255,104 +258,117 @@ export function BookingDetailScreen({ route, navigation }: any) {
           )}
         </View>
 
-        <View className="bg-brand/5 rounded-2xl p-5 mb-4 border border-brand/20">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider`}>
-              Items Purchased
-            </Text>
-            {isPending && (
-              <TouchableOpacity onPress={handleOpenEditItems}>
-                <Text className={`text-xs font-bold text-${isDark ? "white" : "black"}`}>
-                  Update Items
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {booking.items.map((item, index) => (
-            <View
-              key={index}
-              className="flex-row items-center justify-between py-2 border-b border-brand/10 last:border-b-0"
-            >
-              <View className="flex-1">
-                <Text className={`text-sm font-medium text-${isDark ? "white" : "black"}`}>
-                  {item.name}
-                </Text>
-                <Text className={`text-xs text-${isDark ? "white/60" : "black/60"}`}>
-                  {item.quantity} x ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+        <View className={`rounded-2xl border ${isDark ? "bg-[#1e293b] border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+          <View className="p-5">
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center gap-3">
+                <View className={`w-1 h-10 rounded-full bg-brand`} />
+                <Text className={`text-xs uppercase tracking-widest font-semibold ${isDark ? "text-white/50" : "text-black/40"}`}>
+                  Items
                 </Text>
               </View>
-              <Text className={`text-sm font-semibold text-${isDark ? "white/80" : "black/80"}`}>
-                ₱{item.subtotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              {isPending && (
+                <TouchableOpacity
+                  onPress={handleOpenEditItems}
+                  className="bg-brand/10 px-3 py-1.5 rounded-lg"
+                >
+                  <Text className="text-xs font-bold text-brand">Edit</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View className="gap-0">
+              {booking.items.map((item, index) => (
+                <View
+                  key={index}
+                  className={`flex-row items-center py-3 ${
+                    index < booking.items.length - 1 ? `border-b ${isDark ? "border-white/5" : "border-black/5"}` : ""
+                  }`}
+                >
+                  <View className="flex-1">
+                    <Text className={`text-sm font-semibold text-${isDark ? "white" : "black"}`}>
+                      {item.name}
+                    </Text>
+                    <Text className={`text-xs ${isDark ? "text-white/50" : "text-black/50"} mt-0.5`}>
+                      {item.quantity} x ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                    </Text>
+                  </View>
+                  <Text className={`text-sm font-bold text-${isDark ? "white/90" : "black/90"}`}>
+                    ₱{item.subtotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View className={`flex-row items-center justify-between pt-4 mt-2 border-t ${isDark ? "border-white/10" : "border-black/10"}`}>
+              <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
+                Total
+              </Text>
+              <Text className={`text-lg font-bold text-brand`}>
+                ₱{booking.total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
               </Text>
             </View>
-          ))}
-          <View className="flex-row items-center justify-between mt-4 pt-3 border-t border-brand/20">
-            <Text className={`text-lg font-bold text-${isDark ? "white" : "black"}`}>
-              Total
-            </Text>
-            <Text className={`text-xl font-bold text-${isDark ? "white" : "black"}`}>
-              ₱{booking.total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-            </Text>
           </View>
         </View>
 
-        <View className="bg-brand/5 rounded-2xl p-5 border border-brand/20">
-          <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider mb-2`}>
-            Timestamps
-          </Text>
-          <View className="gap-2">
-            <View className="flex-row justify-between">
-              <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>Created</Text>
-              <Text className={`text-sm text-${isDark ? "white" : "black"}`}>
+        <View className={`rounded-2xl p-5 mt-4 border ${isDark ? "bg-[#1e293b] border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+          <View className="flex-row items-center gap-3 mb-3">
+            <View className={`w-1 h-10 rounded-full bg-brand`} />
+            <Text className={`text-xs uppercase tracking-widest font-semibold ${isDark ? "text-white/50" : "text-black/40"}`}>
+              Timeline
+            </Text>
+          </View>
+          <View className="gap-3">
+            <View className="flex-row justify-between items-center">
+              <Text className={`text-sm ${isDark ? "text-white/50" : "text-black/50"}`}>Created</Text>
+              <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"}`}>
                 {new Date(booking.createdAt).toLocaleString("en-PH")}
               </Text>
             </View>
-            <View className="flex-row justify-between">
-              <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>Last Updated</Text>
-              <Text className={`text-sm text-${isDark ? "white" : "black"}`}>
+            <View className={`h-px ${isDark ? "bg-white/5" : "bg-black/5"}`} />
+            <View className="flex-row justify-between items-center">
+              <Text className={`text-sm ${isDark ? "text-white/50" : "text-black/50"}`}>Last Updated</Text>
+              <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"}`}>
                 {new Date(booking.updatedAt).toLocaleString("en-PH")}
               </Text>
             </View>
           </View>
           {booking.notes && (
-            <View className="mt-3 pt-3 border-t border-brand/10">
-              <Text className={`text-xs text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider mb-1`}>
+            <View className="mt-4 pt-4 border-t border-brand/10">
+              <Text className={`text-xs uppercase tracking-widest font-semibold ${isDark ? "text-white/50" : "text-black/40"} mb-2`}>
                 Notes
               </Text>
-              <Text className={`text-sm text-${isDark ? "white/80" : "black/80"}`}>
-                {booking.notes}
-              </Text>
+              <View className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-black/5"}`}>
+                <Text className={`text-sm leading-5 ${isDark ? "text-white/80" : "text-black/80"}`}>
+                  {booking.notes}
+                </Text>
+              </View>
             </View>
           )}
         </View>
 
-        <View className="mt-6 gap-3 pb-4">
+        <View className="mt-6 gap-3">
           {isPending && (
-            <>
+            <Button
+              title="Update Items"
+              variant="secondary"
+              onPress={handleOpenEditItems}
+            />
+          )}
+          {isApproved && (
+            <View className="gap-3">
               <Button
-                title="Update Items"
-                variant="secondary"
-                onPress={handleOpenEditItems}
-              />
-              <Button
-                title="Cancel Booking"
-                variant="ghost"
-                onPress={handleCancel}
+                title={loading ? "Processing..." : "Mark as Delivered"}
+                variant="primary"
+                onPress={handleDeliver}
                 loading={loading}
               />
-            </>
-          )}
-          {isOngoing && (
-            <TouchableOpacity
-              className="bg-brand rounded-2xl py-4 px-6 flex-row items-center justify-center gap-3"
-              activeOpacity={0.85}
-              onPress={handleDeliver}
-              disabled={loading}
-            >
-              <Text className="text-white font-bold text-base">
-                {loading ? "Processing..." : "Mark as Delivered"}
-              </Text>
-            </TouchableOpacity>
+              <Button
+                title={loading ? "Processing..." : "Cancel"}
+                variant="secondary"
+                onPress={() => handleCancel()}
+              />
+            </View>
           )}
         </View>
       </ScrollView>

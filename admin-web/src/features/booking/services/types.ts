@@ -8,8 +8,10 @@ export interface Booking {
   id: string
   customer: string
   agent: string
+  assignedStaff?: string
+  adminProfileId?: string
   date: string
   amount: number
-  status: 'Pending' | 'Process' | 'Completed' | 'Cancelled'
+  status: 'Pending' | 'Process' | 'Approved' | 'Completed' | 'Cancelled'
   items: BookingItem[]
 }

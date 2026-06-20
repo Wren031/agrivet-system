@@ -9,6 +9,8 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { SubcategoriesModule } from './modules/subcategories/subcategories.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 import appConfig from './config/app.config';
 
@@ -27,6 +29,8 @@ import appConfig from './config/app.config';
     SubcategoriesModule,
     InventoryModule,
     UploadModule,
+    OrdersModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

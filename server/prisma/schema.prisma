@@ -37,6 +37,7 @@ model AdminProfile {
   createdAt     DateTime @default(now()) @map("created_at")
   userId        String   @unique @map("user_id")
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        Order[]
 
   @@map("admin_profiles")
 }
@@ -74,6 +75,7 @@ model AgentProfile {
   userId            String        @unique @map("user_id")
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   customers         Customer[]
+  orders            Order[]
 
   @@map("agent_profiles")
 }
@@ -86,10 +88,50 @@ model Customer {
   address        String
   agentProfileId String?       @map("agent_profile_id")
   agentProfile   AgentProfile? @relation(fields: [agentProfileId], references: [id], onDelete: SetNull)
+  orders         Order[]
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
   @@map("customers")
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  orderDate      DateTime      @default(now()) @map("order_date")
+  totalAmount    Decimal       @map("total_amount") @db.Decimal(10, 2)
+  status         OrderStatus   @default(PENDING)
+  notes          String?
+  customerId     String        @map("customer_id")
+  customer       Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  agentProfileId String?       @map("agent_profile_id")
+  agentProfile   AgentProfile? @relation(fields: [agentProfileId], references: [id], onDelete: SetNull)
+  adminProfileId String?       @map("admin_profile_id")
+  adminProfile   AdminProfile? @relation(fields: [adminProfileId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String    @id @default(uuid())
+  quantity    Int
+  unitPrice   Decimal   @map("unit_price") @db.Decimal(10, 2)
+  subtotal    Decimal   @db.Decimal(10, 2)
+  orderId     String    @map("order_id")
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inventoryId String?   @map("inventory_id")
+  inventory   Inventory? @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
 }
 
 model Inventory {
@@ -108,6 +150,7 @@ model Inventory {
   category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   subcategoryId  String?       @map("subcategory_id")
   subcategory    SubCategory?  @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  orderItems     OrderItem[]
 
   @@map("inventory")
 }

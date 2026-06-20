@@ -14,6 +14,7 @@ interface Notification {
 }
 
 interface AuthUser {
+  id: string
   email: string
   name: string
 }

@@ -8,7 +8,7 @@ import { EmptyState } from "../../../components/EmptyState";
 
 export function HistoryListScreen({ navigation }: any) {
   const { isDark } = useTheme();
-  const { history, loading } = useHistory();
+  const { history, loading, error } = useHistory();
 
   if (loading) {
     return (
@@ -25,15 +25,21 @@ export function HistoryListScreen({ navigation }: any) {
           Order History
         </Text>
         <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} mt-0.5`}>
-          Completed and cancelled orders
+          Completed orders
         </Text>
       </View>
 
-      {history.length === 0 ? (
+      {error ? (
+        <View className="px-6">
+          <View className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+            <Text className="text-red-500 text-sm">{error}</Text>
+          </View>
+        </View>
+        ) : history.length === 0 ? (
         <EmptyState
           icon="📜"
           title="No History"
-          description="Completed or cancelled orders will appear here."
+          description="Completed orders will appear here."
         />
       ) : (
         <FlatList

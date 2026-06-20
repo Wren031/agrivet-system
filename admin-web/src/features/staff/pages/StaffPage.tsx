@@ -1,20 +1,20 @@
 import { useState, useMemo } from 'react'
-import { Users, Search, Plus, Phone, Mail, Trash2 } from 'lucide-react'
+import { Users, Search, Plus, Phone, Mail, Trash2, User, Lock, ShieldCheck } from 'lucide-react'
 import { useStaff } from '../hooks/useStaff'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
 import Drawer from '../../../components/Drawer'
 import Modal from '../../../components/Modal'
 import StaffCard from '../components/StaffCard'
-import type { Staff } from '../services/types'
+import type { AdminStaff, CreateAdminStaffData, UpdateAdminStaffData } from '../services/types'
 
 export default function StaffPage() {
   const { staff, loading, add, update, remove } = useStaff()
   const { addNotification } = useApp()
   const [search, setSearch] = useState('')
   const [showDrawer, setShowDrawer] = useState(false)
-  const [editing, setEditing] = useState<Staff | null>(null)
-  const [form, setForm] = useState<Partial<Staff>>({})
+  const [editing, setEditing] = useState<AdminStaff | null>(null)
+  const [form, setForm] = useState<Partial<AdminStaff & { password: string }>>({ password: '' })
   const [confirmPassword, setConfirmPassword] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -23,27 +23,27 @@ export default function StaffPage() {
     staff.filter(s =>
       (s.fullName?.toLowerCase() || '').includes(search.toLowerCase()) ||
       (s.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
-      (s.contactNo?.toLowerCase() || '').includes(search.toLowerCase())
+      (s.contactNumber?.toLowerCase() || '').includes(search.toLowerCase())
     ),
     [staff, search]
   )
 
   function openAdd() {
     setEditing(null)
-    setForm({ fullName: '', email: '', contactNo: '', password: '' })
+    setForm({ fullName: '', email: '', contactNumber: '', password: '' })
     setConfirmPassword('')
     setShowDrawer(true)
   }
 
-  function openEdit(member: Staff) {
+  function openEdit(member: AdminStaff) {
     setEditing(member)
-    setForm({ ...member })
-    setConfirmPassword(member.password || '')
+    setForm({ ...member, password: '' })
+    setConfirmPassword('')
     setShowDrawer(true)
   }
 
   async function handleSave() {
-    if (!form.fullName?.trim() || !form.email?.trim() || !form.contactNo?.trim() || !form.password?.trim()) return
+    if (!form.fullName?.trim() || !form.email?.trim() || !form.contactNumber?.trim() || !form.password?.trim()) return
     if (form.password !== confirmPassword) {
       addNotification({ message: 'Passwords do not match', type: 'error' })
       return
@@ -54,7 +54,7 @@ export default function StaffPage() {
         await update(editing.id, form)
         addNotification({ message: 'Staff updated', type: 'success' })
       } else {
-        await add(form as Omit<Staff, 'id'>)
+        await add(form as CreateAdminStaffData)
         addNotification({ message: 'Staff added', type: 'success' })
       }
       setShowDrawer(false)
@@ -135,40 +135,96 @@ export default function StaffPage() {
       )}
 
       {/* Add / Edit Drawer */}
-      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editing ? 'Edit Staff' : 'Add Staff'}>
-        <div className="space-y-4">
+      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editing ? 'Edit Staff' : 'Add Staff'} size="full" className="max-w-[400px]">
+        <div className="space-y-6">
+          {/* Profile Section */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
-            <input value={form.fullName || ''} onChange={e => setForm({ ...form, fullName: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+            <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
+                <User size={16} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Personal Information</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Basic details about the staff member</p>
+              </div>
+            </div>
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Full Name</label>
+                <div className="relative">
+                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input value={form.fullName || ''} onChange={e => setForm({ ...form, fullName: e.target.value })}
+                    placeholder="Enter full name..."
+                    className="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
+                <div className="relative">
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })}
+                    placeholder="Enter email address..."
+                    className="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Contact Number</label>
+                <div className="relative">
+                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input value={form.contactNumber || ''} onChange={e => setForm({ ...form, contactNumber: e.target.value })}
+                    placeholder="Enter contact number..."
+                    className="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all" />
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Security Section */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
-            <input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+            <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center">
+                <ShieldCheck size={16} className="text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Security</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Set the account password</p>
+              </div>
+            </div>
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input type="password" value={form.password || ''} onChange={e => setForm({ ...form, password: e.target.value })}
+                    placeholder="Enter password..."
+                    className="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Confirm Password</label>
+                <div className="relative">
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password..."
+                    className="w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all" />
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Contact Number</label>
-            <input value={form.contactNo || ''} onChange={e => setForm({ ...form, contactNo: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
-            <input type="password" value={form.password || ''} onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
-            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button onClick={handleSave} disabled={saving || !form.fullName?.trim() || !form.email?.trim() || !form.contactNo?.trim() || !form.password?.trim()}
-              className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50">
-              {saving ? 'Saving...' : editing ? 'Update Staff' : 'Add Staff'}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button onClick={handleSave} disabled={saving || !form.fullName?.trim() || !form.email?.trim() || !form.contactNumber?.trim() || !form.password?.trim()}
+              className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 text-sm font-semibold disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-none">
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                  Saving...
+                </span>
+              ) : editing ? 'Update Staff' : 'Add Staff'}
             </button>
             <button onClick={() => setShowDrawer(false)}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">Cancel</button>
+              className="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 text-sm font-medium">Cancel</button>
           </div>
         </div>
       </Drawer>

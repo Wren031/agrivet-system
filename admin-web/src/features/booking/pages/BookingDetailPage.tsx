@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Printer, Trash2, UserCheck, Package, ChevronDown, ChevronUp, User, Calendar, DollarSign, BadgeCheck, Phone, Mail, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Trash2, UserCheck, Package, ChevronDown, ChevronUp, User, Calendar, DollarSign, BadgeCheck, Phone, Mail, CheckCircle } from 'lucide-react'
 import { useBookings } from '../hooks/useBookings'
 import { useApp } from '../../../context/AppContext'
 import { useStaff } from '../../staff/hooks/useStaff'
@@ -9,14 +9,15 @@ import { useState } from 'react'
 const statusStyles: Record<string, string> = {
   Pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
   Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-  Completed: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+  Approved: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+  Completed: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
   Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 }
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { bookings, loading, update, remove } = useBookings()
+  const { bookings, loading, update, assignTask, remove } = useBookings()
   const { staff } = useStaff()
   const { addNotification } = useApp()
   const [showDelete, setShowDelete] = useState(false)
@@ -24,6 +25,7 @@ export default function BookingDetailPage() {
   const [showAssignTask, setShowAssignTask] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const [showItems, setShowItems] = useState(false)
+
 
   const booking = bookings.find(b => b.id === id)
 
@@ -40,11 +42,12 @@ export default function BookingDetailPage() {
     }
   }
 
-  async function handleAssignTask(staffName: string) {
+  async function handleAssignTask(adminProfileId: string, staffName: string) {
     if (!id) return
     setAssigning(true)
     try {
-      await update(id, { assignedStaff: staffName, status: 'Process' })
+      await assignTask(id, adminProfileId)
+      await update(id, { status: 'Pending' })
       addNotification({ message: `Task assigned to ${staffName}`, type: 'success' })
       setShowAssignTask(false)
     } catch {
@@ -86,10 +89,6 @@ export default function BookingDetailPage() {
               <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">View full booking information</p>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => window.print()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                <Printer size={14} /> Print
-              </button>
               <button onClick={() => setShowDelete(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
                 <Trash2 size={14} /> Delete
@@ -212,6 +211,7 @@ export default function BookingDetailPage() {
           )}
         </div>
 
+
         {/* Assign Task */}
         <div className="px-6 py-5">
           <div className="flex items-center justify-between mb-4">
@@ -272,7 +272,7 @@ export default function BookingDetailPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                               <Phone size={13} />
-                              <span>{member.contactNo}</span>
+                              <span>{member.contactNumber}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -282,7 +282,7 @@ export default function BookingDetailPage() {
                               </span>
                             ) : (
                               <button
-                                onClick={() => handleAssignTask(member.fullName)}
+                                onClick={() => handleAssignTask(member.adminProfileId, member.fullName)}
                                 disabled={assigning}
                                 className="px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-950/50 transition-colors disabled:opacity-50"
                               >

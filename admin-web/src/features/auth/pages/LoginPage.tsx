@@ -19,7 +19,7 @@ export default function LoginPage() {
     try {
       const u = await login(email, password)
       setUser(u)
-      addNotification({ message: 'Welcome back, Admin!', type: 'success' })
+      addNotification({ message: `Welcome back, ${u.name}!`, type: 'success' })
       navigate('/')
     } catch (err: any) {
       setError(err.message || 'Login failed')

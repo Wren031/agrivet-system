@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchBookings, createBooking, updateBooking, deleteBooking } from '../../../data/booking/bookingService'
-import type { Booking } from '../../../data/booking/types'
+import { fetchBookings, createBooking, updateBooking, assignBooking, deleteBooking } from '../../../data/booking/bookingService'
+import type { Booking, BookingItem } from '../../../data/booking/types'
 
 export function useBookings() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -15,7 +15,7 @@ export function useBookings() {
 
   useEffect(() => { load() }, [load])
 
-  const add = useCallback(async (booking: Omit<Booking, 'id' | 'items'> & { items?: Booking['items'] }) => {
+  const add = useCallback(async (booking: Omit<Booking, 'id'> & { items?: BookingItem[] }) => {
     const created = await createBooking(booking)
     setBookings(prev => [...prev, created])
     return created
@@ -27,10 +27,16 @@ export function useBookings() {
     return updated
   }, [])
 
+  const assignTask = useCallback(async (id: string, adminProfileId: string) => {
+    const updated = await assignBooking(id, adminProfileId)
+    setBookings(prev => prev.map(b => b.id === id ? updated : b))
+    return updated
+  }, [])
+
   const remove = useCallback(async (id: string) => {
     await deleteBooking(id)
     setBookings(prev => prev.filter(b => b.id !== id))
   }, [])
 
-  return { bookings, loading, add, update, remove, reload: load }
+  return { bookings, loading, add, update, assignTask, remove, reload: load }
 }

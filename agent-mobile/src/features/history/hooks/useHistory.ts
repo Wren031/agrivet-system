@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Booking } from "../../../types";
+import { Booking, BookingHistoryEntry, BookingStatus } from "../../../types";
 import { historyApi } from "../services/historyApi";
 
 export function useHistory() {
@@ -24,10 +24,30 @@ export function useHistory() {
     fetchHistory();
   }, [fetchHistory]);
 
+  const getBookingHistory = useCallback(
+    async (bookingId: string): Promise<BookingHistoryEntry[]> => {
+      return historyApi.getBookingHistory(bookingId);
+    },
+    []
+  );
+
+  const recordChange = useCallback(
+    async (
+      bookingId: string,
+      status: BookingStatus,
+      note?: string
+    ): Promise<void> => {
+      await historyApi.recordChange(bookingId, status, note);
+    },
+    []
+  );
+
   return {
     history,
     loading,
     error,
     fetchHistory,
+    getBookingHistory,
+    recordChange,
   };
 }

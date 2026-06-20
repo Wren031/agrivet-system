@@ -30,9 +30,9 @@ export function HomeScreen({ navigation }: any) {
   const getStatusOpacity = (status: string) => {
     switch (status) {
       case "Pending": return `bg-brand/10 text-${isDark ? "white/70" : "black/70"}`;
-      case "Accepted": return `bg-brand/20 text-${isDark ? "white" : "black"}`;
-      case "Ongoing": return `bg-brand/20 text-${isDark ? "white" : "black"}`;
-      case "Success": return `bg-brand/30 text-${isDark ? "white" : "black"}`;
+      case "Processing": return `bg-brand/20 text-${isDark ? "white" : "black"}`;
+      case "Approved": return `bg-brand/20 text-${isDark ? "white" : "black"}`;
+      case "Delivered": return `bg-brand/30 text-${isDark ? "white" : "black"}`;
       default: return `bg-brand/5 text-${isDark ? "white/50" : "black/50"}`;
     }
   };

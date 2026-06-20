@@ -103,6 +103,21 @@ export class AgentsService {
     });
   }
 
+  async findCustomersByAgent(id: string) {
+    const agent = await this.prisma.agentProfile.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!agent) {
+      throw new NotFoundException('Agent not found');
+    }
+
+    return this.prisma.customer.findMany({
+      where: { agentProfileId: id },
+    });
+  }
+
   async remove(id: string) {
     const agent = await this.prisma.agentProfile.findUnique({ where: { id } });
     if (!agent) {

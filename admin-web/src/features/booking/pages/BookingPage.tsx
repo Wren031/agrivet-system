@@ -7,7 +7,8 @@ import { SkeletonCards } from '../../../components/Skeleton'
 const statusStyles: Record<string, string> = {
   Pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
   Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-  Completed: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+  Approved: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+  Completed: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
   Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 }
 

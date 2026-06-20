@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Users, Mail, Phone, ChevronLeft, ChevronRight, Search, Eye } from 'lucide-react'
 import { useAgents } from '../hooks/useAgents'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
-import AgentDrawer from '../components/AgentDrawer'
 import type { Agent } from '../services/types'
 
 const PAGE_SIZE = 8
@@ -15,11 +15,11 @@ const statusConfig: Record<string, { label: string; card: string }> = {
 }
 
 export default function AgentsPage() {
+  const navigate = useNavigate()
   const { agents, loading, changeStatus, remove, reload } = useAgents()
   const { addNotification } = useApp()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
 
   const filtered = useMemo(() =>
     agents.filter(a =>
@@ -41,7 +41,6 @@ export default function AgentsPage() {
   async function handleDelete(id: string) {
     await remove(id)
     addNotification({ message: 'Agent deleted', type: 'success' })
-    setSelectedAgent(null)
   }
 
   return (
@@ -109,7 +108,7 @@ export default function AgentsPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button onClick={() => setSelectedAgent(agent)}
+                      <button onClick={() => navigate(`/agents/${agent.id}`)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                         <Eye size={14} /> View
                       </button>
@@ -140,13 +139,6 @@ export default function AgentsPage() {
         </>
       )}
 
-      <AgentDrawer
-        agent={selectedAgent}
-        open={!!selectedAgent}
-        onClose={() => setSelectedAgent(null)}
-        onStatusChange={handleStatusChange}
-        onDelete={handleDelete}
-      />
     </div>
   )
 }

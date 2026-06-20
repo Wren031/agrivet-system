@@ -18,29 +18,17 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
       dot: "bg-accent",
       label: "Pending",
     },
-    Accepted: {
-      bg: "bg-brand/20",
-      text: `text-${isDark ? "white" : "black"}`,
-      dot: "bg-brand/70",
-      label: "Accepted",
-    },
-    Ongoing: {
+    Approved: {
       bg: "bg-brand/15",
       text: `text-${isDark ? "white" : "black"}`,
       dot: "bg-brand",
-      label: "Ongoing",
+      label: "Approved",
     },
-    Success: {
+    Delivered: {
       bg: "bg-brand/30",
       text: `text-${isDark ? "white" : "black"}`,
       dot: "bg-brand",
-      label: "Success",
-    },
-    Cancelled: {
-      bg: "bg-brand/5",
-      text: `text-${isDark ? "white/50" : "black/50"}`,
-      dot: "bg-brand/30",
-      label: "Cancelled",
+      label: "Delivered",
     },
   };
 

@@ -52,4 +52,6 @@ export interface AgentCustomer {
   email: string | null
   address: string
   createdAt: string
+  totalOrders: number
+  totalOrderAmount: number
 }

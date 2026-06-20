@@ -1,5 +1,6 @@
 import type { Agent, AgentApiResponse, CreateAgentData, UpdateAgentData, UpdateAgentStatusData, AgentCustomer } from './types'
 import { apiFetch } from '../../../config/apiClient'
+import { fetchOrders } from '../../orders/services/orderService'
 
 function fromApi(item: AgentApiResponse): Agent {
   return {
@@ -53,4 +54,22 @@ export async function deleteAgent(id: string): Promise<void> {
 
 export async function fetchAgentCustomers(id: string): Promise<AgentCustomer[]> {
   return apiFetch<AgentCustomer[]>(`/agents/${id}/customers`)
+}
+
+export async function fetchAgentCustomersWithOrders(id: string): Promise<AgentCustomer[]> {
+  const [customers, orders] = await Promise.all([
+    fetchAgentCustomers(id),
+    fetchOrders(),
+  ])
+
+  return customers.map(customer => {
+    const customerOrders = orders.filter(
+      o => o.customerName.toLowerCase() === customer.fullName.toLowerCase()
+    )
+    return {
+      ...customer,
+      totalOrders: customerOrders.length,
+      totalOrderAmount: customerOrders.reduce((sum, o) => sum + o.totalAmount, 0),
+    }
+  })
 }

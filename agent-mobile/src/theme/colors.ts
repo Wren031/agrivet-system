@@ -15,8 +15,9 @@ export const agriColors = {
   },
   status: {
     pending: "#d4a373",
-    ongoing: "#2d6a4f",
-    success: "#1b4332",
+    processing: "#40916c",
+    approved: "#2d6a4f",
+    delivered: "#1b4332",
     cancelled: "#6c757d",
   },
   border: {

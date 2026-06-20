@@ -1,9 +1,9 @@
 import { Phone, Mail, Edit2, Trash2 } from 'lucide-react'
-import type { Staff } from '../services/types'
+import type { AdminStaff } from '../services/types'
 
 interface StaffCardProps {
-  member: Staff
-  onEdit: (member: Staff) => void
+  member: AdminStaff
+  onEdit: (member: AdminStaff) => void
   onDelete: (id: string) => void
 }
 
@@ -34,7 +34,7 @@ export default function StaffCard({ member, onEdit, onDelete }: StaffCardProps) 
         </div>
         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
           <Phone size={14} />
-          <span className="font-medium text-slate-700 dark:text-slate-200">{member.contactNo}</span>
+          <span className="font-medium text-slate-700 dark:text-slate-200">{member.contactNumber}</span>
         </div>
       </div>
     </div>

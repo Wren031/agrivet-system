@@ -46,7 +46,7 @@ export interface Item {
   updatedAt: string;
 }
 
-export type BookingStatus = "Pending" | "Accepted" | "Ongoing" | "Success" | "Cancelled";
+export type BookingStatus = "Pending" | "Approved" | "Delivered";
 
 export interface BookingItem {
   itemId: string;
@@ -66,6 +66,15 @@ export interface Booking {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BookingHistoryEntry {
+  id: string;
+  bookingId: string;
+  fromStatus: BookingStatus | null;
+  toStatus: BookingStatus;
+  changedAt: string;
+  note?: string;
 }
 
 export type ThemeMode = "light" | "dark";

@@ -7,6 +7,7 @@ import DashboardPage from './features/dashboard/pages/DashboardPage'
 import InventoryPage from './features/inventory/pages/InventoryPage'
 import CategoriesPage from './features/categories/pages/CategoriesPage'
 import AgentsPage from './features/agents/pages/AgentsPage'
+import AgentDetailPage from './features/agents/pages/AgentDetailPage'
 import CustomersPage from './features/customers/pages/CustomersPage'
 import OrdersPage from './features/orders/pages/OrdersPage'
 import OrderDetailPage from './features/orders/pages/OrderDetailPage'
@@ -15,6 +16,7 @@ import BookingPage from './features/booking/pages/BookingPage'
 import BookingDetailPage from './features/booking/pages/BookingDetailPage'
 import BranchPage from './features/branch/pages/BranchPage'
 import StaffPage from './features/staff/pages/StaffPage'
+import TasksPage from './features/tasks/pages/TasksPage'
 import VerificationPage from './features/verification/pages/VerificationPage'
 
 export default function App() {
@@ -32,6 +34,7 @@ export default function App() {
             <Route path="inventory" element={<InventoryPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="agents" element={<AgentsPage />} />
+            <Route path="agents/:id" element={<AgentDetailPage />} />
             <Route path="customers" element={<CustomersPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/:id" element={<OrderDetailPage />} />
@@ -40,6 +43,7 @@ export default function App() {
             <Route path="bookings/:id" element={<BookingDetailPage />} />
             <Route path="branches" element={<BranchPage />} />
             <Route path="staff" element={<StaffPage />} />
+            <Route path="tasks" element={<TasksPage />} />
             <Route path="verification" element={<VerificationPage />} />
           </Route>
         </Routes>

@@ -1,55 +1,24 @@
 import { useState } from 'react'
-import { Users, UserCheck, UserX, Search } from 'lucide-react'
+import { Users, Search, Phone, MapPin, ShoppingCart, User } from 'lucide-react'
 import { useCustomers } from '../hooks/useCustomers'
-import { updateCustomer } from '../services/customerService'
-import { useApp } from '../../../context/AppContext'
 import { SkeletonTable } from '../../../components/Skeleton'
 
 export default function CustomersPage() {
-  const { customers, loading, reload } = useCustomers()
-  const { addNotification } = useApp()
+  const { customers, loading } = useCustomers()
   const [search, setSearch] = useState('')
 
   const filtered = customers.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase())
+    c.fullName.toLowerCase().includes(search.toLowerCase()) ||
+    c.phone.toLowerCase().includes(search.toLowerCase()) ||
+    c.address.toLowerCase().includes(search.toLowerCase()) ||
+    (c.agent?.toLowerCase().includes(search.toLowerCase()))
   )
-
-  const total = customers.length
-  const active = customers.filter(c => c.status === 'Active').length
-  const terminated = customers.filter(c => c.status === 'Terminated').length
-
-  async function handleToggleStatus(id: string, current: 'Active' | 'Terminated') {
-    const next = current === 'Active' ? 'Terminated' : 'Active'
-    try {
-      await updateCustomer(id, { status: next })
-      addNotification({ message: `Customer ${next.toLowerCase()}`, type: 'success' })
-      reload()
-    } catch {
-      addNotification({ message: 'Failed to update customer', type: 'error' })
-    }
-  }
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Customers</h1>
-        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">View customer records</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center"><Users size={22} className="text-indigo-600" /></div>
-          <div><p className="text-sm text-slate-500 dark:text-slate-400">Total Customers</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{total}</p></div>
-        </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-green-50 dark:bg-green-950/30 flex items-center justify-center"><UserCheck size={22} className="text-green-600" /></div>
-          <div><p className="text-sm text-slate-500 dark:text-slate-400">Active</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{active}</p></div>
-        </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-red-50 dark:bg-red-950/30 flex items-center justify-center"><UserX size={22} className="text-red-600" /></div>
-          <div><p className="text-sm text-slate-500 dark:text-slate-400">Terminated</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{terminated}</p></div>
-        </div>
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{customers.length} customer{customers.length !== 1 ? 's' : ''} registered</p>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -64,40 +33,56 @@ export default function CustomersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th className="px-5 py-3">Name</th><th className="px-5 py-3">Contact Person</th><th className="px-5 py-3">Email</th>
-                  <th className="px-5 py-3">Phone</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Actions</th>
+                  <th className="px-5 py-3">Full Name</th>
+                  <th className="px-5 py-3">Contact Number</th>
+                  <th className="px-5 py-3">Address</th>
+                  <th className="px-5 py-3">Total Orders</th>
+                  <th className="px-5 py-3">Agent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="px-5 py-12 text-center text-slate-400 dark:text-slate-500">
+                  <tr><td colSpan={5} className="px-5 py-12 text-center text-slate-400 dark:text-slate-500">
                     <p>No customers found</p>
                   </td></tr>
                 ) : (
                   filtered.map(customer => (
                     <tr key={customer.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                      <td className="px-5 py-3.5 font-medium text-slate-800 dark:text-slate-200">{customer.name}</td>
-                      <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">{customer.contactPerson}</td>
-                      <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">{customer.email}</td>
-                      <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300">{customer.phone}</td>
                       <td className="px-5 py-3.5">
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          customer.status === 'Active'
-                            ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400'
-                            : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
-                        }`}>
-                          {customer.status}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-xs">
+                            {customer.fullName.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-medium text-slate-800 dark:text-slate-200">{customer.fullName}</span>
+                        </div>
                       </td>
                       <td className="px-5 py-3.5">
-                        <button onClick={() => handleToggleStatus(customer.id, customer.status)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                            customer.status === 'Active'
-                              ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50'
-                              : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50'
-                          }`}>
-                          {customer.status === 'Active' ? <><UserX size={14} /> Terminate</> : <><UserCheck size={14} /> Reactivate</>}
-                        </button>
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                          <Phone size={14} className="text-slate-400 shrink-0" />
+                          {customer.phone}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                          <MapPin size={14} className="text-slate-400 shrink-0" />
+                          {customer.address}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <ShoppingCart size={14} className="text-slate-400 shrink-0" />
+                          <span className="font-medium text-slate-800 dark:text-slate-200">{customer.totalOrders}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {customer.agent ? (
+                          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                            <User size={14} className="text-slate-400 shrink-0" />
+                            {customer.agent}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-500">—</span>
+                        )}
                       </td>
                     </tr>
                   ))

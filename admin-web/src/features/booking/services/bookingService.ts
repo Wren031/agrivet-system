@@ -84,7 +84,7 @@ export async function fetchBookingById(id: string): Promise<Booking | undefined>
   return getAll().find(b => b.id === id)
 }
 
-export async function createBooking(booking: Omit<Booking, 'id' | 'items'> & { items?: BookingItem[] }): Promise<Booking> {
+export async function createBooking(booking: Omit<Booking, 'id'> & { items?: BookingItem[] }): Promise<Booking> {
   await delay()
   const items = getAll()
   const newBooking: Booking = {

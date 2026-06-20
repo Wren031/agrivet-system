@@ -1,15 +1,24 @@
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
+const sizeMap = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+  full: 'w-full',
+}
+
 interface DrawerProps {
   open: boolean
   onClose: () => void
   title: string
   children: ReactNode
   className?: string
+  size?: keyof typeof sizeMap
 }
 
-export default function Drawer({ open, onClose, title, children, className = '' }: DrawerProps) {
+export default function Drawer({ open, onClose, title, children, className = '', size = 'lg' }: DrawerProps) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden'
@@ -36,7 +45,7 @@ export default function Drawer({ open, onClose, title, children, className = '' 
         onClick={onClose}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-full bg-white dark:bg-slate-900 shadow-xl z-50 transform transition-transform duration-200 ease-out ${
+        className={`fixed top-0 right-0 h-full ${sizeMap[size]} bg-white dark:bg-slate-900 shadow-xl z-50 transform transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         } ${className}`}
       >
