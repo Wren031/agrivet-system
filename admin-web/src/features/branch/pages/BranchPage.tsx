@@ -8,8 +8,8 @@ import Modal from '../../../components/Modal'
 import type { Branch } from '../../../data/branch/types'
 
 const statusStyles: Record<string, string> = {
-  Active: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
-  Inactive: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+  Active: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+  Inactive: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
 }
 
 export default function BranchPage() {
@@ -55,7 +55,7 @@ export default function BranchPage() {
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Branches</h1>
         <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Manage your business branches</p>
       </div>
@@ -71,7 +71,7 @@ export default function BranchPage() {
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
             <CheckCircle size={24} />
           </div>
           <div>
@@ -80,7 +80,7 @@ export default function BranchPage() {
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300">
             <XCircle size={24} />
           </div>
           <div>
@@ -91,8 +91,8 @@ export default function BranchPage() {
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-          <div className="relative max-w-xs">
+        <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+          <div className="relative w-full sm:max-w-xs">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input type="text" placeholder="Search branches..." value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
@@ -137,13 +137,13 @@ export default function BranchPage() {
                         <button onClick={() => handleStatusToggle(branch.id, branch.status)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                             branch.status === 'Active'
-                              ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50'
-                              : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50'
+                              ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 hover:bg-indigo-200 dark:hover:bg-indigo-900/50'
+                              : 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-950/50'
                           }`}>
                           {branch.status === 'Active' ? <><UserX size={14} /> Terminate</> : <><UserCheck size={14} /> Reactivate</>}
                         </button>
                         <button onClick={() => setDeleteId(branch.id)}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                           title="Delete"><Trash2 size={16} /></button>
                       </div>
                     </td>
@@ -160,7 +160,7 @@ export default function BranchPage() {
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">Are you sure you want to delete this branch? This action cannot be undone.</p>
           <div className="flex gap-3">
             <button onClick={handleDelete}
-              className="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">Delete</button>
+              className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">Delete</button>
             <button onClick={() => setDeleteId(null)}
               className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">Cancel</button>
           </div>

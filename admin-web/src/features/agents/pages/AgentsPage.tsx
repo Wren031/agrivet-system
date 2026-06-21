@@ -9,9 +9,9 @@ import type { Agent } from '../services/types'
 const PAGE_SIZE = 8
 
 const statusConfig: Record<string, { label: string; card: string }> = {
-  PENDING: { label: 'Pending', card: 'text-amber-600 dark:text-amber-400' },
-  APPROVED: { label: 'Approved', card: 'text-green-600 dark:text-green-400' },
-  REJECTED: { label: 'Rejected', card: 'text-red-600 dark:text-red-400' },
+  PENDING: { label: 'Pending', card: 'text-indigo-600 dark:text-indigo-400' },
+  APPROVED: { label: 'Approved', card: 'text-indigo-700 dark:text-indigo-300' },
+  REJECTED: { label: 'Rejected', card: 'text-indigo-800 dark:text-indigo-300' },
 }
 
 export default function AgentsPage() {
@@ -45,7 +45,7 @@ export default function AgentsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Agents</h1>
           <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
@@ -54,7 +54,7 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      <div className="relative max-w-xs mb-6">
+      <div className="relative w-full sm:max-w-xs mb-6">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input type="text" placeholder="Search agents..." value={search}
           onChange={e => { setSearch(e.target.value); setPage(1) }}

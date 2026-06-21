@@ -132,14 +132,14 @@ export default function InventoryPage() {
 
     if (status === 'critical') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
           <AlertTriangle size={12} /> EXPIRED / CRITICAL
         </span>
       )
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
         <Clock size={12} /> Expiring Soon
       </span>
     )
@@ -149,20 +149,20 @@ export default function InventoryPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Inventory</h1>
           <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Manage your agrivet supply products</p>
         </div>
         <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium w-full sm:w-auto justify-center">
           <Plus size={16} /> Add Product
         </button>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
-          <div className="relative flex-1 max-w-xs">
+        <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="relative w-full sm:flex-1 sm:max-w-xs">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input type="text" placeholder="Search by name, SKU, category..." value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
@@ -187,7 +187,7 @@ export default function InventoryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-5">
             {filtered.map(item => (
               <div key={item.id} className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-200">
-                <div className="relative h-40 bg-slate-50 dark:bg-slate-700">
+                <div className="relative h-32 sm:h-40 bg-slate-50 dark:bg-slate-700">
                   <img src={item.image} alt={item.name}
                     className="w-full h-full object-cover"
                     onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/200x160/eee/999?text=N/A' }} />
@@ -201,7 +201,7 @@ export default function InventoryPage() {
                   </div>
                   {item.reorderLevel > 0 && item.stock <= item.reorderLevel && (
                     <div className="absolute top-2 left-2">
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white shadow-sm">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-500 text-white shadow-sm">
                         Low Stock
                       </span>
                     </div>
@@ -224,7 +224,7 @@ export default function InventoryPage() {
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
-                    <span className={item.stock <= item.reorderLevel ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-700 dark:text-slate-300'}>
+                    <span className={item.stock <= item.reorderLevel ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-700 dark:text-slate-300'}>
                       {item.stock} {getUnitLabel(item.packagingUnit)}
                     </span>
                     {item.reorderLevel > 0 && (
@@ -248,7 +248,7 @@ export default function InventoryPage() {
                       <Edit2 size={13} /> Edit
                     </button>
                     <button onClick={() => setDeleteId(item.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors">
                       <Trash2 size={13} /> Delete
                     </button>
                   </div>
@@ -278,7 +278,7 @@ export default function InventoryPage() {
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
           <div className="flex gap-3">
             <button onClick={handleDelete}
-              className="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">Delete</button>
+              className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">Delete</button>
             <button onClick={() => setDeleteId(null)}
               className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">Cancel</button>
           </div>

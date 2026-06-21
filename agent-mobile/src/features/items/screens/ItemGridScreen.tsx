@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { View, FlatList, TextInput, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useItems } from "../hooks/useItems";
 import { ItemCard } from "../components/ItemCard";
@@ -8,7 +9,13 @@ import { EmptyState } from "../../../components/EmptyState";
 
 export function ItemGridScreen() {
   const { isDark } = useTheme();
-  const { items, loading, searchQuery, searchItems } = useItems();
+  const { items, loading, searchQuery, searchItems, fetchItems } = useItems();
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchItems();
+    }, [fetchItems])
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = useMemo(() => {

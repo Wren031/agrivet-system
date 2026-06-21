@@ -31,12 +31,14 @@ interface AppContextType {
   setUser: (u: AuthUser | null) => void
   darkMode: boolean
   setDarkMode: (v: boolean) => void
+  sidebarOpen: boolean
+  setSidebarOpen: (v: boolean) => void
 }
 
 const defaultSettings: Settings = {
   storeName: 'Agrivet Supply',
   adminEmail: 'admin@agrivet.com',
-  currencySymbol: '\u20B1',
+  currencySymbol: 'Php',
   lowStockThreshold: 10,
 }
 
@@ -56,6 +58,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true'
   })
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     localStorage.setItem('appSettings', JSON.stringify(settings))
@@ -105,6 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loading, setLoading,
       user, setUser,
       darkMode, setDarkMode,
+      sidebarOpen, setSidebarOpen,
     }}>
       {children}
     </AppContext.Provider>

@@ -29,9 +29,9 @@ export default function OrderDetailPage() {
       }
 
   const statusColors: Record<string, string> = {
-    Pending: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400',
-    Completed: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
-    Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+    Pending: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+    Completed: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+    Cancelled: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
   }
 
   if (loading) {
@@ -46,13 +46,13 @@ export default function OrderDetailPage() {
       </button>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Order {order.id}</h1>
+        <div className="px-4 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate">Order {order.id}</h1>
               <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">View full order details</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <button onClick={() => window.print()}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <Printer size={14} /> Print
@@ -62,7 +62,7 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+        <div className="px-4 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
               <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Customer</p>
@@ -83,8 +83,9 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 sm:px-6 py-5">
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Order Items</h3>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -102,6 +103,7 @@ export default function OrderDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

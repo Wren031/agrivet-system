@@ -67,7 +67,7 @@ export default function VerificationPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
             <Users size={24} />
           </div>
           <div>
@@ -76,7 +76,7 @@ export default function VerificationPage() {
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300">
             <Store size={24} />
           </div>
           <div>
@@ -96,8 +96,8 @@ export default function VerificationPage() {
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700">
-          <div className="flex">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-700">
+          <div className="flex overflow-x-auto">
             <button
               onClick={() => { setActiveTab('agents'); setSearch('') }}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors ${
@@ -109,7 +109,7 @@ export default function VerificationPage() {
               <Users size={16} />
               Agents
               {pendingAgents.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 text-[10px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 text-[10px] font-bold">
                   {pendingAgents.length}
                 </span>
               )}
@@ -125,13 +125,13 @@ export default function VerificationPage() {
               <Store size={16} />
               Branches
               {inactiveBranches.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400 text-[10px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-full bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300 text-[10px] font-bold">
                   {inactiveBranches.length}
                 </span>
               )}
             </button>
           </div>
-          <div className="px-4">
+          <div className="px-4 pb-3 sm:pb-0">
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
@@ -139,7 +139,7 @@ export default function VerificationPage() {
                 placeholder={`Search ${activeTab}...`}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-56 pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full sm:w-56 pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>

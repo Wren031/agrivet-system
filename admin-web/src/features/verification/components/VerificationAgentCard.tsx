@@ -24,13 +24,13 @@ export default function VerificationAgentCard({ agent, onApprove, onReject, upda
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-sm uppercase">
+          <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm uppercase">
             {agent.fullName.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">{agent.fullName}</p>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/50">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-900/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
               Pending
             </span>
           </div>
@@ -76,7 +76,7 @@ export default function VerificationAgentCard({ agent, onApprove, onReject, upda
         <button
           onClick={handleApprove}
           disabled={updating !== null}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {updating === `approve-${agent.id}` ? (
             <Loader2 size={14} className="animate-spin" />
@@ -88,7 +88,7 @@ export default function VerificationAgentCard({ agent, onApprove, onReject, upda
         <button
           onClick={handleReject}
           disabled={updating !== null}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {updating === `reject-${agent.id}` ? (
             <Loader2 size={14} className="animate-spin" />

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { Calendar, Package, Users, TrendingUp, ArrowRight, Plus, ListOrdered } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
@@ -11,6 +12,12 @@ export function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const { homeData, recentBookings, refreshing, onRefresh } = useHomeData();
+
+  useFocusEffect(
+    useCallback(() => {
+      onRefresh();
+    }, [onRefresh])
+  );
 
   const firstName = user?.fullName?.split(" ")[0] || "User";
   const initials = user?.fullName

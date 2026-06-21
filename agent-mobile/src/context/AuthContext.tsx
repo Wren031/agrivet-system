@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isPendingApproval: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>;
   register: (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   updateUser: (data: Partial<Pick<User, "fullName" | "email" | "address" | "contactNumber">>) => Promise<void>;
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe?: boolean) => {
     try {
       const { user: apiUser, token } = await authApi.login(email, password);
       const loggedInUser: User = {
@@ -61,8 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUser(loggedInUser);
       setPendingEmail(null);
-      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(loggedInUser));
       await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+      if (rememberMe !== false) {
+        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(loggedInUser));
+      } else {
+        await AsyncStorage.removeItem(USER_STORAGE_KEY);
+      }
       return { success: true, message: "Login successful" };
     } catch (error: any) {
       const message = error.message || "Invalid email or password";

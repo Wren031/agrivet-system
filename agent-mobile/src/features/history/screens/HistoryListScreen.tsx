@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, FlatList, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useHistory } from "../hooks/useHistory";
 import { HistoryCard } from "../components/HistoryCard";
@@ -8,7 +9,13 @@ import { EmptyState } from "../../../components/EmptyState";
 
 export function HistoryListScreen({ navigation }: any) {
   const { isDark } = useTheme();
-  const { history, loading, error } = useHistory();
+  const { history, loading, error, fetchHistory } = useHistory();
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchHistory();
+    }, [fetchHistory])
+  );
 
   if (loading) {
     return (

@@ -219,7 +219,7 @@ export default function ItemForm({ form, onChange, categories, currencySymbol = 
             className="group cursor-pointer relative flex flex-col items-center justify-center min-h-[150px] px-6 py-6 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 bg-white dark:bg-slate-900/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition-all duration-200 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500"
           >
             {form.image ? (
-              <div className="flex flex-col sm:flex-items-center sm:flex-row gap-5 w-full animate-in fade-in duration-200">
+              <div className="flex flex-col sm:items-center sm:flex-row gap-5 w-full animate-in fade-in duration-200">
                 <div className="relative h-24 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex-shrink-0 shadow-inner mx-auto sm:mx-0">
                   <img
                     src={form.image}
@@ -234,7 +234,7 @@ export default function ItemForm({ form, onChange, categories, currencySymbol = 
                   <button
                     type="button"
                     onClick={handleClearImage}
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors bg-red-50 dark:bg-red-950/40 px-2.5 py-1.5 rounded-md border border-red-100 dark:border-red-900/30"
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1.5 rounded-md border border-indigo-100 dark:border-indigo-900/30"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     Remove Image

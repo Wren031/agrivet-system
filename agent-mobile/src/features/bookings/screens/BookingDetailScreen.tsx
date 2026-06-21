@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   ArrowLeft, Minus, Plus, X,
   Clock, CheckCircle2, Circle,
@@ -60,18 +61,20 @@ export function BookingDetailScreen({ route, navigation }: any) {
   const [allItems, setAllItems] = useState<Item[]>([]);
   const [addItemModal, setAddItemModal] = useState(false);
 
-  useEffect(() => {
-    loadBooking();
-  }, []);
-
-  const loadBooking = async () => {
+  const loadBooking = useCallback(async () => {
     const data = await bookingApi.getById(bookingId);
     if (data) {
       setBooking(data);
       const c = await customerApi.getById(data.customerId);
       if (c) setCustomer(c);
     }
-  };
+  }, [bookingId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBooking();
+    }, [loadBooking])
+  );
 
   const handleDeliver = async () => {
     if (!booking) return;

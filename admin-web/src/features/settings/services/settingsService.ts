@@ -10,7 +10,7 @@ const STORAGE_KEY = 'appSettings'
 const defaults: AppSettings = {
   storeName: 'Agrivet Supply',
   adminEmail: 'admin@agrivet.com',
-  currencySymbol: '₱',
+  currencySymbol: 'Php',
   lowStockThreshold: 10,
 }
 

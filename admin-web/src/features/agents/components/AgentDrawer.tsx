@@ -6,9 +6,9 @@ import type { Agent, AgentCustomer } from '../services/types'
 type AgentStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 const statusTheme = {
-  PENDING: { label: 'Pending', dot: 'bg-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/20', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-200/60 dark:border-amber-900/50', selectBorder: 'focus:ring-amber-500/30 focus:border-amber-500 border-slate-200 dark:border-slate-700' },
-  APPROVED: { label: 'Approved', dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/20', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-900/50', selectBorder: 'focus:ring-emerald-500/30 focus:border-emerald-500 border-slate-200 dark:border-slate-700' },
-  REJECTED: { label: 'Rejected', dot: 'bg-rose-500', bg: 'bg-rose-50 dark:bg-rose-950/20', text: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200/60 dark:border-rose-900/50', selectBorder: 'focus:ring-rose-500/30 focus:border-rose-500 border-slate-200 dark:border-slate-700' },
+  PENDING: { label: 'Pending', dot: 'bg-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/20', text: 'text-indigo-700 dark:text-indigo-400', border: 'border-indigo-200/60 dark:border-indigo-900/50', selectBorder: 'focus:ring-indigo-500/30 focus:border-indigo-500 border-slate-200 dark:border-slate-700' },
+  APPROVED: { label: 'Approved', dot: 'bg-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200/60 dark:border-indigo-900/50', selectBorder: 'focus:ring-indigo-600/30 focus:border-indigo-600 border-slate-200 dark:border-slate-700' },
+  REJECTED: { label: 'Rejected', dot: 'bg-indigo-700', bg: 'bg-indigo-200/50 dark:bg-indigo-800/50', text: 'text-indigo-800 dark:text-indigo-300', border: 'border-indigo-200/60 dark:border-indigo-900/50', selectBorder: 'focus:ring-indigo-700/30 focus:border-indigo-700 border-slate-200 dark:border-slate-700' },
 }
 
 interface AgentDrawerProps {
@@ -90,7 +90,7 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
         <div className="h-full flex flex-col">
           
           {/* Header Panel */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-800">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50 tracking-tight">Agent Profile Management</h2>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Review credentials and adjust operational criteria parameters.</p>
@@ -104,8 +104,8 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             
             {/* Left Column Profile Section */}
-            <div className="lg:w-[380px] shrink-0 overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
-              <div className="p-6 space-y-6">
+            <div className="w-full lg:w-[380px] shrink-0 overflow-y-auto border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+              <div className="p-4 sm:p-6 space-y-6">
                 
                 {/* Visual Identity Hero Card */}
                 <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 dark:from-indigo-950 dark:to-indigo-900 rounded-2xl p-6 shadow-xl shadow-indigo-500/10 dark:shadow-none border border-indigo-200/10">
@@ -205,7 +205,7 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
                     {!confirmDelete ? (
                       <button 
                         onClick={() => setConfirmDelete(true)}
-                        className="w-full flex items-center justify-center gap-1.5 h-[38px] text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-all duration-200"
+                        className="w-full flex items-center justify-center gap-1.5 h-[38px] text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-950/40 transition-all duration-200"
                       >
                         <Trash2 size={13} /> Terminate
                       </button>
@@ -220,7 +220,7 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
                         <button 
                           onClick={handleDelete} 
                           disabled={updating === 'delete'}
-                          className="flex-1 flex items-center justify-center h-[38px] text-[11px] font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-all disabled:opacity-50 shadow-sm shadow-rose-600/20"
+                          className="flex-1 flex items-center justify-center h-[38px] text-[11px] font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm shadow-indigo-600/20"
                         >
                           {updating === 'delete' ? <Loader2 size={12} className="animate-spin" /> : 'Confirm'}
                         </button>
@@ -233,7 +233,7 @@ export default function AgentDrawer({ agent, open, onClose, onStatusChange, onDe
             </div>
 
             {/* Right Column Contextual Dynamic Space */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <div className="flex items-center gap-3.5 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/20">
                   <Building2 size={18} />

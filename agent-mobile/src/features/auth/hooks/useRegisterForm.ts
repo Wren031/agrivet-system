@@ -128,19 +128,19 @@ export function useRegisterForm() {
   const handleRegister = async () => {
     if (!fullName || !email || !contactNumber || !password) {
       setError("Please fill in all required fields");
-      return false;
+      return { success: false, message: "Please fill in all required fields" };
     }
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
-      return false;
+      return { success: false, message: "Password must be at least 6 characters" };
     }
     if (!idImageUri) {
       setError("Please select your ID image");
-      return false;
+      return { success: false, message: "Please select your ID image" };
     }
     if (!barangayCode) {
       setError("Please complete your address");
-      return false;
+      return { success: false, message: "Please complete your address" };
     }
     setLoading(true);
     setError("");
@@ -151,13 +151,13 @@ export function useRegisterForm() {
       setLoading(false);
       if (!result.success) {
         setError(result.message);
-        return false;
+        return result;
       }
-      return true;
+      return result;
     } catch (err: any) {
       setLoading(false);
       setError(err.message || "Registration failed");
-      return false;
+      return { success: false, message: err.message || "Registration failed" };
     }
   };
 

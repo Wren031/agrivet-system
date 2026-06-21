@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, Camera, UserPlus } from "lucide-react-native";
+import { ArrowLeft, Camera, UserPlus, CheckCircle2 } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input } from "../../../components/Input";
 import { Button } from "../../../components/Button";
@@ -10,6 +10,7 @@ import { useRegisterForm } from "../hooks/useRegisterForm";
 
 export function RegisterScreen({ navigation }: any) {
   const { isDark } = useTheme();
+  const [showApproval, setShowApproval] = useState(false);
   const {
     fullName, setFullName,
     email, setEmail,
@@ -22,6 +23,42 @@ export function RegisterScreen({ navigation }: any) {
     cities, cityCode, onCitySelect,
     barangays, barangayCode, onBarangaySelect,
   } = useRegisterForm();
+
+  const onRegister = async () => {
+    const result = await handleRegister();
+    if (result?.success && result.message === "pending_approval") {
+      setShowApproval(true);
+    }
+  };
+
+  if (showApproval) {
+    return (
+      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 items-center justify-center mb-6">
+            <CheckCircle2 size={40} color="#16a34a" />
+          </View>
+          <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"} text-center mb-3`}>
+            Account Created!
+          </Text>
+          <Text className={`text-base text-${isDark ? "white/60" : "black/60"} text-center leading-6 mb-8`}>
+            Your account is pending approval from an administrator. You will be notified once your account has been reviewed.
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setShowApproval(false);
+              navigation.goBack();
+            }}
+            className="bg-brand/5 border border-brand/20 rounded-xl px-6 py-3"
+          >
+            <Text className={`text-${isDark ? "white" : "black"} font-semibold`}>
+              Back to Login
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
@@ -169,7 +206,7 @@ export function RegisterScreen({ navigation }: any) {
           />
 
           <View className="mt-6 mb-6">
-            <Button title="Create Account" onPress={handleRegister} loading={loading} size="lg" />
+            <Button title="Create Account" onPress={onRegister} loading={loading} size="lg" />
           </View>
 
           <View className="flex-row items-center justify-center gap-1.5">

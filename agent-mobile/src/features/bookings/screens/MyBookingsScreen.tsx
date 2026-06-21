@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { ArrowLeft, Calendar } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { Booking } from "../../../types";
@@ -12,14 +13,16 @@ export function MyBookingsScreen({ navigation }: any) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     const data = await bookingApi.getAll();
     setBookings(data);
-  };
-
-  useEffect(() => {
-    loadBookings();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBookings();
+    }, [loadBookings])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

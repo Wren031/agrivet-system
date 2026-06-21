@@ -25,8 +25,8 @@ export default function SettingsPage() {
         <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Configure your inventory system</p>
       </div>
 
-      <div className="border-b border-slate-200 dark:border-slate-700 mb-8">
-        <nav className="flex gap-6">
+      <div className="border-b border-slate-200 dark:border-slate-700 mb-8 overflow-x-auto">
+        <nav className="flex gap-6 min-w-max sm:min-w-0">
           {tabs.map(tab => {
             const Icon = tab.icon
             return (
@@ -103,17 +103,17 @@ function AccountTab() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                 <input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
-                  className="w-full max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                  className="w-full sm:max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                 <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                  className="w-full sm:max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Contact Number</label>
                 <input value={form.contactNumber} onChange={e => setForm(f => ({ ...f, contactNumber: e.target.value }))}
-                  className="w-full max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                  className="w-full sm:max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
               </div>
               <div className="pt-2">
                 <button type="submit" disabled={saving}
@@ -260,12 +260,12 @@ function GeneralTab() {
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Store Name</label>
         <input value={form.storeName} onChange={e => setForm(f => ({ ...f, storeName: e.target.value }))}
-          className="w-full max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          className="w-full sm:max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Admin Email</label>
         <input type="email" value={form.adminEmail} onChange={e => setForm(f => ({ ...f, adminEmail: e.target.value }))}
-          className="w-full max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          className="w-full sm:max-w-md px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
         <div>

@@ -2,18 +2,20 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, DollarSign, Search, UserCircle, ClipboardList, Eye } from 'lucide-react'
 import { useBookings } from '../hooks/useBookings'
+import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
 
 const statusStyles: Record<string, string> = {
-  Pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
-  Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-  Approved: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
-  Completed: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
-  Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+  Pending: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+  Process: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+  Approved: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
+  Completed: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+  Cancelled: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
 }
 
 export default function BookingPage() {
   const { bookings, loading } = useBookings()
+  const { settings } = useApp()
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() =>
@@ -31,12 +33,11 @@ export default function BookingPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Bookings</h1>
           <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Manage customer bookings and appointments</p>
         </div>
-
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -50,7 +51,7 @@ export default function BookingPage() {
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
             <CalendarDays size={24} />
           </div>
           <div>
@@ -59,12 +60,12 @@ export default function BookingPage() {
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300">
             <DollarSign size={24} />
           </div>
           <div>
             <p className="text-sm text-slate-500 dark:text-slate-400">Total Revenue</p>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">₱{totalAmount.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">{settings.currencySymbol}{totalAmount.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -111,7 +112,7 @@ export default function BookingPage() {
                   <CalendarDays size={14} /><span>{new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                  <DollarSign size={14} /><span className="font-medium text-slate-700 dark:text-slate-200">₱{booking.amount.toLocaleString()}</span>
+                  <DollarSign size={14} /><span className="font-medium text-slate-700 dark:text-slate-200">{settings.currencySymbol}{booking.amount.toLocaleString()}</span>
                 </div>
               </div>
             </div>

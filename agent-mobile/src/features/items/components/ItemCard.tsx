@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Plus, Minus } from "lucide-react-native";
 import { Item } from "../../../types";
 import { useTheme } from "../../../context/ThemeContext";
-import { API_BASE_URL } from "@/config/api.config";
+import { getImageUrl } from "@/config/api.config";
 
 interface ItemCardProps {
   item: Item;
@@ -22,15 +22,20 @@ function getStockIndicator(stock: number) {
 export function ItemCard({ item, onPress, cartQuantity = 0, onIncrement, onDecrement }: ItemCardProps) {
   const { isDark } = useTheme();
   const stockInfo = getStockIndicator(item.stock);
+  const [imageError, setImageError] = useState(false);
+
+  const imageUri = getImageUrl(item.image);
+  const showImage = !!imageUri && !imageError;
 
   const content = (
     <View className="bg-brand/5 rounded-2xl p-3 border border-brand/20">
       <View className="w-full h-24 bg-brand/5 rounded-xl mb-3 overflow-hidden">
-        {item.image ? (
+        {showImage ? (
           <Image
-            source={{ uri: item.image.startsWith("http") ? item.image : `${API_BASE_URL}${item.image}` }}
+            source={{ uri: imageUri }}
             className="w-full h-full"
             resizeMode="cover"
+            onError={() => setImageError(true)}
           />
         ) : (
           <View className="flex-1 items-center justify-center">

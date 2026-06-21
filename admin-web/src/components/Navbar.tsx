@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Bell, X, LogOut, Sun, Moon, Clock } from 'lucide-react'
+import { Bell, X, LogOut, Sun, Moon, Clock, Menu } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useNavigate } from 'react-router-dom'
 
 export default function Navbar() {
-  const { notifications, removeNotification, user, setUser, addNotification, darkMode, setDarkMode } = useApp()
+  const { notifications, removeNotification, user, setUser, addNotification, darkMode, setDarkMode, sidebarOpen, setSidebarOpen } = useApp()
   const navigate = useNavigate()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
@@ -36,15 +36,23 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-white/80 dark:bg-slate-900/80 border-b border-zinc-200/80 dark:border-slate-800/80 h-16 flex items-center justify-between px-6 sticky top-0 z-30 backdrop-blur-md">
-      <div>
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white tracking-tight">
-          Welcome, {user?.name || 'Admin'}
-        </h2>
-        {/* Dynamic Live Date & Time Element */}
-        <p className="text-xs text-zinc-400 dark:text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-          <span>{formattedDateTime}</span>
-        </p>
+    <header className="bg-white/80 dark:bg-slate-900/80 border-b border-zinc-200/80 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 backdrop-blur-md">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-slate-800/60 text-zinc-500 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white transition-all duration-200"
+          aria-label="Toggle menu"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-white tracking-tight truncate">
+            Welcome, {user?.name || 'Admin'}
+          </h2>
+          <p className="text-xs text-zinc-400 dark:text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+            <span>{formattedDateTime}</span>
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -85,9 +93,9 @@ export default function Navbar() {
                     notifications.map(n => (
                       <div key={n.id} className="flex items-start gap-3 px-4 py-3.5 hover:bg-zinc-50 dark:hover:bg-slate-800/40 border-b border-zinc-100 dark:border-slate-800/40 last:border-0 transition-colors duration-150">
                         <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                          n.type === 'success' ? 'bg-emerald-500' :
-                          n.type === 'warning' ? 'bg-amber-500' :
-                          n.type === 'error' ? 'bg-rose-500' : 'bg-indigo-500'
+                          n.type === 'success' ? 'bg-indigo-500' :
+                          n.type === 'warning' ? 'bg-indigo-600' :
+                          n.type === 'error' ? 'bg-indigo-700' : 'bg-indigo-400'
                         }`} />
                         <p className="text-xs font-medium text-zinc-600 dark:text-slate-300 flex-1 leading-relaxed">{n.message}</p>
                         <button onClick={() => removeNotification(n.id)} className="text-zinc-300 dark:text-slate-600 hover:text-zinc-500 dark:hover:text-slate-400 shrink-0 transition-colors">
@@ -108,7 +116,7 @@ export default function Navbar() {
             onClick={() => setShowProfile(!showProfile)}
             className="flex items-center pl-4 border-l border-zinc-200 dark:border-slate-800 py-1"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-indigo-600/10 transition-transform duration-200 hover:scale-105 active:scale-95">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-indigo-600/10 transition-transform duration-200 hover:scale-105 active:scale-95">
               {user?.name?.charAt(0).toUpperCase() || 'A'}
             </div>
           </button>
@@ -124,7 +132,7 @@ export default function Navbar() {
                 <div className="p-1.5">
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors duration-150"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-colors duration-150"
                   >
                     <LogOut size={14} />
                     Sign out

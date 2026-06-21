@@ -10,11 +10,11 @@ import type { Category } from '../services/types'
 
 const categoryColors = [
   { bg: 'bg-indigo-50 dark:bg-indigo-950/30', text: 'text-indigo-600 dark:text-indigo-400', dot: 'bg-indigo-500' },
-  { bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
-  { bg: 'bg-amber-50 dark:bg-amber-950/30', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
-  { bg: 'bg-rose-50 dark:bg-rose-950/30', text: 'text-rose-600 dark:text-rose-400', dot: 'bg-rose-500' },
-  { bg: 'bg-cyan-50 dark:bg-cyan-950/30', text: 'text-cyan-600 dark:text-cyan-400', dot: 'bg-cyan-500' },
-  { bg: 'bg-violet-50 dark:bg-violet-950/30', text: 'text-violet-600 dark:text-violet-400', dot: 'bg-violet-500' },
+  { bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-300', dot: 'bg-indigo-600' },
+  { bg: 'bg-indigo-200/50 dark:bg-indigo-800/50', text: 'text-indigo-800 dark:text-indigo-300', dot: 'bg-indigo-700' },
+  { bg: 'bg-indigo-50 dark:bg-indigo-950/30', text: 'text-indigo-600 dark:text-indigo-400', dot: 'bg-indigo-500' },
+  { bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-300', dot: 'bg-indigo-600' },
+  { bg: 'bg-indigo-200/50 dark:bg-indigo-800/50', text: 'text-indigo-800 dark:text-indigo-300', dot: 'bg-indigo-700' },
 ]
 
 export default function CategoriesPage() {
@@ -86,20 +86,20 @@ export default function CategoriesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Categories</h1>
           <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Manage product categories</p>
         </div>
         <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm shadow-indigo-200 dark:shadow-none">
+          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm shadow-indigo-200 dark:shadow-none w-full sm:w-auto justify-center">
           <Plus size={16} /> Add Category
         </button>
       </div>
 
       <div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+          <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-slate-700">
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input type="text" placeholder="Search categories..." value={search} onChange={e => setSearch(e.target.value)}
@@ -138,12 +138,12 @@ export default function CategoriesPage() {
                           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{cat.subcategories.length} {cat.subcategories.length === 1 ? 'subcategory' : 'subcategories'}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button onClick={() => openEdit(cat)}
                           className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                           title="Rename"><Edit2 size={15} /></button>
                         <button onClick={() => handleRemove(cat)}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                           title="Remove"><Trash2 size={15} /></button>
                       </div>
                     </div>
@@ -164,7 +164,7 @@ export default function CategoriesPage() {
                                     addNotification({ message: 'Failed to remove subcategory', type: 'error' })
                                   }
                                 }}
-                                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-red-500 opacity-0 group-hover/sub:opacity-100 transition-all"
+                                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600 opacity-100 sm:opacity-0 sm:group-hover/sub:opacity-100 transition-all"
                                   title="Remove subcategory"><Trash2 size={13} /></button>
                               </div>
                             ))

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, LogIn } from "lucide-react-native";
+import { ArrowLeft, LogIn, Check } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input } from "../../../components/Input";
@@ -15,6 +15,7 @@ export function LoginScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPending, setShowPending] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -23,7 +24,7 @@ export function LoginScreen({ navigation }: any) {
     }
     setLoading(true);
     setError("");
-    const result = await login(email, password);
+    const result = await login(email, password, rememberMe);
     setLoading(false);
     if (!result.success) {
       if (result.message === "pending_approval") {
@@ -113,7 +114,26 @@ export function LoginScreen({ navigation }: any) {
             secureTextEntry
           />
 
-          <View className="mt-6 mb-6">
+          <TouchableOpacity
+            onPress={() => setRememberMe(!rememberMe)}
+            className="flex-row items-center mt-3 mb-6"
+            activeOpacity={0.7}
+          >
+            <View className={`w-5 h-5 rounded border-2 items-center justify-center mr-2 ${
+              rememberMe
+                ? "bg-brand border-brand"
+                : isDark
+                  ? "border-white/30"
+                  : "border-black/30"
+            }`}>
+              {rememberMe && <Check size={14} color="white" />}
+            </View>
+            <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>
+              Remember Me
+            </Text>
+          </TouchableOpacity>
+
+          <View className="mb-6">
             <Button title="Sign In" onPress={handleLogin} loading={loading} size="lg" />
           </View>
 

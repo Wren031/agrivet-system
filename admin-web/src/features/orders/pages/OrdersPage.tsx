@@ -63,9 +63,9 @@ export default function OrdersPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const statusColors: Record<string, string> = {
-    Pending: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400',
-    Completed: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
-    Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+    Pending: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+    Completed: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+    Cancelled: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
   }
 
   const tabs: { key: typeof filter; label: string }[] = [
@@ -88,23 +88,23 @@ export default function OrdersPage() {
           <div><p className="text-sm text-slate-500 dark:text-slate-400">Total Orders</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{totalOrders}</p></div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 flex items-center justify-center"><Clock size={22} className="text-yellow-600" /></div>
+          <div className="w-12 h-12 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center"><Clock size={22} className="text-indigo-600" /></div>
           <div><p className="text-sm text-slate-500 dark:text-slate-400">New Orders</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{newOrders}</p></div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center"><CalendarDays size={22} className="text-blue-600" /></div>
+          <div className="w-12 h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center"><CalendarDays size={22} className="text-indigo-700" /></div>
           <div><p className="text-sm text-slate-500 dark:text-slate-400">Weekly Orders</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{weeklyOrders}</p></div>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-green-50 dark:bg-green-950/30 flex items-center justify-center"><DollarSign size={22} className="text-green-600" /></div>
+          <div className="w-12 h-12 rounded-lg bg-indigo-200/50 dark:bg-indigo-800/50 flex items-center justify-center"><DollarSign size={22} className="text-indigo-800" /></div>
           <div><p className="text-sm text-slate-500 dark:text-slate-400">Total Sales</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{settings.currencySymbol}{totalSales.toFixed(2)}</p></div>
         </div>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+        <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-slate-700">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-wrap">
               {tabs.map(tab => (
                 <button key={tab.key} onClick={() => { setFilter(tab.key); setPage(1) }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${

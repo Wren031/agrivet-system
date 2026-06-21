@@ -2,10 +2,10 @@ import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
 const sizeMap = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
+  sm: 'sm:max-w-sm',
+  md: 'sm:max-w-md',
+  lg: 'sm:max-w-lg',
+  xl: 'sm:max-w-xl',
   full: 'w-full',
 }
 
@@ -45,17 +45,17 @@ export default function Drawer({ open, onClose, title, children, className = '',
         onClick={onClose}
       />
       <div
-        className={`fixed top-0 right-0 h-full ${sizeMap[size]} bg-white dark:bg-slate-900 shadow-xl z-50 transform transition-transform duration-200 ease-out ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-auto ${size !== 'full' ? `sm:${sizeMap[size]}` : ''} bg-white dark:bg-slate-900 shadow-xl z-50 transform transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         } ${className}`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-slate-200 dark:border-slate-800">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800 dark:text-slate-100 truncate">{title}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0">
             <X size={20} className="text-slate-400 dark:text-slate-500" />
           </button>
         </div>
-        <div className="overflow-y-auto h-[calc(100%-61px)] p-5">
+        <div className="overflow-y-auto h-[calc(100%-61px)] p-4 sm:p-5">
           {children}
         </div>
       </div>

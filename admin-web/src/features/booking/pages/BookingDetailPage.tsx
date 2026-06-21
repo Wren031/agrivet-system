@@ -7,11 +7,11 @@ import Modal from '../../../components/Modal'
 import { useState } from 'react'
 
 const statusStyles: Record<string, string> = {
-  Pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
-  Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-  Approved: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
-  Completed: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
-  Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+  Pending: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+  Process: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+  Approved: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
+  Completed: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+  Cancelled: 'bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300',
 }
 
 export default function BookingDetailPage() {
@@ -19,7 +19,7 @@ export default function BookingDetailPage() {
   const navigate = useNavigate()
   const { bookings, loading, update, assignTask, remove } = useBookings()
   const { staff } = useStaff()
-  const { addNotification } = useApp()
+  const { addNotification, settings } = useApp()
   const [showDelete, setShowDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showAssignTask, setShowAssignTask] = useState(false)
@@ -82,15 +82,15 @@ export default function BookingDetailPage() {
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-          <div className="flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Booking Details</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">Booking Details</h1>
               <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">View full booking information</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <button onClick={() => setShowDelete(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors">
                 <Trash2 size={14} /> Delete
               </button>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles[booking.status]}`}>{booking.status}</span>
@@ -99,8 +99,8 @@ export default function BookingDetailPage() {
         </div>
 
         {/* Info Grid */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <div className="px-4 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center shrink-0 mt-0.5">
                 <User size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -143,7 +143,7 @@ export default function BookingDetailPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">Total Amount</p>
-                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">₱{booking.amount.toLocaleString()}</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{settings.currencySymbol}{booking.amount.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function BookingDetailPage() {
         <div className="border-b border-slate-100 dark:border-slate-700">
           <button
             onClick={() => setShowItems(!showItems)}
-            className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+            className="w-full flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
@@ -171,8 +171,9 @@ export default function BookingDetailPage() {
           </button>
 
           {showItems && (
-            <div className="px-6 pb-5">
+            <div className="px-4 sm:px-6 pb-5">
               <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -192,8 +193,8 @@ export default function BookingDetailPage() {
                           <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                             <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 font-medium">{item.name}</td>
                             <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{item.quantity}</td>
-                            <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">₱{item.price.toFixed(2)}</td>
-                            <td className="px-4 py-2.5 text-slate-800 dark:text-slate-200 font-medium text-right">₱{total.toFixed(2)}</td>
+                            <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{settings.currencySymbol}{item.price.toFixed(2)}</td>
+                            <td className="px-4 py-2.5 text-slate-800 dark:text-slate-200 font-medium text-right">{settings.currencySymbol}{total.toFixed(2)}</td>
                           </tr>
                         )
                       })
@@ -202,10 +203,11 @@ export default function BookingDetailPage() {
                   <tfoot className="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
                       <td colSpan={3} className="px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</td>
-                      <td className="px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white text-right">₱{booking.amount.toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white text-right">{settings.currencySymbol}{booking.amount.toLocaleString()}</td>
                     </tr>
                   </tfoot>
                 </table>
+                </div>
               </div>
             </div>
           )}
@@ -213,8 +215,8 @@ export default function BookingDetailPage() {
 
 
         {/* Assign Task */}
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-4 sm:px-6 py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
                 <UserCheck size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -222,7 +224,7 @@ export default function BookingDetailPage() {
               <div>
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Assign Task</p>
                 {booking.assignedStaff ? (
-                  <p className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1">
                     <CheckCircle size={12} /> Assigned to <span className="font-semibold">{booking.assignedStaff}</span>
                   </p>
                 ) : (
@@ -238,6 +240,7 @@ export default function BookingDetailPage() {
 
           {showAssignTask && (
             <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -277,7 +280,7 @@ export default function BookingDetailPage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             {isAssigned ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                              <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg">
                                 <CheckCircle size={13} /> Assigned
                               </span>
                             ) : (
@@ -296,6 +299,7 @@ export default function BookingDetailPage() {
                   )}
                 </tbody>
               </table>
+              </div>
               <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <button onClick={() => setShowAssignTask(false)}
                   className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
@@ -312,7 +316,7 @@ export default function BookingDetailPage() {
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">Are you sure you want to delete this booking? This action cannot be undone.</p>
           <div className="flex gap-3">
             <button onClick={handleDelete} disabled={deleting}
-              className="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50">
+              className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50">
               {deleting ? 'Deleting...' : 'Delete'}
             </button>
             <button onClick={() => setShowDelete(false)}

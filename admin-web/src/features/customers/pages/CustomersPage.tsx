@@ -16,15 +16,15 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Customers</h1>
         <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{customers.length} customer{customers.length !== 1 ? 's' : ''} registered</p>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+        <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-slate-700">
           <input type="text" placeholder="Search customers..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full max-w-xs px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+            className="w-full sm:max-w-xs px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
         </div>
         <div className="overflow-x-auto">
           {loading ? (

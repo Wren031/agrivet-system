@@ -9,9 +9,9 @@ import { useApp } from '../../../context/AppContext'
 type AgentStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 const statusTheme: Record<AgentStatus, { label: string; dot: string; bg: string; text: string; border: string }> = {
-  PENDING: { label: 'Pending', dot: 'bg-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/20', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-200/60 dark:border-amber-900/50' },
-  APPROVED: { label: 'Approved', dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/20', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-900/50' },
-  REJECTED: { label: 'Rejected', dot: 'bg-rose-500', bg: 'bg-rose-50 dark:bg-rose-950/20', text: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200/60 dark:border-rose-900/50' },
+  PENDING: { label: 'Pending', dot: 'bg-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/20', text: 'text-indigo-700 dark:text-indigo-400', border: 'border-indigo-200/60 dark:border-indigo-900/50' },
+  APPROVED: { label: 'Approved', dot: 'bg-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200/60 dark:border-indigo-900/50' },
+  REJECTED: { label: 'Rejected', dot: 'bg-indigo-700', bg: 'bg-indigo-200/50 dark:bg-indigo-800/50', text: 'text-indigo-800 dark:text-indigo-300', border: 'border-indigo-200/60 dark:border-indigo-900/50' },
 }
 
 export default function AgentDetailPage() {
@@ -92,18 +92,18 @@ export default function AgentDetailPage() {
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 dark:from-indigo-950 dark:to-indigo-900 flex items-center justify-center text-white font-bold text-xl uppercase shadow-lg">
+        <div className="px-4 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 dark:from-indigo-950 dark:to-indigo-900 flex items-center justify-center text-white font-bold text-lg sm:text-xl uppercase shadow-lg shrink-0">
                 {agent.fullName.charAt(0)}
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-800 dark:text-white">{agent.fullName}</h1>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate">{agent.fullName}</h1>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Agent Profile</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <div className="relative">
                 <select
                   value={agent.status}
@@ -118,7 +118,7 @@ export default function AgentDetailPage() {
                 <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
               <button onClick={() => setShowDelete(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors">
                 <Trash2 size={14} /> Delete
               </button>
             </div>
@@ -128,7 +128,7 @@ export default function AgentDetailPage() {
         {/* Content: two columns */}
         <div className="flex flex-col lg:flex-row">
           {/* Left Column - Profile Info */}
-          <div className="lg:w-[380px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+          <div className="w-full lg:w-[380px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
             <div className="p-6 space-y-6">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-1 h-3 rounded-full bg-indigo-500" />
@@ -197,7 +197,7 @@ export default function AgentDetailPage() {
           </div>
 
           {/* Right Column - Assigned Customer Accounts */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="flex items-center gap-3.5 mb-6">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/20">
                 <Building2 size={18} />
@@ -241,8 +241,8 @@ export default function AgentDetailPage() {
                           </p>
                           <p className="text-base font-bold text-slate-800 dark:text-slate-100">{c.totalOrders}</p>
                         </div>
-                        <div className="flex-1 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg px-3 py-2 border border-emerald-100/30 dark:border-emerald-900/20">
-                          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                        <div className="flex-1 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg px-3 py-2 border border-indigo-200/30 dark:border-indigo-900/20">
+                          <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
                             <PhilippinePeso size={11} /> Total
                           </p>
                           <p className="text-base font-bold text-slate-800 dark:text-slate-100">₱{c.totalOrderAmount.toLocaleString()}</p>
@@ -279,7 +279,7 @@ export default function AgentDetailPage() {
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">Are you sure you want to delete this agent? This action cannot be undone.</p>
           <div className="flex gap-3">
             <button onClick={handleDelete} disabled={deleting}
-              className="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50">
+              className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50">
               {deleting ? 'Deleting...' : 'Delete'}
             </button>
             <button onClick={() => setShowDelete(false)}

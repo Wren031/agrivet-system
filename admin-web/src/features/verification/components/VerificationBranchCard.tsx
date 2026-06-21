@@ -29,8 +29,8 @@ export default function VerificationBranchCard({ branch, onActivate, onDeactivat
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">{branch.name}</p>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200/60 dark:border-red-900/50">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-200/50 dark:bg-indigo-800/50 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
               Inactive
             </span>
           </div>
@@ -56,7 +56,7 @@ export default function VerificationBranchCard({ branch, onActivate, onDeactivat
         <button
           onClick={handleActivate}
           disabled={updating !== null}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {updating === `activate-${branch.id}` ? (
             <Loader2 size={14} className="animate-spin" />
@@ -68,7 +68,7 @@ export default function VerificationBranchCard({ branch, onActivate, onDeactivat
         <button
           onClick={handleDeactivate}
           disabled={updating !== null}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {updating === `deactivate-${branch.id}` ? (
             <Loader2 size={14} className="animate-spin" />
