@@ -9,7 +9,6 @@ interface TaskCardProps {
   isMyTask: boolean
   onViewDetails: () => void
   onApprove: (id: string) => void
-  onCancel: (id: string) => void
   onComplete: (id: string) => void
 }
 
@@ -21,7 +20,7 @@ const statusBorder: Record<string, string> = {
   Cancelled: 'border-l-red-400',
 }
 
-export default function TaskCard({ task, isMyTask, onViewDetails, onApprove, onCancel, onComplete }: TaskCardProps) {
+export default function TaskCard({ task, isMyTask, onViewDetails, onApprove, onComplete }: TaskCardProps) {
   const { settings } = useApp()
   const totalItems = task.items.reduce((sum, item) => sum + item.quantity * item.price, 0)
 
@@ -115,7 +114,6 @@ export default function TaskCard({ task, isMyTask, onViewDetails, onApprove, onC
           task={task}
           isMyTask={isMyTask}
           onApprove={onApprove}
-          onCancel={onCancel}
           onComplete={onComplete}
         />
       </div>

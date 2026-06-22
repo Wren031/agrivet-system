@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchBookings, updateBooking } from '../../../data/booking/bookingService'
+import { fetchBookings, updateBooking, deleteBooking } from '../../../data/booking/bookingService'
 import { fetchStaffById } from '../../staff/services/staffService'
 import type { Booking } from '../../../data/booking/types'
 import { useApp } from '../../../context/AppContext'
@@ -16,7 +16,7 @@ export function useTasks() {
         fetchBookings(),
         user?.id ? fetchStaffById(user.id) : Promise.resolve(null),
       ])
-      setTasks(all.filter(b => b.adminProfileId))
+      setTasks(all.filter(b => b.adminProfileId === profile?.adminProfileId))
       setMyAdminProfileId(profile?.adminProfileId ?? null)
     } catch {
       addNotification({ message: 'Failed to load tasks', type: 'error' })
@@ -57,5 +57,15 @@ export function useTasks() {
     }
   }, [addNotification])
 
-  return { tasks, myAdminProfileId, loading, handleApprove, handleCancel, handleComplete, reload: load }
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteBooking(id)
+      setTasks(prev => prev.filter(t => t.id !== id))
+      addNotification({ message: 'Booking deleted successfully', type: 'success' })
+    } catch {
+      addNotification({ message: 'Failed to delete booking', type: 'error' })
+    }
+  }, [addNotification])
+
+  return { tasks, myAdminProfileId, loading, handleApprove, handleCancel, handleComplete, handleDelete, reload: load }
 }

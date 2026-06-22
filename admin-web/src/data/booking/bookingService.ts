@@ -33,6 +33,7 @@ function fromApi(item: OrderApiResponse): Booking {
     agent: agentName,
     assignedStaff: item.adminProfile?.fullName ?? undefined,
     adminProfileId: item.adminProfile?.id ?? undefined,
+    assigned_by_admin: !!item.adminProfileId,
     date: item.orderDate.split('T')[0],
     amount: Number(item.totalAmount),
     status: statusMap[item.status] || 'Pending',

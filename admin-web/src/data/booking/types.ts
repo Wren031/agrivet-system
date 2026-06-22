@@ -10,6 +10,7 @@ export interface Booking {
   agent: string
   assignedStaff?: string
   adminProfileId?: string
+  assigned_by_admin: boolean
   date: string
   amount: number
   status: 'Pending' | 'Process' | 'Approved' | 'Completed' | 'Cancelled'

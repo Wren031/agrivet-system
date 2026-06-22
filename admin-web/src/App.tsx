@@ -17,6 +17,7 @@ import BookingDetailPage from './features/booking/pages/BookingDetailPage'
 import BranchPage from './features/branch/pages/BranchPage'
 import StaffPage from './features/staff/pages/StaffPage'
 import TasksPage from './features/tasks/pages/TasksPage'
+import TaskDetailPage from './features/tasks/pages/TaskDetailPage'
 import VerificationPage from './features/verification/pages/VerificationPage'
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="branches" element={<BranchPage />} />
             <Route path="staff" element={<StaffPage />} />
             <Route path="tasks" element={<TasksPage />} />
+            <Route path="tasks/:id" element={<TaskDetailPage />} />
             <Route path="verification" element={<VerificationPage />} />
           </Route>
         </Routes>

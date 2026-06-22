@@ -36,3 +36,10 @@ export async function updateCustomer(id: string, updates: { fullName?: string; p
 export async function deleteCustomer(id: string): Promise<void> {
   await apiFetch<void>(`/customers/${id}`, { method: 'DELETE' })
 }
+
+export async function sendAnnouncement(data: { title: string; message: string; customerIds: string[] }): Promise<void> {
+  await apiFetch<void>('/announcements', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}

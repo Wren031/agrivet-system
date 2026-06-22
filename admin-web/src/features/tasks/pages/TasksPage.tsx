@@ -1,15 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ClipboardCheck, Search } from 'lucide-react'
 import { useTasks } from '../hooks/useTasks'
 import TaskCard from '../components/TaskCard'
-import TaskDetailsDrawer from '../components/TaskDetailsDrawer'
-import type { Booking } from '../../../data/booking/types'
 
 export default function TasksPage() {
-  const { tasks, myAdminProfileId, loading, handleApprove, handleCancel, handleComplete } = useTasks()
+  const navigate = useNavigate()
+  const { tasks, myAdminProfileId, loading, handleApprove, handleComplete } = useTasks()
   const [search, setSearch] = useState('')
-  const [selectedTask, setSelectedTask] = useState<Booking | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const filtered = tasks.filter(t =>
     !search ||
@@ -70,9 +68,8 @@ export default function TasksPage() {
                 key={task.id}
                 task={task}
                 isMyTask={isMyTask}
-                onViewDetails={() => { setSelectedTask(task); setDrawerOpen(true) }}
+                onViewDetails={() => navigate(`/tasks/${task.id}`)}
                 onApprove={handleApprove}
-                onCancel={handleCancel}
                 onComplete={handleComplete}
               />
             )
@@ -80,11 +77,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      <TaskDetailsDrawer
-        task={selectedTask}
-        open={drawerOpen}
-        onClose={() => { setDrawerOpen(false); setSelectedTask(null) }}
-      />
     </>
   )
 }

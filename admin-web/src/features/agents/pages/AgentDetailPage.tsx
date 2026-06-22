@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, MapPin, DollarSign, ShoppingCart, PhilippinePeso } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, MapPin, ShoppingCart, PhilippinePeso, Navigation } from 'lucide-react'
 import { fetchAgent, fetchAgentCustomersWithOrders, updateStatus, deleteAgent } from '../services/agentService'
 import type { Agent, AgentCustomer } from '../services/types'
 import Modal from '../../../components/Modal'
 import { useApp } from '../../../context/AppContext'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 type AgentStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
@@ -13,6 +15,25 @@ const statusTheme: Record<AgentStatus, { label: string; dot: string; bg: string;
   APPROVED: { label: 'Approved', dot: 'bg-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200/60 dark:border-indigo-900/50' },
   REJECTED: { label: 'Rejected', dot: 'bg-indigo-700', bg: 'bg-indigo-200/50 dark:bg-indigo-800/50', text: 'text-indigo-800 dark:text-indigo-300', border: 'border-indigo-200/60 dark:border-indigo-900/50' },
 }
+
+const tabs = [
+  { key: 'profile', label: 'Profile', icon: Building2 },
+  { key: 'location', label: 'Live Location', icon: MapPin },
+] as const
+
+type TabKey = (typeof tabs)[number]['key']
+
+// Fix Leaflet default icon paths
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
+
+// Fake agent location (Manila, Philippines)
+const AGENT_FAKE_LAT = 14.5995
+const AGENT_FAKE_LNG = 120.9842
 
 export default function AgentDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,17 +47,7 @@ export default function AgentDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [customers, setCustomers] = useState<AgentCustomer[]>([])
   const [customersLoading, setCustomersLoading] = useState(false)
-
-  useEffect(() => {
-    if (!id) return
-    setLoading(true)
-    Promise.all([
-      fetchAgent(id).then(setAgent),
-      fetchAgentCustomersWithOrders(id).then(setCustomers).finally(() => setCustomersLoading(false)),
-    ]).catch(() => {
-      addNotification({ message: 'Failed to load agent', type: 'error' })
-    }).finally(() => setLoading(false))
-  }, [id, addNotification])
+  const [activeTab, setActiveTab] = useState<TabKey>('profile')
 
   async function handleStatusChange(status: AgentStatus) {
     if (!agent) return
@@ -63,6 +74,87 @@ export default function AgentDetailPage() {
       addNotification({ message: 'Failed to delete agent', type: 'error' })
       setDeleting(false)
     }
+  }
+
+  function LocationTab() {
+    const mapRef = useRef<HTMLDivElement>(null)
+    const mapInstance = useRef<L.Map | null>(null)
+    const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString())
+
+    useEffect(() => {
+      if (!mapRef.current || mapInstance.current) return
+
+      const map = L.map(mapRef.current, {
+        center: [AGENT_FAKE_LAT, AGENT_FAKE_LNG],
+        zoom: 15,
+        zoomControl: true,
+      })
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map)
+
+      const marker = L.marker([AGENT_FAKE_LAT, AGENT_FAKE_LNG]).addTo(map)
+      marker.bindPopup(`
+        <div style="font-family: system-ui, sans-serif; text-align: center; min-width: 160px;">
+          <p style="font-weight: 700; margin: 0 0 4px; font-size: 14px;">${agent?.fullName || 'Agent'}</p>
+          <p style="margin: 0; font-size: 12px; color: #666;">Current Location</p>
+          <p style="margin: 6px 0 0; font-size: 11px; color: #999;">
+            Last updated: ${lastUpdated}
+          </p>
+        </div>
+      `).openPopup()
+
+      mapInstance.current = map
+
+      return () => {
+        map.remove()
+        mapInstance.current = null
+      }
+    }, [])
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setLastUpdated(new Date().toLocaleTimeString())
+      }, 10000)
+      return () => clearInterval(interval)
+    }, [])
+
+    return (
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Navigation size={16} className="text-indigo-600" />
+            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Real-time Location Tracking</h3>
+          </div>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            Last update: {lastUpdated}
+          </span>
+        </div>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+          <div ref={mapRef} className="w-full h-[500px]" />
+        </div>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg px-4 py-3 border border-slate-100 dark:border-slate-700">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">Latitude</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-0.5">{AGENT_FAKE_LAT}</p>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg px-4 py-3 border border-slate-100 dark:border-slate-700">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">Longitude</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-0.5">{AGENT_FAKE_LNG}</p>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg px-4 py-3 border border-slate-100 dark:border-slate-700">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">Status</p>
+            <p className="text-sm font-bold text-green-600 dark:text-green-400 mt-0.5 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Online
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -125,153 +217,179 @@ export default function AgentDetailPage() {
           </div>
         </div>
 
-        {/* Content: two columns */}
-        <div className="flex flex-col lg:flex-row">
-          {/* Left Column - Profile Info */}
-          <div className="w-full lg:w-[380px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
-            <div className="p-6 space-y-6">
-              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-1 h-3 rounded-full bg-indigo-500" />
-                Account Information
-              </h3>
+        {/* Tab Navigation */}
+        <div className="border-b border-slate-200 dark:border-slate-700">
+          <nav className="flex gap-6 px-4 sm:px-6">
+            {tabs.map(tab => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-2 pb-3 pt-4 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab.key
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </nav>
+        </div>
 
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-3.5 px-4 py-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm shadow-slate-100/50 dark:shadow-none">
-                  <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0">
-                    <Mail size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Email Address</p>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{agent.email}</p>
-                  </div>
-                </div>
+        {/* Tab Content */}
+        {activeTab === 'profile' && (
+          <div className="flex flex-col lg:flex-row">
+            {/* Left Column - Profile Info */}
+            <div className="w-full lg:w-[380px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+              <div className="p-6 space-y-6">
+                <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-1 h-3 rounded-full bg-indigo-500" />
+                  Account Information
+                </h3>
 
-                <div className="flex items-center gap-3.5 px-4 py-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm shadow-slate-100/50 dark:shadow-none">
-                  <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0">
-                    <Phone size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Contact Number</p>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{agent.contactNumber}</p>
-                  </div>
-                </div>
-
-                {agent.createdAt && (
+                <div className="space-y-2.5">
                   <div className="flex items-center gap-3.5 px-4 py-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm shadow-slate-100/50 dark:shadow-none">
                     <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0">
-                      <Calendar size={15} />
+                      <Mail size={15} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Registration Date</p>
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                        {new Date(agent.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                      </p>
+                      <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Email Address</p>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{agent.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3.5 px-4 py-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm shadow-slate-100/50 dark:shadow-none">
+                    <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0">
+                      <Phone size={15} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Contact Number</p>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{agent.contactNumber}</p>
+                    </div>
+                  </div>
+
+                  {agent.createdAt && (
+                    <div className="flex items-center gap-3.5 px-4 py-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm shadow-slate-100/50 dark:shadow-none">
+                      <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0">
+                        <Calendar size={15} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Registration Date</p>
+                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          {new Date(agent.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ID Verification */}
+                {agent.idVerificationUrl && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-1 h-3 rounded-full bg-indigo-500" />
+                      ID Verification Asset
+                    </p>
+                    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/40 p-2 shadow-inner">
+                      <img
+                        src={agent.idVerificationUrl}
+                        alt="ID Verification"
+                        className="w-full max-h-48 object-contain rounded-lg transition-transform duration-300 hover:scale-[1.02]"
+                        onError={e => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden')
+                        }}
+                      />
+                      <p className="hidden text-xs text-slate-400 dark:text-slate-500 py-12 text-center font-medium">Failed to process imagery asset</p>
                     </div>
                   </div>
                 )}
+
+              </div>
+            </div>
+
+            {/* Right Column - Assigned Customer Accounts */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="flex items-center gap-3.5 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/20">
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-50 tracking-tight">Assigned Customer Accounts</h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    {agent.status === 'APPROVED' ? `${customers.length} registered partner accounts` : 'Operational limits restricted for unapproved agents.'}
+                  </p>
+                </div>
               </div>
 
-              {/* ID Verification */}
-              {agent.idVerificationUrl && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-1 h-3 rounded-full bg-indigo-500" />
-                    ID Verification Asset
-                  </p>
-                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/40 p-2 shadow-inner">
-                    <img
-                      src={agent.idVerificationUrl}
-                      alt="ID Verification"
-                      className="w-full max-h-48 object-contain rounded-lg transition-transform duration-300 hover:scale-[1.02]"
-                      onError={e => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden')
-                      }}
-                    />
-                    <p className="hidden text-xs text-slate-400 dark:text-slate-500 py-12 text-center font-medium">Failed to process imagery asset</p>
+              {agent.status === 'APPROVED' ? (
+                customersLoading ? (
+                  <div className="flex items-center justify-center py-24">
+                    <Loader2 size={24} className="animate-spin text-indigo-500/80" />
                   </div>
+                ) : customers.length === 0 ? (
+                  <div className="text-center py-20 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
+                    <Building2 size={32} className="mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                    <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">No customers assigned</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {customers.map(c => (
+                      <div key={c.id} className="bg-white dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80 p-4 hover:border-indigo-500/20 dark:hover:border-indigo-400/20 hover:shadow-md hover:shadow-slate-100/40 dark:hover:shadow-none transition-all duration-200 group">
+                        <div className="flex items-start gap-2 mb-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{c.fullName}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5 flex items-center gap-1">
+                              <MapPin size={11} className="shrink-0" /> {c.address}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 mb-3">
+                          <div className="flex-1 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-lg px-3 py-2 border border-indigo-100/30 dark:border-indigo-900/20">
+                            <p className="text-[10px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                              <ShoppingCart size={11} /> Orders
+                            </p>
+                            <p className="text-base font-bold text-slate-800 dark:text-slate-100">{c.totalOrders}</p>
+                          </div>
+                          <div className="flex-1 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg px-3 py-2 border border-indigo-200/30 dark:border-indigo-900/20">
+                            <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                              <PhilippinePeso size={11} /> Total
+                            </p>
+                            <p className="text-base font-bold text-slate-800 dark:text-slate-100">₱{c.totalOrderAmount.toLocaleString()}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border-t border-slate-50 dark:border-slate-800/50 pt-3">
+                          <p className="truncate text-[11px] flex items-center gap-1.5">
+                            <Mail size={11} className="shrink-0" /> {c.email || 'N/A'}
+                          </p>
+                          <p className="text-[11px] flex items-center gap-1.5">
+                            <Phone size={11} className="shrink-0" /> {c.phone}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/30 dark:bg-slate-900/10">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3.5">
+                    <Building2 size={20} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Portfolio Hidden</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center max-w-[240px] mt-1 leading-relaxed">Approve registration criteria to authorize account pipeline assignment mapping.</p>
                 </div>
               )}
-
             </div>
           </div>
+        )}
 
-          {/* Right Column - Assigned Customer Accounts */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-            <div className="flex items-center gap-3.5 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/20">
-                <Building2 size={18} />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-50 tracking-tight">Assigned Customer Accounts</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                  {agent.status === 'APPROVED' ? `${customers.length} registered partner accounts` : 'Operational limits restricted for unapproved agents.'}
-                </p>
-              </div>
-            </div>
-
-            {agent.status === 'APPROVED' ? (
-              customersLoading ? (
-                <div className="flex items-center justify-center py-24">
-                  <Loader2 size={24} className="animate-spin text-indigo-500/80" />
-                </div>
-              ) : customers.length === 0 ? (
-                <div className="text-center py-20 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
-                  <Building2 size={32} className="mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                  <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">No customers assigned</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {customers.map(c => (
-                    <div key={c.id} className="bg-white dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80 p-4 hover:border-indigo-500/20 dark:hover:border-indigo-400/20 hover:shadow-md hover:shadow-slate-100/40 dark:hover:shadow-none transition-all duration-200 group">
-                      <div className="flex items-start gap-2 mb-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{c.fullName}</p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5 flex items-center gap-1">
-                            <MapPin size={11} className="shrink-0" /> {c.address}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Order totals */}
-                      <div className="flex gap-3 mb-3">
-                        <div className="flex-1 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-lg px-3 py-2 border border-indigo-100/30 dark:border-indigo-900/20">
-                          <p className="text-[10px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-                            <ShoppingCart size={11} /> Orders
-                          </p>
-                          <p className="text-base font-bold text-slate-800 dark:text-slate-100">{c.totalOrders}</p>
-                        </div>
-                        <div className="flex-1 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg px-3 py-2 border border-indigo-200/30 dark:border-indigo-900/20">
-                          <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-                            <PhilippinePeso size={11} /> Total
-                          </p>
-                          <p className="text-base font-bold text-slate-800 dark:text-slate-100">₱{c.totalOrderAmount.toLocaleString()}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border-t border-slate-50 dark:border-slate-800/50 pt-3">
-                        <p className="truncate text-[11px] flex items-center gap-1.5">
-                          <Mail size={11} className="shrink-0" /> {c.email || 'N/A'}
-                        </p>
-                        <p className="text-[11px] flex items-center gap-1.5">
-                          <Phone size={11} className="shrink-0" /> {c.phone}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/30 dark:bg-slate-900/10">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3.5">
-                  <Building2 size={20} className="text-slate-400 dark:text-slate-500" />
-                </div>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Portfolio Hidden</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 text-center max-w-[240px] mt-1 leading-relaxed">Approve registration criteria to authorize account pipeline assignment mapping.</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {activeTab === 'location' && <LocationTab />}
       </div>
 
       <Modal open={showDelete} onClose={() => setShowDelete(false)} title="Delete Agent" size="sm">
