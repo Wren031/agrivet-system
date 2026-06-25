@@ -1,10 +1,13 @@
+export type AgentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'TERMINATED' | 'ONLINE' | 'OFFLINE'
+
 export interface AgentApiResponse {
   id: string
   fullName: string
   contactNumber: string
   email: string
+  address: string | null
   idVerificationUrl: string | null
-  status: string
+  status: AgentStatus
   userId: string
   user: {
     id: string
@@ -18,9 +21,19 @@ export interface Agent {
   fullName: string
   contactNumber: string
   email: string
+  address?: string
   idVerificationUrl?: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: AgentStatus
   createdAt?: string
+}
+
+export interface AgentWithLocation extends Agent {
+  location: {
+    latitude: number
+    longitude: number
+    address: string | null
+    updatedAt: string
+  }
 }
 
 export interface CreateAgentData {
@@ -28,7 +41,7 @@ export interface CreateAgentData {
   contactNumber: string
   email: string
   password: string
-  status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status?: AgentStatus
   idVerificationUrl?: string
 }
 
@@ -37,12 +50,12 @@ export interface UpdateAgentData {
   contactNumber?: string
   email?: string
   password?: string
-  status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status?: AgentStatus
   idVerificationUrl?: string
 }
 
 export interface UpdateAgentStatusData {
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: AgentStatus
 }
 
 export interface AgentCustomer {

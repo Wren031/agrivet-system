@@ -1,8 +1,8 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
-import { Platform, View } from "react-native";
+import { Platform, View, ActivityIndicator } from "react-native";
 import {
   Home,
   Users,
@@ -13,16 +13,40 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { LoginScreen } from "../features/auth/screens/LoginScreen";
-import { RegisterScreen } from "../features/auth/screens/RegisterScreen";
-import { CustomerListScreen } from "../features/customers/screens/CustomerListScreen";
-import { ItemGridScreen } from "../features/items/screens/ItemGridScreen";
-import { HomeScreen } from "../features/home/screens/HomeScreen";
-import { BookingDetailScreen } from "../features/bookings/screens/BookingDetailScreen";
-import { CreateBookingScreen } from "../features/bookings/screens/CreateBookingScreen";
-import { MyBookingsScreen } from "../features/bookings/screens/MyBookingsScreen";
-import { HistoryListScreen } from "../features/history/screens/HistoryListScreen";
-import { SettingsScreen } from "../features/settings/screens/SettingsScreen";
+
+const LoginScreen = lazy(() =>
+  import("../features/auth/screens/LoginScreen").then((m) => ({ default: m.LoginScreen }))
+);
+const RegisterScreen = lazy(() =>
+  import("../features/auth/screens/RegisterScreen").then((m) => ({ default: m.RegisterScreen }))
+);
+const CustomerListScreen = lazy(() =>
+  import("../features/customers/screens/CustomerListScreen").then((m) => ({ default: m.CustomerListScreen }))
+);
+const ItemGridScreen = lazy(() =>
+  import("../features/items/screens/ItemGridScreen").then((m) => ({ default: m.ItemGridScreen }))
+);
+const ItemDetailScreen = lazy(() =>
+  import("../features/items/screens/ItemDetailScreen").then((m) => ({ default: m.ItemDetailScreen }))
+);
+const HomeScreen = lazy(() =>
+  import("../features/home/screens/HomeScreen").then((m) => ({ default: m.HomeScreen }))
+);
+const BookingDetailScreen = lazy(() =>
+  import("../features/bookings/screens/BookingDetailScreen").then((m) => ({ default: m.BookingDetailScreen }))
+);
+const CreateBookingScreen = lazy(() =>
+  import("../features/bookings/screens/CreateBookingScreen").then((m) => ({ default: m.CreateBookingScreen }))
+);
+const MyBookingsScreen = lazy(() =>
+  import("../features/bookings/screens/MyBookingsScreen").then((m) => ({ default: m.MyBookingsScreen }))
+);
+const HistoryListScreen = lazy(() =>
+  import("../features/history/screens/HistoryListScreen").then((m) => ({ default: m.HistoryListScreen }))
+);
+const SettingsScreen = lazy(() =>
+  import("../features/settings/screens/SettingsScreen").then((m) => ({ default: m.SettingsScreen }))
+);
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -158,6 +182,7 @@ function AppStack() {
       <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
       <Stack.Screen name="CreateBooking" component={CreateBookingScreen} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
+      <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
     </Stack.Navigator>
   );
 }
@@ -165,17 +190,17 @@ function AppStack() {
 export function AppNavigator() {
   const { isAuthenticated, isPendingApproval } = useAuth();
 
-  if (isPendingApproval) {
-    return (
-      <NavigationContainer>
-        <AuthStack />
-      </NavigationContainer>
-    );
-  }
-
   return (
-    <NavigationContainer>
-      {isAuthenticated ? <AppStack /> : <AuthStack />}
-    </NavigationContainer>
+    <Suspense fallback={<ActivityIndicator style={{ flex: 1 }} />}>
+      <NavigationContainer>
+        {isPendingApproval ? (
+          <AuthStack />
+        ) : isAuthenticated ? (
+          <AppStack />
+        ) : (
+          <AuthStack />
+        )}
+      </NavigationContainer>
+    </Suspense>
   );
 }

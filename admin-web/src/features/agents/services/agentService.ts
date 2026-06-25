@@ -1,4 +1,4 @@
-import type { Agent, AgentApiResponse, CreateAgentData, UpdateAgentData, UpdateAgentStatusData, AgentCustomer } from './types'
+import type { Agent, AgentApiResponse, AgentWithLocation, CreateAgentData, UpdateAgentData, UpdateAgentStatusData, AgentCustomer } from './types'
 import { apiFetch } from '../../../config/apiClient'
 import { fetchOrders } from '../../orders/services/orderService'
 
@@ -8,6 +8,7 @@ function fromApi(item: AgentApiResponse): Agent {
     fullName: item.fullName,
     contactNumber: item.contactNumber,
     email: item.email,
+    address: item.address || undefined,
     idVerificationUrl: item.idVerificationUrl || undefined,
     status: item.status as Agent['status'],
     createdAt: item.user.createdAt,
@@ -50,6 +51,10 @@ export async function updateStatus(id: string, data: UpdateAgentStatusData): Pro
 
 export async function deleteAgent(id: string): Promise<void> {
   await apiFetch<void>(`/agents/${id}`, { method: 'DELETE' })
+}
+
+export async function fetchAgentsWithLocations(): Promise<AgentWithLocation[]> {
+  return apiFetch<AgentWithLocation[]>('/agents/locations')
 }
 
 export async function fetchAgentCustomers(id: string): Promise<AgentCustomer[]> {

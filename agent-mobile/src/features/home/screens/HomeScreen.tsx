@@ -1,23 +1,19 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
-import { Calendar, Package, Users, TrendingUp, ArrowRight, Plus, ListOrdered } from "lucide-react-native";
+import { Calendar, Package, Users, TrendingUp, ArrowRight, Plus, ListOrdered, MapPin } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useHomeData } from "../hooks/useHomeData";
+import { useAgentStatus } from "../../agents/hooks/useAgentStatus";
 import { StatCard } from "../components/StatCard";
 
 export function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const { homeData, recentBookings, refreshing, onRefresh } = useHomeData();
-
-  useFocusEffect(
-    useCallback(() => {
-      onRefresh();
-    }, [onRefresh])
-  );
+  const { agentStatus, location, address, locationError, locationLoading, isOnline } = useAgentStatus();
+  const isAgent = !!user?.agentProfileId;
 
   const firstName = user?.fullName?.split(" ")[0] || "User";
   const initials = user?.fullName
@@ -62,6 +58,33 @@ export function HomeScreen({ navigation }: any) {
               <Text className={`text-sm text-${isDark ? "white/60" : "black/60"} mt-1`}>
                 Here's your business overview today
               </Text>
+              {isAgent && (
+                <View className="flex-row items-center gap-3 mt-3">
+                  <View className="flex-row items-center gap-1.5">
+                    <View className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-green-500" : "bg-red-400"}`} />
+                    <Text className={`text-xs font-semibold ${isOnline ? "text-green-500" : "text-red-400"}`}>
+                      {isOnline ? "Online" : "Offline"}
+                    </Text>
+                  </View>
+                  <View className="w-px h-3.5 bg-black/20 dark:bg-white/20" />
+                  <View className="flex-row items-center gap-1 flex-1 min-w-0">
+                    <MapPin size={12} color={isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)"} />
+                    {locationLoading ? (
+                      <Text className={`text-xs text-${isDark ? "white/40" : "black/40"}`}>
+                        Getting location...
+                      </Text>
+                    ) : location ? (
+                      <Text className={`text-xs text-${isDark ? "white/50" : "black/50"}`} numberOfLines={1}>
+                        {address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`}
+                      </Text>
+                    ) : (
+                      <Text className={`text-xs text-${isDark ? "white/40" : "black/40"}`}>
+                        {locationError || "No location"}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              )}
             </View>
             <View className="w-14 h-14 rounded-full bg-brand items-center justify-center">
               <Text className="text-white text-lg font-bold">{initials}</Text>

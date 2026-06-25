@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, FlatList, Text, TextInput } from "react-native";
+import { View, FlatList, Text, TextInput, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 import { Search } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -18,12 +17,7 @@ export function CustomerListScreen() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const { customers, loading, addCustomer, updateCustomer, deleteCustomer, fetchCustomers } = useCustomers();
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchCustomers();
-    }, [fetchCustomers])
-  );
+  const [refreshing, setRefreshing] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [search, setSearch] = useState("");
@@ -65,6 +59,12 @@ export function CustomerListScreen() {
     setEditingCustomer(null);
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchCustomers();
+    setRefreshing(false);
+  }, [fetchCustomers]);
+
   return (
     <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
       <PageHeader
@@ -104,6 +104,7 @@ export function CustomerListScreen() {
           )}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
         />
       )}
       <Modal

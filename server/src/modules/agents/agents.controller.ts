@@ -12,9 +12,11 @@ import { AgentsService } from './agents.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { UpdateAgentDto } from './dto/update-agent.dto';
 import { UpdateAgentStatusDto } from './dto/update-agent-status.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('agents')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,6 +35,12 @@ export class AgentsController {
     return this.agentsService.findAll();
   }
 
+  @Get('locations')
+  @Roles('ADMIN')
+  findAllWithLocations() {
+    return this.agentsService.findAllWithLocations();
+  }
+
   @Get(':id')
   @Roles('ADMIN')
   findOne(@Param('id') id: string) {
@@ -46,18 +54,31 @@ export class AgentsController {
   }
 
   @Patch(':id/status')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'AGENT')
   updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateAgentStatusDto,
+    @CurrentUser() user: any,
   ) {
-    return this.agentsService.updateStatus(id, dto);
+    return this.agentsService.updateStatus(id, dto, user.sub, user.role);
+  }
+
+  @Get(':id/location')
+  @Roles('ADMIN', 'AGENT')
+  getLocation(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.agentsService.getLocation(id, user.sub, user.role);
+  }
+
+  @Patch(':id/location')
+  @Roles('ADMIN', 'AGENT')
+  updateLocation(@Param('id') id: string, @Body() dto: UpdateLocationDto, @CurrentUser() user: any) {
+    return this.agentsService.updateLocation(id, dto, user.sub, user.role);
   }
 
   @Get(':id/customers')
-  @Roles('ADMIN')
-  findCustomers(@Param('id') id: string) {
-    return this.agentsService.findCustomersByAgent(id);
+  @Roles('ADMIN', 'AGENT')
+  findCustomers(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.agentsService.findCustomersByAgent(id, user.sub, user.role);
   }
 
   @Delete(':id')

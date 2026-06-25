@@ -1,7 +1,6 @@
-import React, { useCallback } from "react";
-import { View, FlatList, Text } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, FlatList, Text, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useHistory } from "../hooks/useHistory";
 import { HistoryCard } from "../components/HistoryCard";
@@ -10,12 +9,13 @@ import { EmptyState } from "../../../components/EmptyState";
 export function HistoryListScreen({ navigation }: any) {
   const { isDark } = useTheme();
   const { history, loading, error, fetchHistory } = useHistory();
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchHistory();
-    }, [fetchHistory])
-  );
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchHistory();
+    setRefreshing(false);
+  }, [fetchHistory]);
 
   if (loading) {
     return (
@@ -42,7 +42,7 @@ export function HistoryListScreen({ navigation }: any) {
             <Text className="text-red-500 text-sm">{error}</Text>
           </View>
         </View>
-        ) : history.length === 0 ? (
+      ) : history.length === 0 ? (
         <EmptyState
           icon="📜"
           title="No History"
@@ -60,6 +60,7 @@ export function HistoryListScreen({ navigation }: any) {
           )}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
         />
       )}
     </SafeAreaView>

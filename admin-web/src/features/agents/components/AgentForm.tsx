@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import type { Agent, CreateAgentData, UpdateAgentData } from '../services/types'
+import type { Agent, AgentStatus, CreateAgentData, UpdateAgentData } from '../services/types'
 
 interface AgentFormProps {
   initialData: Agent | null
@@ -12,7 +12,7 @@ export default function AgentForm({ initialData, onSave, onCancel }: AgentFormPr
   const [email, setEmail] = useState(initialData?.email ?? '')
   const [contactNumber, setContactNumber] = useState(initialData?.contactNumber ?? '')
   const [password, setPassword] = useState('')
-  const [status, setStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>(initialData?.status ?? 'PENDING')
+  const [status, setStatus] = useState<AgentStatus>(initialData?.status ?? 'PENDING')
   const [idVerificationUrl, setIdVerificationUrl] = useState(initialData?.idVerificationUrl ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -77,7 +77,7 @@ export default function AgentForm({ initialData, onSave, onCancel }: AgentFormPr
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-        <select value={status} onChange={e => setStatus(e.target.value as 'PENDING' | 'APPROVED' | 'REJECTED')}
+        <select value={status} onChange={e => setStatus(e.target.value as AgentStatus)}
           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="PENDING">Pending</option>
           <option value="APPROVED">Approved</option>

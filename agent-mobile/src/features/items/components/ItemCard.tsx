@@ -28,7 +28,11 @@ export function ItemCard({ item, onPress, cartQuantity = 0, onIncrement, onDecre
   const showImage = !!imageUri && !imageError;
 
   const content = (
-    <View className="bg-brand/5 rounded-2xl p-3 border border-brand/20">
+    <TouchableOpacity
+      className="bg-brand/5 rounded-2xl p-3 border border-brand/20"
+      activeOpacity={0.7}
+      onPress={() => onPress?.(item)}
+    >
       <View className="w-full h-24 bg-brand/5 rounded-xl mb-3 overflow-hidden">
         {showImage ? (
           <Image
@@ -84,15 +88,7 @@ export function ItemCard({ item, onPress, cartQuantity = 0, onIncrement, onDecre
           </TouchableOpacity>
         </View>
       )}
-      {cartQuantity === 0 && onPress && (
-        <TouchableOpacity
-          className="w-full mt-3 py-2 rounded-xl bg-brand items-center justify-center"
-          onPress={() => onPress(item)}
-        >
-          <Text className="text-white text-sm font-bold">Add</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    </TouchableOpacity>
   );
 
   return content;

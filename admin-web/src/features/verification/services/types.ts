@@ -4,7 +4,7 @@ export interface VerificationAgent {
   email: string
   contactNumber: string
   idVerificationUrl?: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: string
   createdAt?: string
 }
 

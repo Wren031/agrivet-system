@@ -1,21 +1,15 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, FlatList, TextInput, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, FlatList, TextInput, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useItems } from "../hooks/useItems";
 import { ItemCard } from "../components/ItemCard";
 import { EmptyState } from "../../../components/EmptyState";
 
-export function ItemGridScreen() {
+export function ItemGridScreen({ navigation }: any) {
   const { isDark } = useTheme();
   const { items, loading, searchQuery, searchItems, fetchItems } = useItems();
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchItems();
-    }, [fetchItems])
-  );
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = useMemo(() => {
@@ -27,6 +21,12 @@ export function ItemGridScreen() {
     if (!selectedCategory) return items;
     return items.filter((i) => i.category === selectedCategory);
   }, [items, selectedCategory]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchItems();
+    setRefreshing(false);
+  }, [fetchItems]);
 
   return (
     <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`} edges={["top", "left", "right"]}>
@@ -144,13 +144,14 @@ export function ItemGridScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View className="flex-1 max-w-[50%]">
-              <ItemCard item={item} />
+              <ItemCard item={item} onPress={() => navigation.navigate("ItemDetail", { item })} />
             </View>
           )}
           numColumns={2}
           columnWrapperClassName="justify-between px-6 gap-3"
           contentContainerClassName="gap-3 pb-8"
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
         />
       )}
     </SafeAreaView>

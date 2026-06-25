@@ -1,3 +1,11 @@
+export type AgentStatus = "PENDING" | "APPROVED" | "ONLINE" | "OFFLINE";
+
+export interface AgentLocation {
+  latitude: number;
+  longitude: number;
+  updatedAt?: string;
+}
+
 export interface User {
   id: string;
   fullName: string;
@@ -11,6 +19,9 @@ export interface User {
   pending_admin_approval: boolean;
   isApproved: boolean;
   createdAt: string;
+  agentProfileId?: string;
+  status?: AgentStatus;
+  location?: AgentLocation;
 }
 
 export interface Customer {

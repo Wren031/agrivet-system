@@ -1,24 +1,29 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Mail, Phone, ChevronLeft, ChevronRight, Search, Eye, MapPin, List, Navigation } from 'lucide-react'
+import { Users, Mail, Phone, ChevronLeft, ChevronRight, Search, Eye, MapPin, List, Navigation, MapPinned, Clock } from 'lucide-react'
 import { useAgents } from '../hooks/useAgents'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
-import type { Agent } from '../services/types'
+import type { Agent, AgentWithLocation, AgentStatus } from '../services/types'
+import { fetchAgentsWithLocations } from '../services/agentService'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const PAGE_SIZE = 8
 
-const statusConfig: Record<string, { label: string; card: string }> = {
-  PENDING: { label: 'Pending', card: 'text-indigo-600 dark:text-indigo-400' },
-  APPROVED: { label: 'Approved', card: 'text-indigo-700 dark:text-indigo-300' },
-  REJECTED: { label: 'Rejected', card: 'text-indigo-800 dark:text-indigo-300' },
+const statusConfig: Record<AgentStatus, { label: string; card: string }> = {
+  PENDING: { label: 'Pending', card: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20' },
+  APPROVED: { label: 'Approved', card: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
+  REJECTED: { label: 'Rejected', card: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20' },
+  TERMINATED: { label: 'Terminated', card: 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800' },
+  ONLINE: { label: 'Online', card: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20' },
+  OFFLINE: { label: 'Offline', card: 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800' },
 }
 
 const tabs = [
   { key: 'list', label: 'List', icon: List },
   { key: 'map', label: 'Map View', icon: MapPin },
+  { key: 'location', label: 'Agent Current Location', icon: MapPinned },
 ] as const
 
 type TabKey = (typeof tabs)[number]['key']
@@ -31,65 +36,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-// Manila center for fake locations
-const MANILA_CENTER: [number, number] = [14.5995, 120.9842]
-
-const fakeStreets = ['Rizal St', 'Mabini St', 'Bonifacio St', 'Luna St', 'Aguinaldo St', 'Jacinto St', 'Del Pilar St', 'Zamora St', 'Burgos St', 'Plaridel St']
-const fakeBarangays = ['Poblacion', 'San Roque', 'Sto Niño', 'Dagohoy', 'Kapitan Bayong', 'Malinawon', 'Silangan', 'Makugihon', 'Mahayahay', 'Kauswagan']
-const fakeCities = ['Valencia City', 'Malaybalay City', 'Cagayan de Oro City', 'Davao City', 'General Santos City', 'Iligan City', 'Butuan City', 'Ozamiz City', 'Tacloban City', 'Zamboanga City']
-const fakeProvinces = ['Bukidnon', 'Misamis Oriental', 'Davao del Sur', 'South Cotabato', 'Lanao del Norte', 'Agusan del Norte', 'Leyte', 'Zamboanga del Sur']
-
-function hashToString(hash: number): string {
-  return Math.abs(hash).toString()
-}
-
-function fakeAddress(id: string): string {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = ((hash << 5) - hash) + id.charCodeAt(i)
-    hash |= 0
-  }
-  const street = fakeStreets[Math.abs(hash) % fakeStreets.length]
-  const barangay = fakeBarangays[Math.abs(hash >> 2) % fakeBarangays.length]
-  const city = fakeCities[Math.abs(hash >> 4) % fakeCities.length]
-  const province = fakeProvinces[Math.abs(hash >> 6) % fakeProvinces.length]
-  const houseNum = Math.abs(hash) % 999 + 1
-  return `${houseNum} ${street}, ${barangay}, ${city}, ${province}`
-}
-
-function hashToOffset(id: string): [number, number] {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = ((hash << 5) - hash) + id.charCodeAt(i)
-    hash |= 0
-  }
-  const latOffset = (hash % 100) / 1000
-  const lngOffset = ((hash >> 4) % 100) / 1000
-  return [latOffset, lngOffset]
-}
-
-function AgentMap({ agents }: { agents: Agent[] }) {
+function AgentMap({ locations }: { locations: AgentWithLocation[] }) {
   const navigate = useNavigate()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
 
-  const locations = useMemo(() =>
-    agents.map(agent => {
-      const [latOff, lngOff] = hashToOffset(agent.id)
-      return {
-        agent,
-        lat: MANILA_CENTER[0] + latOff,
-        lng: MANILA_CENTER[1] + lngOff,
-      }
-    }),
-    [agents]
+  const markers = useMemo(() =>
+    locations.map(agent => ({
+      agent,
+      lat: agent.location.latitude,
+      lng: agent.location.longitude,
+    })),
+    [locations]
   )
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
 
     const map = L.map(mapRef.current, {
-      center: MANILA_CENTER,
       zoom: 12,
       zoomControl: true,
     })
@@ -99,8 +63,9 @@ function AgentMap({ agents }: { agents: Agent[] }) {
       maxZoom: 19,
     }).addTo(map)
 
-    locations.forEach(({ agent, lat, lng }) => {
-      const address = fakeAddress(agent.id)
+    markers.forEach(({ agent, lat, lng }) => {
+      const address = agent.location.address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+      const lastUpdate = new Date(agent.location.updatedAt).toLocaleString()
       const marker = L.marker([lat, lng]).addTo(map)
       marker.bindPopup(`
         <div style="font-family: system-ui, sans-serif; min-width: 260px;">
@@ -122,6 +87,7 @@ function AgentMap({ agents }: { agents: Agent[] }) {
             <div>
               <p style="margin: 0; font-size: 12px; font-weight: 600; color: #1e293b;">Current Location</p>
               <p style="margin: 2px 0 0; font-size: 11px; color: #64748b; line-height: 1.4;">${address}</p>
+              <p style="margin: 4px 0 0; font-size: 10px; color: #94a3b8;">Updated: ${lastUpdate}</p>
             </div>
           </div>
           <a href="/agents/${agent.id}" style="display: block; text-align: center; padding: 7px 16px; background: #4f46e5; color: white; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600;">View Profile</a>
@@ -131,8 +97,8 @@ function AgentMap({ agents }: { agents: Agent[] }) {
 
     mapInstance.current = map
 
-    if (locations.length > 0) {
-      const group = L.featureGroup(locations.map(l => L.marker([l.lat, l.lng])))
+    if (markers.length > 0) {
+      const group = L.featureGroup(markers.map(m => L.marker([m.lat, m.lng])))
       map.fitBounds(group.getBounds().pad(0.1))
     }
 
@@ -140,7 +106,7 @@ function AgentMap({ agents }: { agents: Agent[] }) {
       map.remove()
       mapInstance.current = null
     }
-  }, [locations])
+  }, [markers])
 
   return (
     <div>
@@ -149,12 +115,74 @@ function AgentMap({ agents }: { agents: Agent[] }) {
           <Navigation size={16} className="text-indigo-600" />
           <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Agent Locations</h3>
         </div>
-        <span className="text-xs text-slate-400 dark:text-slate-500">{agents.length} agent{agents.length !== 1 ? 's' : ''} on map</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">{locations.length} agent{locations.length !== 1 ? 's' : ''} on map</span>
       </div>
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
         <div ref={mapRef} className="w-full h-[600px]" />
       </div>
 
+    </div>
+  )
+}
+
+function AgentLocationTab({ locations }: { locations: AgentWithLocation[] }) {
+  const navigate = useNavigate()
+
+  if (locations.length === 0) {
+    return (
+      <div className="text-center py-16 text-slate-400 dark:text-slate-500">
+        <MapPinned size={48} className="mx-auto mb-3 opacity-40" />
+        <p>No location data available</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="overflow-x-auto bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
+            <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Full Name</th>
+            <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Current Location</th>
+            <th className="text-left py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Last Location Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {locations.map(agent => (
+            <tr key={agent.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors last:border-b-0 cursor-pointer"
+              onClick={() => navigate(`/agents/${agent.id}`)}>
+              <td className="py-3.5 px-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-xs shrink-0">
+                    {agent.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">{agent.fullName}</span>
+                    <span className={`ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${statusConfig[agent.status]?.card || ''}`}>
+                      {statusConfig[agent.status]?.label || agent.status}
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td className="py-3.5 px-4">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                  <MapPin size={14} className="shrink-0 text-slate-400" />
+                  <span>{agent.location.address || `${agent.location.latitude.toFixed(4)}, ${agent.location.longitude.toFixed(4)}`}</span>
+                </div>
+              </td>
+              <td className="py-3.5 px-4">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                  <Clock size={14} className="shrink-0" />
+                  <span>{new Date(agent.location.updatedAt).toLocaleString()}</span>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-500">
+        Showing {locations.length} agent{locations.length !== 1 ? 's' : ''} with location data
+      </div>
     </div>
   )
 }
@@ -166,6 +194,26 @@ export default function AgentsPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [activeTab, setActiveTab] = useState<TabKey>('list')
+  const [agentsWithLocations, setAgentsWithLocations] = useState<AgentWithLocation[]>([])
+  const [locationsLoading, setLocationsLoading] = useState(false)
+
+  const loadLocations = useCallback(async () => {
+    setLocationsLoading(true)
+    try {
+      const data = await fetchAgentsWithLocations()
+      setAgentsWithLocations(data)
+    } catch {
+      setAgentsWithLocations([])
+    } finally {
+      setLocationsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'map' || activeTab === 'location') {
+      loadLocations()
+    }
+  }, [activeTab, loadLocations])
 
   const filtered = useMemo(() =>
     agents.filter(a =>
@@ -179,7 +227,7 @@ export default function AgentsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  async function handleStatusChange(id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED') {
+  async function handleStatusChange(id: string, status: AgentStatus) {
     await changeStatus(id, { status })
     addNotification({ message: `Agent ${statusConfig[status].label.toLowerCase()}`, type: 'success' })
   }
@@ -312,7 +360,26 @@ export default function AgentsPage() {
         </>
       )}
 
-      {activeTab === 'map' && <AgentMap agents={filtered} />}
+      {activeTab === 'map' && (
+        locationsLoading ? (
+          <SkeletonCards count={4} />
+        ) : agentsWithLocations.length === 0 ? (
+          <div className="text-center py-16 text-slate-400 dark:text-slate-500">
+            <MapPin size={48} className="mx-auto mb-3 opacity-40" />
+            <p>No location data available for any agent</p>
+          </div>
+        ) : (
+          <AgentMap locations={agentsWithLocations} />
+        )
+      )}
+
+      {activeTab === 'location' && (
+        locationsLoading ? (
+          <SkeletonCards count={4} />
+        ) : (
+          <AgentLocationTab locations={agentsWithLocations} />
+        )
+      )}
     </div>
   )
 }

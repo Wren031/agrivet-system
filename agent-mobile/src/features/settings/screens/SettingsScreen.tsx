@@ -4,9 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Moon, LogOut, ChevronRight, X, Check, Info } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
+import { useAgentStatus } from "../../agents/hooks/useAgentStatus";
 
 export function SettingsScreen() {
   const { user, logout, updateUser } = useAuth();
+  const { setOffline } = useAgentStatus();
   
   const { isDark, toggleTheme } = useTheme();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -26,7 +28,14 @@ export function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: logout },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          await setOffline();
+          logout();
+        },
+      },
     ]);
   };
 

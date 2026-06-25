@@ -20,6 +20,10 @@ export class CreateAgentDto {
   idVerificationUrl?: string;
 
   @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
   @IsEnum(AgentStatus)
   status?: AgentStatus;
 }

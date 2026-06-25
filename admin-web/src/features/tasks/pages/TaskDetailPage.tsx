@@ -168,20 +168,18 @@ export default function TaskDetailPage() {
               </table>
             </div>
           </div>
-
-          {/* Actions below items */}
-<div className="flex items-center justify-end gap-2 mt-4">
-  {canCancel && (
-    <button onClick={() => handleCancel(task.id)}
-      className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium">
-      <XCircle size={15} /> Cancel
-    </button>
-  )}
-  <button onClick={() => handlePrint(task, settings.currencySymbol)}
-    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
-    <Printer size={15} /> Print
-  </button>
-</div>
+        <div className="flex items-center justify-end gap-2 mt-4">
+          {canCancel && (
+            <button onClick={() => handleCancel(task.id)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium">
+              <XCircle size={15} /> Cancel
+            </button>
+          )}
+          <button onClick={() => handlePrint(task, settings.currencySymbol)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+            <Printer size={15} /> Print
+          </button>
+        </div>
         </div>
       </div>
     </div>

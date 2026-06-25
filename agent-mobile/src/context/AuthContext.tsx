@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
 import { authApi } from "../features/auth/services/authApi";
@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>;
   register: (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
-  updateUser: (data: Partial<Pick<User, "fullName" | "email" | "address" | "contactNumber">>) => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -58,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         pending_admin_approval: false,
         isApproved: true,
         createdAt: new Date().toISOString(),
+        agentProfileId: apiUser.agentProfile?.id || apiUser.agentProfileId,
+        status: apiUser.agentProfile?.status || apiUser.status,
       };
       setUser(loggedInUser);
       setPendingEmail(null);
@@ -100,6 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         pending_admin_approval: false,
         isApproved: true,
         createdAt: new Date().toISOString(),
+        agentProfileId: apiUser.agentProfile?.id || apiUser.agentProfileId,
+        status: apiUser.agentProfile?.status || apiUser.status,
       };
       setUser(newUser);
       setPendingEmail(null);
@@ -118,12 +122,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
   };
 
-  const updateUser = async (data: Partial<Pick<User, "fullName" | "email" | "address" | "contactNumber">>) => {
-    if (!user) return;
-    const updated = { ...user, ...data };
-    setUser(updated);
-    await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
-  };
+  const updateUser = useCallback(async (data: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      return { ...prev, ...data };
+    });
+    const saved = await AsyncStorage.getItem(USER_STORAGE_KEY);
+    if (saved) {
+      const merged = { ...JSON.parse(saved), ...data };
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(merged));
+    }
+  }, []);
 
   return (
     <AuthContext.Provider

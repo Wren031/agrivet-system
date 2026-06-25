@@ -1,7 +1,6 @@
-import React, { useCallback, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal, FlatList } from "react-native";
+import React, { useCallback, useState, useEffect } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Modal, FlatList, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 import {
   ArrowLeft, Minus, Plus, X,
   Clock, CheckCircle2, Circle,
@@ -60,21 +59,30 @@ export function BookingDetailScreen({ route, navigation }: any) {
   const [editItems, setEditItems] = useState<BookingItem[]>([]);
   const [allItems, setAllItems] = useState<Item[]>([]);
   const [addItemModal, setAddItemModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadBooking = useCallback(async () => {
-    const data = await bookingApi.getById(bookingId);
-    if (data) {
-      setBooking(data);
-      const c = await customerApi.getById(data.customerId);
-      if (c) setCustomer(c);
+    try {
+      const data = await bookingApi.getById(bookingId);
+      if (data) {
+        setBooking(data);
+        const c = await customerApi.getById(data.customerId);
+        if (c) setCustomer(c);
+      }
+    } catch (e: any) {
+      console.error("Failed to load booking:", e);
     }
   }, [bookingId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadBooking();
-    }, [loadBooking])
-  );
+  useEffect(() => {
+    loadBooking();
+  }, [loadBooking]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadBooking();
+    setRefreshing(false);
+  }, [loadBooking]);
 
   const handleDeliver = async () => {
     if (!booking) return;
@@ -166,7 +174,10 @@ export function BookingDetailScreen({ route, navigation }: any) {
         </Text>
       </View>
 
-      <ScrollView contentContainerClassName="p-4 pb-8">
+      <ScrollView
+        contentContainerClassName="p-4 pb-8"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
+      >
         <View className={`rounded-2xl p-4 mb-4 ${statusCfg.bg} border border-brand/10`}>
           <View className="flex-row items-center gap-3">
             <View className={`w-10 h-10 rounded-full items-center justify-center ${statusCfg.bg}`}>

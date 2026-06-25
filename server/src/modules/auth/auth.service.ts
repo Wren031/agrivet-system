@@ -100,8 +100,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (agentProfile.status !== 'APPROVED') {
-      throw new UnauthorizedException('Account is not approved yet');
+    const allowedLoginStatuses = ['APPROVED', 'ONLINE', 'OFFLINE'];
+    if (!allowedLoginStatuses.includes(agentProfile.status)) {
+      const message = agentProfile.status === 'PENDING'
+        ? 'Account is not approved yet'
+        : `Account is ${agentProfile.status.toLowerCase()}`;
+      throw new UnauthorizedException(message);
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, agentProfile.user.password);
@@ -123,6 +127,7 @@ export class AuthService {
         email: agentProfile.email,
         fullName: agentProfile.fullName,
         role: agentProfile.user.role,
+        agentProfileId: agentProfile.id,
       },
     };
   }
@@ -171,6 +176,7 @@ export class AuthService {
         status: user.agentProfile.status,
         contactNumber: user.agentProfile.contactNumber,
         idVerificationUrl: user.agentProfile.idVerificationUrl,
+        agentProfileId: user.agentProfile.id,
       },
     };
   }
