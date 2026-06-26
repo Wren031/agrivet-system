@@ -52,6 +52,15 @@ function mapStatus(status: string): BookingStatus {
   return STATUS_MAP[status] || "Pending";
 }
 
+let _historyApi: any = null;
+async function getHistoryApi() {
+  if (!_historyApi) {
+    const mod = await import("../../history/services/historyApi");
+    _historyApi = mod.historyApi;
+  }
+  return _historyApi;
+}
+
 function mapItem(item: BackendOrderItem): BookingItem {
   return {
     itemId: item.inventoryId || item.id,
@@ -152,9 +161,7 @@ export const bookingApi = {
     });
     const order: BackendOrder = await handleResponse(res);
     const booking = fromBackendOrder(order);
-    import("../../history/services/historyApi").then(({ historyApi }) =>
-      historyApi.recordChange(booking.id, "Pending")
-    );
+    getHistoryApi().then((api) => api.recordChange(booking.id, "Pending"));
     return booking;
   },
 
@@ -170,9 +177,7 @@ export const bookingApi = {
     });
     const order: BackendOrder = await handleResponse(res);
     const booking = fromBackendOrder(order);
-    import("../../history/services/historyApi").then(({ historyApi }) =>
-      historyApi.recordChange(id, status)
-    );
+    getHistoryApi().then((api) => api.recordChange(id, status));
     return booking;
   },
 

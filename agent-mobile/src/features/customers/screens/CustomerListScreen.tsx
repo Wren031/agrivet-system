@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, FlatList, Text, TextInput, RefreshControl } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, FlatList, TextInput, RefreshControl } from "react-native";
 import { Search } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -10,6 +9,9 @@ import { CustomerForm } from "../components/CustomerForm";
 import { PageHeader } from "../../../components/PageHeader";
 import { EmptyState } from "../../../components/EmptyState";
 import { Modal } from "../../../components/Modal";
+import { ScreenLayout } from "../../../components/ScreenLayout";
+import { useHideTabBar } from "../../../hooks/useHideTabBar";
+import { getScrollBottomPadding } from "../../../theme/layout";
 import { Customer } from "../../../types";
 
 export function CustomerListScreen() {
@@ -22,29 +24,31 @@ export function CustomerListScreen() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [search, setSearch] = useState("");
 
+  useHideTabBar(showForm);
+
   const filteredCustomers = useMemo(() => {
     if (!search.trim()) return customers;
     const query = search.toLowerCase();
     return customers.filter(
       (c) =>
         c.name.toLowerCase().includes(query) ||
-        c.email.toLowerCase().includes(query) ||
+        c.storeName.toLowerCase().includes(query) ||
         c.phone.toLowerCase().includes(query)
     );
   }, [customers, search]);
 
-  const handleEdit = (customer: Customer) => {
+  const handleEdit = useCallback((customer: Customer) => {
     setEditingCustomer(customer);
     setShowForm(true);
-  };
+  }, []);
 
-  const handleDelete = async (customer: Customer) => {
+  const handleDelete = useCallback(async (customer: Customer) => {
     try {
       await deleteCustomer(customer.id);
     } catch {}
-  };
+  }, [deleteCustomer]);
 
-  const handleFormSubmit = async (data: Omit<Customer, "id" | "createdAt">) => {
+  const handleFormSubmit = useCallback(async (data: Omit<Customer, "id" | "createdAt">) => {
     if (editingCustomer) {
       await updateCustomer(editingCustomer.id, data);
     } else {
@@ -52,12 +56,12 @@ export function CustomerListScreen() {
     }
     setShowForm(false);
     setEditingCustomer(null);
-  };
+  }, [editingCustomer, updateCustomer, addCustomer]);
 
-  const handleCloseForm = () => {
+  const handleCloseForm = useCallback(() => {
     setShowForm(false);
     setEditingCustomer(null);
-  };
+  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -65,8 +69,14 @@ export function CustomerListScreen() {
     setRefreshing(false);
   }, [fetchCustomers]);
 
+  const keyExtractor = useCallback((item: Customer) => item.id, []);
+
+  const renderItem = useCallback(({ item }: { item: Customer }) => (
+    <CustomerCard customer={item} onEdit={handleEdit} onDelete={handleDelete} />
+  ), [handleEdit, handleDelete]);
+
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
+    <ScreenLayout withTabBarPadding={!showForm}>
       <PageHeader
         title="Customers"
         subtitle={
@@ -76,9 +86,13 @@ export function CustomerListScreen() {
         }
         action={{ label: "+ Add", onPress: () => setShowForm(true) }}
       />
-      <View className="px-6 mb-3">
-        <View className="flex-row items-center bg-brand/5 rounded-xl px-4 border border-brand/20">
-          <Search size={18} color="rgba(45,106,79,0.4)" />
+      <View className="px-5 mb-3">
+        <View
+          className={`flex-row items-center rounded-xl px-4 border ${
+            isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5"
+          }`}
+        >
+          <Search size={18} color="rgba(27,67,50,0.45)" />
           <TextInput
             className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
             placeholder="Search customers..."
@@ -98,13 +112,14 @@ export function CustomerListScreen() {
       ) : (
         <FlatList
           data={filteredCustomers}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <CustomerCard customer={item} onEdit={handleEdit} onDelete={handleDelete} />
-          )}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: getScrollBottomPadding(!showForm) }}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={7}
         />
       )}
       <Modal
@@ -118,6 +133,6 @@ export function CustomerListScreen() {
           onCancel={handleCloseForm}
         />
       </Modal>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }

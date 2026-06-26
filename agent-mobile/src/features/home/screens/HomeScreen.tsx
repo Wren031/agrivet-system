@@ -1,12 +1,13 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, TouchableOpacity, RefreshControl } from "react-native";
 import { Calendar, Package, Users, TrendingUp, ArrowRight, Plus, ListOrdered, MapPin } from "lucide-react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAgentStatus } from "../../agents/hooks/useAgentStatus";
 import { StatCard } from "../components/StatCard";
+import { ScreenLayout } from "../../../components/ScreenLayout";
+import { Card } from "../../../components/Card";
 
 export function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -41,12 +42,15 @@ export function HomeScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2d6a4f" />}
-      >
-        <View className="px-6 pt-8 pb-6">
+    <ScreenLayout
+      scroll
+      scrollProps={{
+        refreshControl: (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1b4332" />
+        ),
+      }}
+    >
+      <View className="px-5 pt-6 pb-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
               <Text className={`text-sm font-bold text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider`}>
@@ -92,12 +96,12 @@ export function HomeScreen({ navigation }: any) {
           </View>
         </View>
 
-        <View className="px-6 mb-1">
-          <Text className={`text-xs font-bold text-${isDark ? "white/40" : "black/40"} uppercase tracking-widest`}>
+        <View className="px-5 mb-1">
+          <Text className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-black/40"}`}>
             Overview
           </Text>
         </View>
-        <View className="flex-row flex-wrap px-6 mb-6">
+        <View className="flex-row flex-wrap px-5 mb-6">
           {statCards.map((card, index) => (
             <View key={index} className={`w-1/2 ${index % 2 === 0 ? "pr-1.5" : "pl-1.5"} mb-3`}>
               <StatCard icon={card.icon} label={card.label} value={card.value} />
@@ -105,8 +109,8 @@ export function HomeScreen({ navigation }: any) {
           ))}
         </View>
 
-        <View className="px-6 mb-6">
-          <Text className={`text-xs font-bold text-${isDark ? "white/40" : "black/40"} uppercase tracking-widest mb-3`}>
+        <View className="px-5 mb-6">
+          <Text className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/40" : "text-black/40"}`}>
             Quick Actions
           </Text>
           <View className="flex-row gap-3">
@@ -123,23 +127,25 @@ export function HomeScreen({ navigation }: any) {
                 <Text className="text-white/60 text-xs mt-0.5">Create an order</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} rounded-2xl py-4 px-4 flex-row items-center gap-3 border border-black/10 shadow-sm`}
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate("MyBookings")}
-            >
-              <View className="w-9 h-9 rounded-xl bg-brand/10 items-center justify-center">
-                <ListOrdered size={20} color="#2d6a4f" />
-              </View>
-              <View className="flex-1">
-                <Text className={`text-${isDark ? "white" : "black"} font-bold text-sm`}>My Bookings</Text>
-                <Text className={`text-${isDark ? "white/50" : "black/50"} text-xs mt-0.5`}>View all orders</Text>
-              </View>
-            </TouchableOpacity>
+            <Card elevated className="flex-1 py-4 px-4 flex-row items-center gap-3 !p-0">
+              <TouchableOpacity
+                className="flex-1 flex-row items-center gap-3 py-4 px-4"
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate("MyBookings")}
+              >
+                <View className="w-9 h-9 rounded-xl bg-brand/10 items-center justify-center">
+                  <ListOrdered size={20} color="#1b4332" />
+                </View>
+                <View className="flex-1">
+                  <Text className={`font-bold text-sm ${isDark ? "text-white" : "text-black"}`}>My Bookings</Text>
+                  <Text className={`text-xs mt-0.5 ${isDark ? "text-white/50" : "text-black/50"}`}>View all orders</Text>
+                </View>
+              </TouchableOpacity>
+            </Card>
           </View>
         </View>
 
-        <View className="px-6 mb-8">
+        <View className="px-5 mb-4">
           <View className="flex-row items-center justify-between mb-4">
             <Text className={`text-sm font-bold text-${isDark ? "white/60" : "black/60"} uppercase tracking-wider`}>
               Recent Transactions
@@ -154,24 +160,23 @@ export function HomeScreen({ navigation }: any) {
           </View>
 
           {recentBookings.length === 0 ? (
-            <View className="bg-brand/5 rounded-2xl py-12 border border-brand/20 items-center">
-              <Calendar size={40} color="rgba(45,106,79,0.3)" />
-              <Text className={`text-${isDark ? "white/50" : "black/50"} mt-3 text-base font-medium`}>No transactions yet</Text>
-              <Text className={`text-${isDark ? "white/40" : "black/40"} text-xs mt-1`}>Create your first booking to get started</Text>
-            </View>
+            <Card elevated className="py-12 items-center">
+              <Calendar size={40} color="rgba(27,67,50,0.3)" />
+              <Text className={`mt-3 text-base font-medium ${isDark ? "text-white/50" : "text-black/50"}`}>No transactions yet</Text>
+              <Text className={`text-xs mt-1 ${isDark ? "text-white/40" : "text-black/40"}`}>Create your first booking to get started</Text>
+            </Card>
           ) : (
             <View className="gap-2.5">
               {recentBookings.map((booking) => {
                 const statusStyle = getStatusOpacity(booking.status);
                 return (
-                  <TouchableOpacity
-                    key={booking.id}
-                    className="bg-brand/5 rounded-2xl p-4 border border-brand/20"
-                    activeOpacity={0.7}
-                    onPress={() =>
-                      navigation.navigate("BookingDetail", { bookingId: booking.id })
-                    }
-                  >
+                  <Card key={booking.id} elevated className="!p-4">
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() =>
+                        navigation.navigate("BookingDetail", { bookingId: booking.id })
+                      }
+                    >
                     <View className="flex-row items-center justify-between mb-2">
                       <View className="flex-row items-center gap-2.5 flex-1">
                         <View className="w-9 h-9 rounded-full bg-brand/10 items-center justify-center">
@@ -206,13 +211,13 @@ export function HomeScreen({ navigation }: any) {
                         ₱{booking.total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </Card>
                 );
               })}
             </View>
           )}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }

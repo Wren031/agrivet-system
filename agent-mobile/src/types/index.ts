@@ -28,7 +28,7 @@ export interface Customer {
   id: string;
   name: string;
   phone: string;
-  email: string;
+  storeName: string;
   region: string;
   province: string;
   city: string;

@@ -102,7 +102,7 @@ model Customer {
   id             String        @id @default(uuid())
   fullName       String        @map("full_name")
   phone          String
-  email          String?
+  storeName      String?       @map("store_name")
   address        String
   agentProfileId String?       @map("agent_profile_id")
   agentProfile   AgentProfile? @relation(fields: [agentProfileId], references: [id], onDelete: SetNull)

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Plus, Minus } from "lucide-react-native";
 import { Item } from "../../../types";
 import { useTheme } from "../../../context/ThemeContext";
-import { getImageUrl } from "@/config/api.config";
+import { getImageUrl } from "../../../config/api.config";
 
 interface ItemCardProps {
   item: Item;

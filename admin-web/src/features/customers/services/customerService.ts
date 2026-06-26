@@ -6,6 +6,7 @@ function fromApi(item: CustomerApiResponse): Customer {
     id: item.id,
     fullName: item.fullName,
     phone: item.phone,
+    storeName: item.storeName ?? undefined,
     address: item.address,
     totalOrders: item._count?.orders ?? 0,
     agent: item.agentProfile?.fullName ?? undefined,
@@ -17,7 +18,7 @@ export async function fetchCustomers(): Promise<Customer[]> {
   return data.map(fromApi)
 }
 
-export async function createCustomer(customer: { fullName: string; phone: string; address?: string }): Promise<Customer> {
+export async function createCustomer(customer: { fullName: string; phone: string; storeName?: string; address?: string }): Promise<Customer> {
   const data = await apiFetch<CustomerApiResponse>('/customers', {
     method: 'POST',
     body: JSON.stringify(customer),
@@ -25,7 +26,7 @@ export async function createCustomer(customer: { fullName: string; phone: string
   return fromApi(data)
 }
 
-export async function updateCustomer(id: string, updates: { fullName?: string; phone?: string; address?: string }): Promise<Customer> {
+export async function updateCustomer(id: string, updates: { fullName?: string; phone?: string; storeName?: string; address?: string }): Promise<Customer> {
   const data = await apiFetch<CustomerApiResponse>(`/customers/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(updates),

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Customer } from "../../../types";
 import { getCityName, getProvinceName } from "../../../data/philippineAddress";
@@ -15,7 +15,7 @@ function formatAddress(c: Customer): string {
   return parts.join(", ") || "No address";
 }
 
-export function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) {
+export const CustomerCard = memo(function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) {
   const { isDark } = useTheme();
   const initials = customer.name
     .split(" ")
@@ -37,7 +37,7 @@ export function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) 
             {customer.name}
           </Text>
           <Text className={`text-sm text-${isDark ? "white/70" : "black/70"}`}>
-            {customer.email}
+            {customer.storeName}
           </Text>
           <Text className={`text-xs text-${isDark ? "white/50" : "black/50"} mt-0.5`}>
             {customer.phone}
@@ -71,4 +71,4 @@ export function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) 
       </View>
     </View>
   );
-}
+});

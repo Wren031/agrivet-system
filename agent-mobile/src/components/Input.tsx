@@ -4,6 +4,7 @@ import {
   View,
   Text,
   TextInputProps,
+  Platform,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
@@ -18,25 +19,33 @@ export function Input({ label, error, ...props }: InputProps) {
 
   return (
     <View className="mb-4">
-      <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"} mb-1.5`}>
+      <Text
+        className={`text-sm font-semibold mb-1.5 ${
+          isDark ? "text-white/80" : "text-black/75"
+        }`}
+      >
         {label}
       </Text>
       <TextInput
-        className={`w-full px-4 py-3 rounded-xl text-base text-${isDark ? "white" : "black"} bg-brand/5 border ${
+        className={`w-full px-4 rounded-xl text-base border ${
+          Platform.OS === "ios" ? "py-3.5" : "py-3"
+        } ${isDark ? "text-white bg-white/5" : "text-black bg-black/3"} ${
           isFocused
             ? "border-brand"
             : error
-            ? "border-brand/50"
-            : "border-brand/20"
+              ? "border-red-400"
+              : isDark
+                ? "border-white/10"
+                : "border-black/8"
         }`}
-        placeholderTextColor="rgba(45,106,79,0.4)"
+        placeholderTextColor={isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         {...props}
       />
-      {error && (
-        <Text className={`text-${isDark ? "white/70" : "black/70"} text-xs mt-1`}>{error}</Text>
-      )}
+      {error ? (
+        <Text className="text-red-500 text-xs mt-1">{error}</Text>
+      ) : null}
     </View>
   );
 }

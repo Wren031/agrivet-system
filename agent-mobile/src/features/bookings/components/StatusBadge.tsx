@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { View, Text } from "react-native";
 import { BookingStatus } from "../../../types";
 import { useTheme } from "../../../context/ThemeContext";
@@ -8,31 +8,15 @@ interface StatusBadgeProps {
   size?: "sm" | "md";
 }
 
-export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
+const STATUS_STYLES: Record<BookingStatus, { bg: string; dot: string; label: string }> = {
+  Pending: { bg: "bg-accent/15", dot: "bg-accent", label: "Pending" },
+  Approved: { bg: "bg-brand/15", dot: "bg-brand", label: "Approved" },
+  Delivered: { bg: "bg-brand/30", dot: "bg-brand", label: "Delivered" },
+};
+
+export const StatusBadge = memo(function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
   const { isDark } = useTheme();
-
-  const statusStyles: Record<BookingStatus, { bg: string; text: string; dot: string; label: string }> = {
-    Pending: {
-      bg: "bg-accent/15",
-      text: `text-${isDark ? "white" : "black"}`,
-      dot: "bg-accent",
-      label: "Pending",
-    },
-    Approved: {
-      bg: "bg-brand/15",
-      text: `text-${isDark ? "white" : "black"}`,
-      dot: "bg-brand",
-      label: "Approved",
-    },
-    Delivered: {
-      bg: "bg-brand/30",
-      text: `text-${isDark ? "white" : "black"}`,
-      dot: "bg-brand",
-      label: "Delivered",
-    },
-  };
-
-  const style = statusStyles[status];
+  const style = STATUS_STYLES[status];
 
   return (
     <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full border border-brand/20 ${style.bg}`}>
@@ -40,10 +24,10 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
       <Text
         className={`font-semibold ${
           size === "sm" ? "text-[10px]" : "text-xs"
-        } ${style.text}`}
+        } ${isDark ? "text-white" : "text-black"}`}
       >
         {style.label}
       </Text>
     </View>
   );
-}
+});

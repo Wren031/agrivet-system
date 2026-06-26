@@ -1,5 +1,5 @@
 import { Item } from "../../../types";
-import { API_BASE_URL } from "@/config/api.config";
+import { API_BASE_URL } from "../../../config/api.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface InventoryResponse {

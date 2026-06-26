@@ -9,7 +9,7 @@ interface CustomerResponse {
   id: string;
   fullName: string;
   phone: string;
-  email: string | null;
+  storeName: string | null;
   address: string;
   agentProfileId: string | null;
   createdAt: string;
@@ -60,7 +60,7 @@ function fromBackendCustomer(raw: CustomerResponse): Customer {
     id: raw.id,
     name: raw.fullName,
     phone: raw.phone,
-    email: raw.email ?? "",
+    storeName: raw.storeName ?? "",
     region: parts[0] ?? "",
     province: parts[1] ?? "",
     city: parts[2] ?? "",
@@ -95,7 +95,7 @@ export const customerApi = {
     const body: Record<string, any> = {
       fullName: data.name,
       phone: data.phone,
-      email: data.email || undefined,
+      storeName: data.storeName || undefined,
       address: toBackendAddress(data),
     };
     if (data.agentProfileId) body.agentProfileId = data.agentProfileId;
@@ -113,7 +113,7 @@ export const customerApi = {
     const body: Record<string, any> = {};
     if (data.name) body.fullName = data.name;
     if (data.phone) body.phone = data.phone;
-    if (data.email !== undefined) body.email = data.email || undefined;
+    if (data.storeName !== undefined) body.storeName = data.storeName || undefined;
     if (data.region || data.province || data.city || data.barangay || data.address) {
       body.address = toBackendAddress({
         region: data.region ?? "",

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../types";
 import { authApi } from "../features/auth/services/authApi";
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
-  const login = async (email: string, password: string, rememberMe?: boolean) => {
+  const login = useCallback(async (email: string, password: string, rememberMe?: boolean) => {
     try {
       const { user: apiUser, token } = await authApi.login(email, password);
       const loggedInUser: User = {
@@ -78,9 +78,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { success: false, message };
     }
-  };
+  }, []);
 
-  const register = async (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) => {
+  const register = useCallback(async (fullName: string, email: string, contactNumber: string, password: string, idVerificationUrl: string) => {
     try {
       const { user: apiUser, token } = await authApi.register(fullName, email, contactNumber, password, idVerificationUrl);
 
@@ -113,14 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       return { success: false, message: error.message || "Registration failed" };
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setUser(null);
     setPendingEmail(null);
     await AsyncStorage.removeItem(USER_STORAGE_KEY);
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
-  };
+  }, []);
 
   const updateUser = useCallback(async (data: Partial<User>) => {
     setUser(prev => {
@@ -134,18 +134,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const value = useMemo(() => ({
+    user,
+    isAuthenticated: !!user,
+    isPendingApproval: !!pendingEmail,
+    login,
+    register,
+    logout,
+    updateUser,
+  }), [user, pendingEmail, login, register, logout, updateUser]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isPendingApproval: !!pendingEmail,
-        login,
-        register,
-        logout,
-        updateUser,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

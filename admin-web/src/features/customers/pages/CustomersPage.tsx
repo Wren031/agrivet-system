@@ -22,6 +22,7 @@ export default function CustomersPage() {
     customers.filter(c =>
       c.fullName.toLowerCase().includes(search.toLowerCase()) ||
       c.phone.toLowerCase().includes(search.toLowerCase()) ||
+      (c.storeName?.toLowerCase().includes(search.toLowerCase())) ||
       c.address.toLowerCase().includes(search.toLowerCase()) ||
       (c.agent?.toLowerCase().includes(search.toLowerCase()))
     ), [customers, search]
@@ -72,6 +73,7 @@ export default function CustomersPage() {
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <th className="px-5 py-3">Full Name</th>
                     <th className="px-5 py-3">Contact Number</th>
+                    <th className="px-5 py-3">Store Name</th>
                     <th className="px-5 py-3">Address</th>
                     <th className="px-5 py-3">Total Orders</th>
                     <th className="px-5 py-3">Agent</th>
@@ -98,6 +100,9 @@ export default function CustomersPage() {
                             <Phone size={14} className="text-slate-400 shrink-0" />
                             {customer.phone}
                           </div>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="text-slate-600 dark:text-slate-300">{customer.storeName ?? '—'}</span>
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">

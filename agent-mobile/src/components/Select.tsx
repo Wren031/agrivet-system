@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   FlatList,
   TextInput,
 } from "react-native";
-import { Search, ChevronDown } from "lucide-react-native";
+import { Search, ChevronDown, Check } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
 
 interface Option {
@@ -36,75 +36,121 @@ export function Select({
   const [search, setSearch] = useState("");
   const { isDark } = useTheme();
 
-  const selectedName = options.find((o) => o.code === value)?.name;
+  const selectedName = useMemo(() => options.find((o) => o.code === value)?.name, [options, value]);
 
-  const filtered = search.trim()
+  const filtered = useMemo(() => search.trim()
     ? options.filter((o) => o.name.toLowerCase().includes(search.toLowerCase()))
-    : options;
+    : options, [options, search]);
+
+  const mutedColor = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)";
 
   return (
     <View className="mb-4">
-      <Text className={`text-sm font-medium text-${isDark ? "white/80" : "black/80"} mb-1.5`}>
+      <Text className={`text-sm font-semibold text-${isDark ? "white/80" : "black/75"} mb-1.5`}>
         {label}
       </Text>
       <TouchableOpacity
-        className="w-full px-4 py-3 rounded-xl flex-row items-center justify-between bg-brand/5 border border-brand/20"
+        className={`w-full px-4 py-3.5 rounded-xl flex-row items-center justify-between border ${
+          isDark ? "bg-white/5 border-white/10" : "bg-black/3 border-black/8"
+        }`}
         onPress={() => { setSearch(""); setOpen(true); }}
         activeOpacity={0.7}
         disabled={disabled}
+        style={{
+          shadowColor: "#1b4332",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: isDark ? 0 : 0.04,
+          shadowRadius: 3,
+          elevation: isDark ? 0 : 1,
+        }}
       >
-        <Text className={value ? `text-base text-${isDark ? "white" : "black"}` : `text-base text-${isDark ? "white/40" : "black/40"}`}>
+        <Text
+          className={`text-base ${value ? `text-${isDark ? "white" : "black"}` : `text-${isDark ? "white/35" : "black/35"}`}`}
+        >
           {selectedName || placeholder}
         </Text>
-        <ChevronDown size={18} color="rgba(45,106,79,0.4)" />
+        <View className={`w-7 h-7 rounded-lg items-center justify-center ${isDark ? "bg-white/5" : "bg-black/5"}`}>
+          <ChevronDown size={16} color={isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"} />
+        </View>
       </TouchableOpacity>
 
-      <Modal visible={open} transparent animationType="fade">
+      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
         <TouchableOpacity
-          className="flex-1 bg-black/40 justify-center px-6"
+          className="flex-1 justify-end"
           activeOpacity={1}
           onPress={() => setOpen(false)}
         >
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => {}}
-            className={`bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"} rounded-2xl max-h-[70%]`}
+            className={`rounded-t-3xl max-h-[80%] ${isDark ? "bg-[#1e293b]" : "bg-white"}`}
           >
-            <View className="flex-row items-center px-4 py-3 border-b border-brand/20">
-              <Search size={18} color="rgba(45,106,79,0.4)" />
+            <View className="items-center pt-2 pb-1">
+              <View className={`w-10 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-black/15"}`} />
+            </View>
+
+            <View className="flex-row items-center mx-5 mt-2 mb-3 px-4 py-2.5 rounded-xl border bg-brand/5 border-brand/20">
+              <Search size={17} color="rgba(45,106,79,0.5)" />
               <TextInput
-                className={`flex-1 ml-2 py-1 text-base text-${isDark ? "white" : "black"}`}
+                className={`flex-1 ml-2.5 py-1 text-base ${isDark ? "text-white" : "text-black"}`}
                 placeholder="Search..."
-                placeholderTextColor="rgba(45,106,79,0.4)"
+                placeholderTextColor={mutedColor}
                 value={search}
                 onChangeText={setSearch}
                 autoFocus
               />
+              {search.length > 0 && (
+                <TouchableOpacity onPress={() => setSearch("")} className="p-1">
+                  <View className="w-4 h-4 rounded-full bg-black/20 items-center justify-center">
+                    <Text className="text-white text-[10px] font-bold">X</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
+
             <FlatList
               data={filtered}
               keyExtractor={(item) => item.code}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className={`px-4 py-3.5 border-b border-brand/10 ${
-                    value === item.code ? "bg-brand/10" : ""
-                  }`}
-                  onPress={() => { onSelect(item.code); setOpen(false); }}
-                >
-                  <Text
-                    className={`text-base ${
-                      value === item.code
-                        ? `text-${isDark ? "white" : "black"} font-bold`
-                        : `text-${isDark ? "white/70" : "black/70"}`
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+              renderItem={({ item }) => {
+                const isSelected = value === item.code;
+                return (
+                  <TouchableOpacity
+                    className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${
+                      isSelected
+                        ? isDark ? "bg-brand/20" : "bg-brand/10"
+                        : isDark ? "active:bg-white/5" : "active:bg-black/5"
                     }`}
+                    onPress={() => {
+                      onSelect(item.code);
+                      setOpen(false);
+                    }}
+                    activeOpacity={0.6}
                   >
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
+                    <View className="flex-1">
+                      <Text
+                        className={`text-base ${
+                          isSelected
+                            ? "text-brand font-bold"
+                            : `text-${isDark ? "white" : "black"}`
+                        }`}
+                      >
+                        {item.name}
+                      </Text>
+                    </View>
+                    {isSelected && (
+                      <View className="w-6 h-6 rounded-full bg-brand items-center justify-center">
+                        <Check size={14} color="white" strokeWidth={3} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
               ListEmptyComponent={
-                <View className="items-center py-8">
-                  <Text className={`text-${isDark ? "white/40" : "black/40"}`}>No options found</Text>
+                <View className="items-center py-10">
+                  <Text className={`text-sm ${isDark ? "text-white/30" : "text-black/30"}`}>
+                    No matching options
+                  </Text>
                 </View>
               }
             />

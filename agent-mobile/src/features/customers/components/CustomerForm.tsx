@@ -30,7 +30,7 @@ export function CustomerForm({ customer, onSubmit, onCancel }: CustomerFormProps
   const { isDark } = useTheme();
   const [name, setName] = useState(customer?.name || "");
   const [phone, setPhone] = useState(customer?.phone || "");
-  const [email, setEmail] = useState(customer?.email || "");
+  const [storeName, setStoreName] = useState(customer?.storeName || "");
   
   // Address Codes (for cascading selects)
   const [regionCode, setRegionCode] = useState("");
@@ -115,7 +115,7 @@ export function CustomerForm({ customer, onSubmit, onCancel }: CustomerFormProps
     if (customer) {
       setName(customer.name);
       setPhone(customer.phone);
-      setEmail(customer.email);
+      setStoreName(customer.storeName);
       setPurok(customer.address);
       // Try resolving stored names to codes; if options not yet loaded, just store names
       setRegionCode(findCode(regionOptions, customer.region));
@@ -164,7 +164,7 @@ export function CustomerForm({ customer, onSubmit, onCancel }: CustomerFormProps
       await onSubmit({
         name,
         phone,
-        email,
+        storeName,
         region: regionName,
         province: provinceName,
         city: cityName,
@@ -190,7 +190,7 @@ export function CustomerForm({ customer, onSubmit, onCancel }: CustomerFormProps
       {/* Profile Details Section */}
       <Input label="Full Name" placeholder="Enter full name" value={name} onChangeText={setName} />
       <Input label="Phone" placeholder="+63 9XX XXX XXXX" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-      <Input label="Email" placeholder="email@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+      <Input label="Store Name" placeholder="Enter store name" value={storeName} onChangeText={setStoreName} />
 
       {/* GCash Stacked Address Section */}
       <View className="mt-2 gap-3">

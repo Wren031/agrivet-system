@@ -15,13 +15,13 @@ export function useCustomers() {
 
   useEffect(() => { load() }, [load])
 
-  const add = useCallback(async (customer: { fullName: string; phone: string; address?: string }) => {
+  const add = useCallback(async (customer: { fullName: string; phone: string; storeName?: string; address?: string }) => {
     const created = await createCustomer(customer)
     setCustomers(prev => [...prev, created])
     return created
   }, [])
 
-  const update = useCallback(async (id: string, updates: { fullName?: string; phone?: string; address?: string }) => {
+  const update = useCallback(async (id: string, updates: { fullName?: string; phone?: string; storeName?: string; address?: string }) => {
     const updated = await updateCustomer(id, updates)
     setCustomers(prev => prev.map(c => c.id === id ? updated : c))
     return updated

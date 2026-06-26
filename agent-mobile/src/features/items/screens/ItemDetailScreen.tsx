@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Package, Calendar, Tag, Box, AlertTriangle, TrendingUp } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { Item } from "../../../types";
-import { getImageUrl } from "@/config/api.config";
+import { getImageUrl } from "../../../config/api.config";
 
 function PesoIcon({ size = 18, color = "#2d6a4f" }: { size?: number; color?: string }) {
   return (

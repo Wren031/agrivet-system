@@ -7,13 +7,26 @@ import * as Location from "expo-location";
 const LOCATION_UPDATE_INTERVAL = 30000;
 const LOCATION_TIMEOUT = 15000;
 
-async function getCurrentPosition(): Promise<{ latitude: number; longitude: number }> {
-  const { status } = await Location.requestForegroundPermissionsAsync();
-  if (status !== "granted") {
+let permissionGranted: boolean | null = null;
+
+async function ensureLocationPermission(): Promise<void> {
+  if (permissionGranted === true) return;
+  if (permissionGranted === false) {
     const err = new Error("Location permission denied") as any;
     err.code = 1;
     throw err;
   }
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  permissionGranted = status === "granted";
+  if (!permissionGranted) {
+    const err = new Error("Location permission denied") as any;
+    err.code = 1;
+    throw err;
+  }
+}
+
+async function getCurrentPosition(): Promise<{ latitude: number; longitude: number }> {
+  await ensureLocationPermission();
   const pos = await Location.getCurrentPositionAsync({
     accuracy: Location.Accuracy.Balanced,
     timeout: LOCATION_TIMEOUT,

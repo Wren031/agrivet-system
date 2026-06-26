@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { agriColors } from "../theme/colors";
 
@@ -32,14 +32,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
-  const toggleTheme = async () => {
-    const next = !isDark;
-    setIsDark(next);
-    await AsyncStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(next));
-  };
+  const toggleTheme = useCallback(async () => {
+    setIsDark(prev => {
+      const next = !prev;
+      AsyncStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const value = useMemo(() => ({ isDark, toggleTheme, colors: agriColors }), [isDark, toggleTheme]);
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme, colors: agriColors }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

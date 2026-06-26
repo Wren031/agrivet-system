@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, MinLength, IsUUID } from 'class-validator';
+import { IsString, IsOptional, MinLength, IsUUID } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsString()
@@ -10,8 +10,8 @@ export class CreateCustomerDto {
   phone: string;
 
   @IsOptional()
-  @IsEmail()
-  email?: string;
+  @IsString()
+  storeName?: string;
 
   @IsString()
   @MinLength(1)

@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, FlatList } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, FlatList, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Search, Plus, Minus, ShoppingCart, ArrowRight, ArrowLeft, X, PackageCheck } from "lucide-react-native";
+import { Search, Plus, Minus, ShoppingCart, ArrowRight, ArrowLeft, X, PackageCheck, Package, Filter } from "lucide-react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { Customer, Item, BookingItem } from "../../../types";
 import { customerApi } from "../../customers/services/customerApi";
 import { getCityName, getProvinceName } from "../../../data/philippineAddress";
 import { itemApi } from "../../items/services/itemApi";
 import { bookingApi } from "../services/bookingApi";
-import { ItemCard } from "../../items/components/ItemCard";
 import { Button } from "../../../components/Button";
+import { getImageUrl } from "../../../config/api.config";
 
 type Step = "customer" | "items" | "cart" | "review";
 
@@ -22,6 +22,8 @@ export function CreateBookingScreen({ navigation }: any) {
   const [cart, setCart] = useState<Map<string, number>>(new Map());
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const [creating, setCreating] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -46,8 +48,16 @@ export function CreateBookingScreen({ navigation }: any) {
     );
   }, [customers, customerSearch]);
 
+  const categories = useMemo(() => {
+    const cats = new Set(items.map((i) => i.category));
+    return Array.from(cats).sort();
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     let result = items;
+    if (selectedCategory) {
+      result = result.filter((i) => i.category === selectedCategory);
+    }
     if (itemSearch.trim()) {
       const q = itemSearch.toLowerCase();
       result = result.filter(
@@ -57,7 +67,7 @@ export function CreateBookingScreen({ navigation }: any) {
       );
     }
     return result;
-  }, [items, itemSearch]);
+  }, [items, itemSearch, selectedCategory]);
 
   const cartItems = useMemo(() => {
     return Array.from(cart.entries()).map(([id, qty]) => {
@@ -194,7 +204,9 @@ export function CreateBookingScreen({ navigation }: any) {
                     <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
                       {customer.name}
                     </Text>
-                    <Text className={`text-sm text-${isDark ? "white/70" : "black/70"}`}>{customer.email}</Text>
+                    <Text className={`text-sm text-${isDark ? "white/70" : "black/70"}`}>
+                      {customer.storeName || "No store"}
+                    </Text>
                     <Text className={`text-xs text-${isDark ? "white/50" : "black/50"} mt-0.5`}>{customer.phone}</Text>
                   </View>
                   {isSelected && (
@@ -237,15 +249,41 @@ export function CreateBookingScreen({ navigation }: any) {
         Customer: {selectedCustomer?.name}
       </Text>
 
-      <View className="flex-row items-center bg-brand/5 rounded-xl px-4 border border-brand/20 mb-3">
-        <Search size={18} color="rgba(45,106,79,0.4)" />
+      <View className="mb-4">
         <TextInput
-          className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
+          className={`w-full px-4 py-3.5 rounded-xl text-base text-${isDark ? "white" : "black"} bg-brand/5 border border-brand/20`}
           placeholder="Search items..."
           placeholderTextColor="rgba(45,106,79,0.4)"
           value={itemSearch}
           onChangeText={setItemSearch}
+          clearButtonMode="while-editing"
         />
+      </View>
+
+      <View className="flex-row items-center justify-between mb-3">
+        <TouchableOpacity
+          className="flex-row items-center gap-2 px-4 py-2 rounded-xl bg-brand/5 border border-brand/20"
+          onPress={() => setShowCategoryModal(true)}
+          activeOpacity={0.7}
+        >
+          <Filter size={16} color="#2d6a4f" />
+          <Text className={`text-sm font-bold text-${isDark ? "white" : "black"}`}>
+            {selectedCategory || "All"}
+          </Text>
+          {selectedCategory && (
+            <TouchableOpacity
+              onPress={() => setSelectedCategory(null)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <X size={14} color="rgba(45,106,79,0.5)" />
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+        <View className="bg-brand/10 rounded-lg px-2.5 py-1">
+          <Text className={`text-${isDark ? "white" : "black"} text-xs font-bold tracking-wide`}>
+            {filteredItems.length} ITEM{filteredItems.length !== 1 ? "S" : ""}
+          </Text>
+        </View>
       </View>
 
       {filteredItems.length === 0 ? (
@@ -256,23 +294,78 @@ export function CreateBookingScreen({ navigation }: any) {
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperClassName="gap-3"
           renderItem={({ item }) => {
             const qty = cart.get(item.id) || 0;
+            const imageUri = getImageUrl(item.image);
+            const stockColor =
+              item.stock <= 20 ? "bg-red-400" : item.stock <= 50 ? "bg-yellow-400" : "bg-brand";
             return (
               <View className="flex-1 max-w-[50%]">
-                <ItemCard
-                  item={item}
-                  cartQuantity={qty}
-                  onPress={(it) => addToCart(it.id)}
-                  onIncrement={(id) => updateQty(id, (cart.get(id) || 0) + 1)}
-                  onDecrement={(id) => updateQty(id, (cart.get(id) || 0) - 1)}
-                />
+                <View className="bg-brand/5 rounded-2xl p-3 border border-brand/20">
+                  <View className="w-full h-20 bg-brand/5 rounded-xl mb-2 overflow-hidden">
+                    {imageUri ? (
+                      <Image source={{ uri: imageUri }} className="w-full h-full" resizeMode="cover" />
+                    ) : (
+                      <View className="flex-1 items-center justify-center">
+                        <Package size={24} color="rgba(45,106,79,0.3)" />
+                      </View>
+                    )}
+                  </View>
+                  <View className="self-start px-2 py-0.5 rounded-full bg-brand/10 mb-1">
+                    <Text className={`text-[10px] font-bold text-${isDark ? "white" : "black"}`}>
+                      {item.category}
+                    </Text>
+                  </View>
+                  <Text className={`text-sm font-bold text-${isDark ? "white" : "black"} mb-1`} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <View className="flex-row items-center justify-between">
+                    <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
+                      ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                    </Text>
+                    <View className="flex-row items-center gap-1">
+                      <View className={`w-2 h-2 rounded-full ${stockColor}`} />
+                      <Text className={`text-[10px] text-${isDark ? "white/60" : "black/60"}`}>
+                        {item.stock}
+                      </Text>
+                    </View>
+                  </View>
+                  {qty > 0 ? (
+                    <View className="flex-row items-center justify-between mt-2 pt-2 border-t border-brand/10">
+                      <TouchableOpacity
+                        className="w-7 h-7 rounded-lg bg-brand/10 items-center justify-center"
+                        onPress={() => {
+                          const current = cart.get(item.id) || 0;
+                          if (current > 1) updateQty(item.id, current - 1);
+                          else removeFromCart(item.id);
+                        }}
+                      >
+                        <Minus size={14} color="#2d6a4f" />
+                      </TouchableOpacity>
+                      <Text className={`text-sm font-bold text-${isDark ? "white" : "black"}`}>{qty}</Text>
+                      <TouchableOpacity
+                        className="w-7 h-7 rounded-lg bg-brand/10 items-center justify-center"
+                        onPress={() => addToCart(item.id)}
+                      >
+                        <Plus size={14} color="#2d6a4f" />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      className="bg-brand px-3 py-1.5 rounded-lg items-center mt-2"
+                      onPress={() => addToCart(item.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text className="text-white text-xs font-bold">Add to Cart</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             );
           }}
-          numColumns={2}
-          columnWrapperClassName="gap-3 pb-3"
-          contentContainerClassName="pb-4"
+          contentContainerClassName="gap-3 pb-4"
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -289,6 +382,76 @@ export function CreateBookingScreen({ navigation }: any) {
           />
         </View>
       </View>
+
+      {showCategoryModal && (
+        <View className={`absolute inset-0 ${isDark ? "bg-black/70" : "bg-black/40"}`}>
+          <TouchableOpacity
+            className="flex-1"
+            activeOpacity={1}
+            onPress={() => setShowCategoryModal(false)}
+          />
+          <View className={`rounded-t-3xl p-6 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className={`text-lg font-bold text-${isDark ? "white" : "black"}`}>
+                Select Category
+              </Text>
+              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                <X size={22} color={isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)"} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView className="max-h-80">
+              <TouchableOpacity
+                className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${
+                  selectedCategory === null ? "bg-brand/10" : ""
+                }`}
+                onPress={() => {
+                  setSelectedCategory(null);
+                  setShowCategoryModal(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <View className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3 ${
+                  selectedCategory === null ? "border-brand bg-brand" : "border-brand/30"
+                }`}>
+                  {selectedCategory === null && <View className="w-2.5 h-2.5 rounded-full bg-white" />}
+                </View>
+                <Text className={`text-base font-medium text-${isDark ? "white" : "black"}`}>
+                  All Items
+                </Text>
+              </TouchableOpacity>
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${
+                    selectedCategory === cat ? "bg-brand/10" : ""
+                  }`}
+                  onPress={() => {
+                    setSelectedCategory(cat);
+                    setShowCategoryModal(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3 ${
+                    selectedCategory === cat ? "border-brand bg-brand" : "border-brand/30"
+                  }`}>
+                    {selectedCategory === cat && <View className="w-2.5 h-2.5 rounded-full bg-white" />}
+                  </View>
+                  <Text className={`text-base font-medium text-${isDark ? "white" : "black"}`}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowCategoryModal(false)}
+              className="w-full mt-4 py-3.5 rounded-xl bg-brand items-center active:bg-brand/90"
+              activeOpacity={0.85}
+            >
+              <Text className="text-white text-base font-bold">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 

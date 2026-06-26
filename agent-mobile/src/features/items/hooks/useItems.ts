@@ -41,22 +41,22 @@ export function useItems() {
     }
   }, [fetchItems]);
 
-  const createItem = async (data: CreateItemData) => {
+  const createItem = useCallback(async (data: CreateItemData) => {
     const newItem = await itemApi.create(data);
     setItems((prev) => [newItem, ...prev]);
     return newItem;
-  };
+  }, []);
 
-  const updateItem = async (id: string, data: UpdateItemData) => {
+  const updateItem = useCallback(async (id: string, data: UpdateItemData) => {
     const updated = await itemApi.update(id, data);
     setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
     return updated;
-  };
+  }, []);
 
-  const deleteItem = async (id: string) => {
+  const deleteItem = useCallback(async (id: string) => {
     await itemApi.remove(id);
     setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  }, []);
 
   return {
     items,
