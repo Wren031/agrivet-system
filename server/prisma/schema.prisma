@@ -10,9 +10,19 @@ datasource db {
 enum Role {
   ADMIN
   AGENT
+  BRANCH
 }
 
 enum AgentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  TERMINATED
+  ONLINE
+  OFFLINE
+}
+
+enum BranchStatus {
   PENDING
   APPROVED
   REJECTED
@@ -26,8 +36,9 @@ model User {
   password     String
   role         Role          @default(AGENT)
   createdAt    DateTime      @default(now()) @map("created_at")
-  adminProfile AdminProfile?
-  agentProfile AgentProfile?
+  adminProfile  AdminProfile?
+  agentProfile  AgentProfile?
+  branchProfile BranchProfile?
 
   @@map("users")
 }
@@ -96,6 +107,23 @@ model AgentLocation {
   agent     AgentProfile @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@map("agent_locations")
+}
+
+model BranchProfile {
+  id                String        @id @default(uuid())
+  fullName          String        @map("full_name")
+  storeBranch       String        @map("store_branch")
+  contactNumber     String        @map("contact_number")
+  email             String        @unique
+  status            BranchStatus  @default(PENDING)
+  address           String?
+  verificationImage String?       @map("verification_image")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  userId            String        @unique @map("user_id")
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("branch_profiles")
 }
 
 model Customer {

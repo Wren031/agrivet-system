@@ -11,6 +11,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { BranchesModule } from './modules/branches/branches.module';
 
 import appConfig from './config/app.config';
 
@@ -31,6 +32,7 @@ import appConfig from './config/app.config';
     UploadModule,
     OrdersModule,
     AdminModule,
+    BranchesModule,
   ],
 })
 export class AppModule {}

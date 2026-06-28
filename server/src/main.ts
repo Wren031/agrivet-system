@@ -9,10 +9,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // 1. Set global prefix first
   app.setGlobalPrefix('api');
 
-  // Serve uploaded files statically
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   app.enableCors({
@@ -20,7 +18,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // 3. Global validation rules
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -29,12 +26,10 @@ async function bootstrap() {
     }),
   );
   
-  // 4. Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
-
-  // 5. Get port configuration and listen
+  
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port') || 3000; // Fallback to 3000 if not found
+  const port = configService.get<number>('app.port') || 3000; 
 
   await app.listen(port);
   console.log(`Server is running on http://localhost:${port}/api`);
