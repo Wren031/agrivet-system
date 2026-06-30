@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+*.log
+.git
+.gitignore
+coverage
+test
+docker-compose.yml
+docker-comand
+nest-error.log
+nest-output.log

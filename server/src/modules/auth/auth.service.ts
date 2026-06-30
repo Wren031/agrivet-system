@@ -5,6 +5,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { CreateAgentDto } from '../agents/dto/create-agent.dto';
+import { CreateBranchAuthDto } from './dto/create-branch-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -177,6 +178,106 @@ export class AuthService {
         contactNumber: user.agentProfile.contactNumber,
         idVerificationUrl: user.agentProfile.idVerificationUrl,
         agentProfileId: user.agentProfile.id,
+      },
+    };
+  }
+
+  async branchLogin(dto: LoginDto) {
+    const branchProfile = await this.prisma.branchProfile.findUnique({
+      where: { email: dto.email },
+      include: { user: true },
+    });
+
+    if (!branchProfile) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const allowedLoginStatuses = ['APPROVED', 'ONLINE', 'OFFLINE'];
+    if (!allowedLoginStatuses.includes(branchProfile.status)) {
+      const message = branchProfile.status === 'PENDING'
+        ? 'Account is not approved yet'
+        : `Account is ${branchProfile.status.toLowerCase()}`;
+      throw new UnauthorizedException(message);
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, branchProfile.user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = {
+      sub: branchProfile.user.id,
+      email: branchProfile.email,
+      role: branchProfile.user.role,
+    };
+
+    return {
+      message: `Welcome back, ${branchProfile.fullName}`,
+      accessToken: this.jwtService.sign(payload),
+      user: {
+        id: branchProfile.user.id,
+        email: branchProfile.email,
+        fullName: branchProfile.fullName,
+        storeName: branchProfile.storeBranch,
+        contactNumber: branchProfile.contactNumber,
+        address: branchProfile.address,
+        idVerificationUrl: branchProfile.verificationImage,
+        role: branchProfile.user.role,
+        status: branchProfile.status,
+        branchProfileId: branchProfile.id,
+      },
+    };
+  }
+
+  async branchRegister(dto: CreateBranchAuthDto) {
+    const existing = await this.prisma.branchProfile.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existing) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        password: hashedPassword,
+        role: 'BRANCH',
+        branchProfile: {
+          create: {
+            fullName: dto.fullName,
+            storeBranch: dto.storeName,
+            contactNumber: dto.contactNumber,
+            email: dto.email,
+            address: dto.address ?? '',
+            verificationImage: dto.idVerificationUrl ?? '',
+            status: 'PENDING',
+          },
+        },
+      },
+      include: { branchProfile: true },
+    });
+
+    const payload = {
+      sub: user.id,
+      email: user.branchProfile.email,
+      role: user.role,
+    };
+
+    return {
+      accessToken: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.branchProfile.email,
+        fullName: user.branchProfile.fullName,
+        storeName: user.branchProfile.storeBranch,
+        contactNumber: user.branchProfile.contactNumber,
+        address: user.branchProfile.address,
+        idVerificationUrl: user.branchProfile.verificationImage,
+        role: user.role,
+        status: user.branchProfile.status,
+        branchProfileId: user.branchProfile.id,
       },
     };
   }

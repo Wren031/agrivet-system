@@ -122,6 +122,8 @@ model BranchProfile {
   updatedAt         DateTime      @updatedAt @map("updated_at")
   userId            String        @unique @map("user_id")
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cartItems         CartItem[]
+  branchOrders      BranchOrder[]
 
   @@map("branch_profiles")
 }
@@ -168,16 +170,56 @@ model Order {
 }
 
 model OrderItem {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   quantity    Int
-  unitPrice   Decimal   @map("unit_price") @db.Decimal(10, 2)
-  subtotal    Decimal   @db.Decimal(10, 2)
-  orderId     String    @map("order_id")
-  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  inventoryId String?   @map("inventory_id")
-  inventory   Inventory? @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
+  unitPrice   Decimal       @map("unit_price") @db.Decimal(10, 2)
+  subtotal    Decimal       @db.Decimal(10, 2)
+  orderId     String        @map("order_id")
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inventoryId String?       @map("inventory_id")
+  inventory   Inventory?    @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
 
   @@map("order_items")
+}
+
+model BranchOrder {
+  id              String             @id @default(uuid())
+  branchProfileId String             @map("branch_profile_id")
+  branchProfile   BranchProfile      @relation(fields: [branchProfileId], references: [id], onDelete: Cascade)
+  status          String             @default("PENDING")
+  totalAmount     Decimal            @default(0) @map("total_amount") @db.Decimal(10, 2)
+  notes           String?
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  items           BranchOrderItem[]
+
+  @@map("branch_orders")
+}
+
+model BranchOrderItem {
+  id            String       @id @default(uuid())
+  branchOrderId String       @map("branch_order_id")
+  branchOrder   BranchOrder  @relation(fields: [branchOrderId], references: [id], onDelete: Cascade)
+  inventoryId   String       @map("inventory_id")
+  inventory     Inventory    @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  quantity      Int
+  subtotal      Decimal      @db.Decimal(10, 2)
+
+  @@map("branch_order_items")
+}
+
+model CartItem {
+  id              String        @id @default(uuid())
+  branchProfileId String        @map("branch_profile_id")
+  branchProfile   BranchProfile @relation(fields: [branchProfileId], references: [id], onDelete: Cascade)
+  inventoryId     String        @map("inventory_id")
+  inventory       Inventory     @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  quantity        Int
+  status          String        @default("NOT_CHECKOUT")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("cart_items")
 }
 
 model Inventory {
@@ -196,7 +238,9 @@ model Inventory {
   category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   subcategoryId  String?       @map("subcategory_id")
   subcategory    SubCategory?  @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
-  orderItems     OrderItem[]
+  orderItems       OrderItem[]
+  cartItems        CartItem[]
+  branchOrderItems BranchOrderItem[]
 
   @@map("inventory")
 }

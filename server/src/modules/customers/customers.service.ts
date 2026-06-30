@@ -10,7 +10,6 @@ export class CustomersService {
   async create(dto: CreateCustomerDto, user?: { id: string; role: string }) {
     const data: any = { ...dto };
 
-    // If an AGENT is creating, auto-assign their agentProfileId
     if (user?.role === 'AGENT') {
       const agentProfile = await this.prisma.agentProfile.findUnique({
         where: { userId: user.id },

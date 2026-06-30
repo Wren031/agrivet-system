@@ -1,0 +1,10 @@
+How to use
+# 1. Update .env — change DATABASE_URL to point at the db service:
+#    DATABASE_URL="postgresql://postgres:postgres@db:5432/agrivet?schema=public"
+
+# 2. Start everything
+docker compose up -d
+
+# 3. Run migrations
+docker exec agrivet-api npx prisma migrate deploy
+The app runs on port 3000 (configurable via PORT in .env). The uploads/ directory is mounted as a bind volume so uploaded files persist.

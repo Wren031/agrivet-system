@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Branch Agrivet",
+    "slug": "customer-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/1711538445387.jpg",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agrivet.customer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#22C55E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.agrivet.customer",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
