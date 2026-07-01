@@ -88,21 +88,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role:
             apiUser.role?.toLowerCase() === "admin" ? "admin" : "user",
 
-          address: "",
+          address: apiUser.address ?? "",
           password: "",
           pending_admin_approval: false,
           isApproved: true,
           createdAt: new Date().toISOString(),
 
-          branchProfileId:
-            apiUser.branchProfileId?.id ??
-            apiUser.branchProfileId ??
-            null,
+          branchProfileId: apiUser.branchProfileId ?? null,
 
-          status:
-            apiUser.branchProfile?.status ??
-            apiUser.status ??
-            "ACTIVE",
+          status: apiUser.status ?? "ACTIVE",
         };
 
         setUser(mappedUser);
@@ -202,15 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isApproved: true,
           createdAt: new Date().toISOString(),
 
-          branchProfileId:
-            apiUser.branchProfileId?.id ??
-            apiUser.branchProfileId ??
-            null,
+          branchProfileId: apiUser.branchProfileId ?? null,
 
-          status:
-            apiUser.branchProfile?.status ??
-            apiUser.status ??
-            "PENDING",
+          status: apiUser.status ?? "PENDING",
         };
 
         setUser(mappedUser);

@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useEffect } from 'react';
 import {
   User, Shield, Bell, FileText, Info, HelpCircle, LogOut,
   ChevronRight, Moon, Sun,
@@ -40,6 +41,10 @@ export default function SettingsScreen() {
   const { colors } = useColorTheme();
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useThemeStore();
+
+  useEffect(() => {
+    console.log('[BranchProfile]', JSON.stringify(user, null, 2));
+  }, []);
 
   const handleLogout = () => {
     Alert.alert(

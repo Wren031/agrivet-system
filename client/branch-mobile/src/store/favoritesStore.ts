@@ -1,22 +1,51 @@
 import { create } from 'zustand';
+import { FavoriteItem } from '../types';
+import { favoritesFeatureService } from '../features/favorites/services/favoritesFeature.service';
 
 interface FavoritesState {
+  favorites: FavoriteItem[];
   favoriteIds: string[];
-  isFavorite: (productId: string) => boolean;
-  toggleFavorite: (productId: string) => void;
+  isLoading: boolean;
+  isFavorite: (inventoryId: string) => boolean;
+  loadFavorites: () => Promise<void>;
+  toggleFavorite: (inventoryId: string) => Promise<void>;
 }
 
 export const useFavoritesStore = create<FavoritesState>((set, get) => ({
+  favorites: [],
   favoriteIds: [],
+  isLoading: false,
 
-  isFavorite: (productId: string) => get().favoriteIds.includes(productId),
+  isFavorite: (inventoryId: string) => get().favoriteIds.includes(inventoryId),
 
-  toggleFavorite: (productId: string) => {
-    const exists = get().favoriteIds.includes(productId);
-    if (exists) {
-      set({ favoriteIds: get().favoriteIds.filter((id) => id !== productId) });
-    } else {
-      set({ favoriteIds: [...get().favoriteIds, productId] });
+  loadFavorites: async () => {
+    set({ isLoading: true });
+    try {
+      const items = await favoritesFeatureService.getAll();
+      set({ favorites: items, favoriteIds: items.map((f) => f.inventoryId), isLoading: false });
+    } catch {
+      set({ isLoading: false });
+    }
+  },
+
+  toggleFavorite: async (inventoryId: string) => {
+    const exists = get().favoriteIds.includes(inventoryId);
+    try {
+      if (exists) {
+        await favoritesFeatureService.removeByInventory(inventoryId);
+        set({
+          favorites: get().favorites.filter((f) => f.inventoryId !== inventoryId),
+          favoriteIds: get().favoriteIds.filter((id) => id !== inventoryId),
+        });
+      } else {
+        const item = await favoritesFeatureService.add(inventoryId);
+        set({
+          favorites: [item, ...get().favorites],
+          favoriteIds: [item.inventoryId, ...get().favoriteIds],
+        });
+      }
+    } catch {
+      // silently fail — the UI will still toggle locally on next load
     }
   },
 }));

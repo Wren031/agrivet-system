@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service';
@@ -6,6 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { CreateAgentDto } from '../agents/dto/create-agent.dto';
 import { CreateBranchAuthDto } from './dto/create-branch-auth.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(dto: LoginDto) {
+  async adminLogin(dto: LoginDto) {
     const adminProfile = await this.prisma.adminProfile.findUnique({
       where: { email: dto.email },
       include: { user: true },
@@ -48,7 +49,7 @@ export class AuthService {
     };
   }
 
-  async register(dto: CreateUserDto) {
+  async adminRegister(dto: CreateUserDto) {
     const existing = await this.prisma.adminProfile.findUnique({
       where: { email: dto.email },
     });
@@ -280,5 +281,33 @@ export class AuthService {
         branchProfileId: user.branchProfile.id,
       },
     };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Password changed successfully' };
   }
 }

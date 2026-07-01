@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Image, TouchableOpacity, Platform } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react-native';
 import { useColorTheme } from '../../../hooks/useColorTheme';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
@@ -31,6 +31,7 @@ export default function BookingDetailScreen() {
   const { cancelBooking } = useBookingHistory();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [buttonLoading, setButtonLoading] = useState(false); // Controls the 1-second button delay state
 
   useEffect(() => {
     const parent = navigation.getParent();
@@ -39,6 +40,8 @@ export default function BookingDetailScreen() {
       parent?.setOptions({ tabBarStyle: undefined });
     };
   }, [navigation]);
+
+  const mergedProducts = useMemo(() => mergeProducts(booking?.products || []), [booking?.products]);
 
   useEffect(() => {
     (async () => {
@@ -49,25 +52,39 @@ export default function BookingDetailScreen() {
     })();
   }, [route.params.bookingId]);
 
-  if (loading || !booking) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.textSecondary }}>Loading...</Text>
-      </View>
-    );
-  }
-
+  // Handles the cancel operation with a mandatory 1-second delay
   const handleCancel = async () => {
-    await cancelBooking(booking.id);
-    const { historyFeatureService } = await import('../services/historyFeature.service');
-    const b = await historyFeatureService.getById(booking.id);
-    setBooking(b || null);
+    if (buttonLoading) return;
+    setButtonLoading(true);
+
+    setTimeout(async () => {
+      try {
+        await cancelBooking(booking!.id);
+        const { historyFeatureService } = await import('../services/historyFeature.service');
+        const b = await historyFeatureService.getById(booking!.id);
+        setBooking(b || null);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setButtonLoading(false);
+      }
+    }, 1000); // 1 Second Delay
   };
 
-  const mergedProducts = useMemo(() => mergeProducts(booking.products || []), [booking.products]);
+  // Handles the "Book Again" navigation with a mandatory 1-second delay
+  const handleBookAgain = () => {
+    if (buttonLoading) return;
+    setButtonLoading(true);
+
+    setTimeout(() => {
+      setButtonLoading(false);
+      navigation.navigate('Booking');
+    }, 1000); // 1 Second Delay
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* HEADER BAR */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -82,84 +99,109 @@ export default function BookingDetailScreen() {
           <ArrowLeft size={20} color={colors.text} />
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>{booking.bookingNumber}</Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{formatDate(booking.createdAt)}</Text>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>{booking?.bookingNumber || '---'}</Text>
+          <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{booking ? formatDate(booking.createdAt) : ''}</Text>
         </View>
-        <StatusBadge status={booking.status} size="md" />
+        {booking && <StatusBadge status={booking.status} size="md" />}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{
-          backgroundColor: colors.surface, marginHorizontal: 16, borderRadius: 14, padding: 16,
-          borderWidth: 1, borderColor: colors.border,
-        }}>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Customer Information</Text>
-          <View style={{ flexDirection: 'row', marginBottom: 6 }}>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Name:</Text>
-            <Text style={{ fontSize: 13, color: colors.text, fontWeight: '500', flex: 1 }}>{booking.customerName}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', marginBottom: 6 }}>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Email:</Text>
-            <Text style={{ fontSize: 13, color: colors.text, flex: 1 }}>{booking.customerEmail}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', marginBottom: 6 }}>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Phone:</Text>
-            <Text style={{ fontSize: 13, color: colors.text, flex: 1 }}>{booking.customerPhone}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', marginBottom: 6 }}>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Address:</Text>
-            <Text style={{ fontSize: 13, color: colors.text, flex: 1 }}>{booking.customerAddress || 'N/A'}</Text>
-          </View>
-          <View style={{ flexDirection: 'row' }}>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Branch:</Text>
-            <Text style={{ fontSize: 13, color: colors.text, fontWeight: '500', flex: 1 }}>{booking.preferredBranch}</Text>
-          </View>
+      {/* MAIN CONTENT AREA */}
+      {loading || !booking ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 }}>
+          <Text style={{ color: colors.textSecondary }}>Loading...</Text>
         </View>
-
-        <View style={{
-          backgroundColor: colors.surface, marginHorizontal: 16, borderRadius: 14, padding: 16,
-          borderWidth: 1, borderColor: colors.border, marginTop: 16,
-        }}>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Ordered Products</Text>
-          {mergedProducts.map((p, idx) => (
-            <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <Image source={{ uri: p.productImage }} style={{ width: 50, height: 50, borderRadius: 10, backgroundColor: colors.surfaceVariant }} />
-              <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>{p.productName}</Text>
-                <Text style={{ fontSize: 12, color: colors.textSecondary }}>x{p.quantity} × {formatCurrency(p.price)}</Text>
-              </View>
-              <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary }}>{formatCurrency(p.subtotal)}</Text>
+      ) : (
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 32 }}
+        >
+          {/* Customer Information Card */}
+          <View style={{
+            backgroundColor: colors.surface, marginHorizontal: 16, borderRadius: 14, padding: 16,
+            borderWidth: 1, borderColor: colors.border,
+          }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Customer Information</Text>
+            <View style={{ flexDirection: 'row', marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Name:</Text>
+              <Text style={{ fontSize: 13, color: colors.text, fontWeight: '500', flex: 1 }}>{booking.customerName}</Text>
             </View>
-          ))}
-          <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text style={{ fontSize: 13, color: colors.textSecondary }}>Subtotal</Text>
-            <Text style={{ fontSize: 13, color: colors.text }}>{formatCurrency(mergedProducts.reduce((s, p) => s + p.subtotal, 0))}</Text>
+            <View style={{ flexDirection: 'row', marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Email:</Text>
+              <Text style={{ fontSize: 13, color: colors.text, flex: 1 }}>{booking.customerEmail}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Phone:</Text>
+              <Text style={{ fontSize: 13, color: colors.text, flex: 1 }}>{booking.customerPhone}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Address:</Text>
+              <Text style={{ fontSize: 13, color: colors.text, flex: 1 }}>{booking.customerAddress || 'N/A'}</Text>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, width: 80 }}>Branch:</Text>
+              <Text style={{ fontSize: 13, color: colors.text, fontWeight: '500', flex: 1 }}>{booking.preferredBranch}</Text>
+            </View>
           </View>
-          <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 16, fontWeight: '800', color: colors.text }}>Total</Text>
-            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.primary }}>{formatCurrency(booking.totalAmount)}</Text>
+
+          {/* Ordered Products Card */}
+          <View style={{
+            backgroundColor: colors.surface, marginHorizontal: 16, borderRadius: 14, padding: 16,
+            borderWidth: 1, borderColor: colors.border, marginTop: 16,
+          }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Ordered Products</Text>
+            {mergedProducts.map((p, idx) => (
+              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <Image source={{ uri: p.productImage }} style={{ width: 50, height: 50, borderRadius: 10, backgroundColor: colors.surfaceVariant }} />
+                <View style={{ marginLeft: 12, flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>{p.productName}</Text>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>x{p.quantity} × {formatCurrency(p.price)}</Text>
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary }}>{formatCurrency(p.subtotal)}</Text>
+              </View>
+            ))}
+            <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>Subtotal</Text>
+              <Text style={{ fontSize: 13, color: colors.text }}>{formatCurrency(mergedProducts.reduce((s, p) => s + p.subtotal, 0))}</Text>
+            </View>
+            <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: colors.text }}>Total</Text>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.primary }}>{formatCurrency(booking.totalAmount)}</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={{
-          backgroundColor: colors.surface, margin: 16, borderRadius: 14, padding: 16,
-          borderWidth: 1, borderColor: colors.border,
-        }}>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Order Timeline</Text>
-          <OrderTimeline timeline={booking.timeline} />
-        </View>
+          {/* Order Timeline Card */}
+          <View style={{
+            backgroundColor: colors.surface, margin: 16, borderRadius: 14, padding: 16,
+            borderWidth: 1, borderColor: colors.border,
+          }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Order Timeline</Text>
+            <OrderTimeline timeline={booking.timeline} />
+          </View>
 
-        <View style={{ padding: 16, paddingBottom: 40, gap: 10 }}>
-          {booking.status === 'pending' && (
-            <PrimaryButton title="Cancel Booking" variant="danger" onPress={handleCancel} />
-          )}
-          {(booking.status === 'completed' || booking.status === 'cancelled') && (
-            <PrimaryButton title="Book Again" onPress={() => navigation.navigate('Booking')} />
-          )}
-        </View>
-      </ScrollView>
+          {/* Bottom Action Buttons */}
+          <View style={{ marginHorizontal: 16, gap: 10, marginTop: 8 }}>
+            {booking.status === 'pending' ? (
+              <PrimaryButton 
+                title="Cancel Booking" 
+                variant="danger" 
+                onPress={handleCancel} 
+                loading={buttonLoading}
+                disabled={buttonLoading}
+              />
+            ) : booking.status === 'completed' || booking.status === 'cancelled' ? (
+              <PrimaryButton 
+                title="Book Again" 
+                onPress={handleBookAgain} 
+                loading={buttonLoading}
+                disabled={buttonLoading}
+              />
+            ) : null}
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }

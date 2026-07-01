@@ -24,13 +24,21 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const settingsFeatureService = {
-  async updateProfile(data: Partial<User>): Promise<User> {
-    const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+  async getProfile(): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/branches/profile`, {
+      method: "GET",
+      headers: await authHeaders(),
+    });
+    return handleResponse<any>(res);
+  },
+
+  async updateProfile(data: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/branches/profile`, {
       method: "PATCH",
       headers: await authHeaders(),
       body: JSON.stringify(data),
     });
-    return handleResponse<User>(res);
+    return handleResponse<any>(res);
   },
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {

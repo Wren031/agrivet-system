@@ -105,6 +105,18 @@ export interface Notification {
   bookingId?: string;
 }
 
+export interface FavoriteItem {
+  id: string;
+  inventoryId: string;
+  createdAt: string;
+  productName: string;
+  productImage: string;
+  price: number;
+  stock: number;
+  unit: string;
+  category: string;
+}
+
 export interface Branch {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useMemo } from 'react';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { StatusBadge } from '../ui/StatusBadge';
@@ -27,6 +27,7 @@ interface BookingCardProps {
 export function BookingCard({ booking, onPress }: BookingCardProps) {
   const { colors } = useColorTheme();
   const mergedProducts = useMemo(() => mergeProducts(booking.products || []), [booking.products]);
+  const totalItems = mergedProducts.reduce((s, p) => s + p.quantity, 0);
 
   return (
     <TouchableOpacity
@@ -34,7 +35,7 @@ export function BookingCard({ booking, onPress }: BookingCardProps) {
       activeOpacity={0.7}
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 12,
+        borderRadius: 14,
         padding: 16,
         marginHorizontal: 16,
         marginVertical: 6,
@@ -42,39 +43,37 @@ export function BookingCard({ booking, onPress }: BookingCardProps) {
         borderColor: colors.border,
       }}
     >
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 4, height: 26, borderRadius: 2, backgroundColor: '#059669', marginRight: 10 }} />
-          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{booking.bookingNumber}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ width: 4, height: 28, borderRadius: 2, backgroundColor: '#059669', marginRight: 10 }} />
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.text }}>{booking.bookingNumber}</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, marginLeft: 14 }}>
+            {formatDate(booking.createdAt)}
+          </Text>
         </View>
         <StatusBadge status={booking.status} />
       </View>
-      <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4, marginLeft: 14 }}>
-        {formatDate(booking.createdAt)}
-      </Text>
 
-      <View style={{ marginTop: 12 }}>
-        {mergedProducts.slice(0, 2).map((p, idx) => (
-          <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-            <Image
-              source={{ uri: p.productImage }}
-              style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: colors.surfaceVariant }}
-            />
-            <View style={{ marginLeft: 12, flex: 1 }}>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }} numberOfLines={1}>{p.productName}</Text>
-              <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Qty: {p.quantity}</Text>
-            </View>
+      <View style={{ marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: colors.background, borderRadius: 10 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 }}>Total Items</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 2 }}>{mergedProducts.length}</Text>
           </View>
-        ))}
-        {mergedProducts.length > 2 && (
-          <Text style={{ fontSize: 11, color: colors.textTertiary, marginTop: 6, marginLeft: 52 }}>
-            +{mergedProducts.length - 2} more item(s)
-          </Text>
-        )}
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5 }}>Total Qty</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 2 }}>{totalItems}</Text>
+          </View>
+        </View>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
-        <Text style={{ fontSize: 16, fontWeight: '800', color: '#059669' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+        <Text style={{ fontSize: 11, color: colors.textTertiary }}>
+          {mergedProducts.length} item{mergedProducts.length !== 1 ? 's' : ''} · {totalItems} qty
+        </Text>
+        <Text style={{ fontSize: 17, fontWeight: '800', color: '#059669' }}>
           {formatCurrency(booking.totalAmount)}
         </Text>
       </View>

@@ -1,27 +1,28 @@
-import { useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useEffect, useCallback, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Bell, ShoppingCart, Store, ClipboardList } from 'lucide-react-native';
 import { useColorTheme } from '../../../hooks/useColorTheme';
-import { useAuthStore } from '../../../store/authStore';
+import { useAuth } from '../../../context/AuthContext';
 import { StatCard } from '../../../components/cards/StatCard';
 import { RecentOrderCard } from '../components/RecentOrderCard';
 import { useHome } from '../hooks/useHome';
+import { homeFeatureService } from '../services/homeFeature.service';
 import { getGreeting } from '../../../utils/helpers';
 import { StatSkeleton, BookingSkeleton } from '../../../components/loading/SkeletonLoader';
 import { ErrorState } from '../../../components/ui/ErrorState';
 
 const actions = [
-  { label: 'Cart', icon: ShoppingCart, screen: 'CartScreen', color: '#059669' },
+  { label: 'My Cart', icon: ShoppingCart, screen: 'CartScreen', color: '#059669' },
   { label: 'Branches', icon: Store, screen: 'BranchesScreen', color: '#2563EB' },
-  { label: 'Orders', icon: ClipboardList, screen: 'OrdersScreen', color: '#7C3AED' },
+  { label: 'Recent Orders', icon: ClipboardList, screen: 'OrdersScreen', color: '#7C3AED' },
   { label: 'Notifications', icon: Bell, screen: 'NotificationsScreen', color: '#D97706' },
 ];
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useColorTheme();
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
   const { statistics, recentOrders, isLoading, error, loadData } = useHome();
 
   useEffect(() => {
@@ -31,6 +32,24 @@ export default function HomeScreen() {
   const onRefresh = useCallback(() => {
     loadData();
   }, [loadData]);
+
+  const [loadingLatest, setLoadingLatest] = useState(false);
+
+  const handleOrdersPress = useCallback(async () => {
+    setLoadingLatest(true);
+    try {
+      const latest = await homeFeatureService.getLatestBooking();
+      if (latest) {
+        navigation.navigate('History', { screen: 'BookingDetail', params: { bookingId: latest.id } });
+      } else {
+        Alert.alert('No Orders', 'You have no existing bookings. Start by adding items to your cart!');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to load booking details.');
+    } finally {
+      setLoadingLatest(false);
+    }
+  }, [navigation]);
 
   if (error && !isLoading) {
     return <ErrorState message={error} onRetry={loadData} />;
@@ -47,7 +66,7 @@ export default function HomeScreen() {
           <View>
             <Text style={{ fontSize: 14, color: colors.textSecondary }}>{getGreeting()},</Text>
             <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, marginTop: 2 }}>
-              {user?.fullName || 'John Doe'}
+              {user?.fullName ? user.fullName.trim().split(' ')[0] : 'John'}
             </Text>
           </View>
           <TouchableOpacity
@@ -80,12 +99,14 @@ export default function HomeScreen() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           {actions.map((action) => {
             const Icon = action.icon;
+            const isOrders = action.label === 'Recent Orders';
             return (
               <TouchableOpacity
                 key={action.label}
-                onPress={() => navigation.navigate(action.screen)}
+                onPress={isOrders ? handleOrdersPress : () => navigation.navigate(action.screen)}
                 activeOpacity={0.7}
-                style={{ alignItems: 'center', width: 72 }}
+                style={{ alignItems: 'center', width: 72, opacity: isOrders && loadingLatest ? 0.5 : 1 }}
+                disabled={isOrders && loadingLatest}
               >
                 <View
                   style={{
@@ -110,7 +131,7 @@ export default function HomeScreen() {
       <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textSecondary, letterSpacing: 0.5, textTransform: 'uppercase' }}>Recent Orders</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('History')}>
+          <TouchableOpacity onPress={handleOrdersPress}>
             <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>See All</Text>
           </TouchableOpacity>
         </View>

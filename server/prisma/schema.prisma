@@ -124,6 +124,7 @@ model BranchProfile {
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   cartItems         CartItem[]
   branchOrders      BranchOrder[]
+  favorites         Favorite[]
 
   @@map("branch_profiles")
 }
@@ -222,6 +223,18 @@ model CartItem {
   @@map("cart_items")
 }
 
+model Favorite {
+  id              String        @id @default(uuid())
+  branchProfileId String        @map("branch_profile_id")
+  branchProfile   BranchProfile @relation(fields: [branchProfileId], references: [id], onDelete: Cascade)
+  inventoryId     String        @map("inventory_id")
+  inventory       Inventory     @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@unique([branchProfileId, inventoryId])
+  @@map("favorites")
+}
+
 model Inventory {
   id             String        @id @default(uuid())
   productName    String        @map("product_name")
@@ -241,6 +254,7 @@ model Inventory {
   orderItems       OrderItem[]
   cartItems        CartItem[]
   branchOrderItems BranchOrderItem[]
+  favorites        Favorite[]
 
   @@map("inventory")
 }

@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, Platform } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Package, Heart, ArrowLeft } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useColorTheme } from '../../../hooks/useColorTheme';
 import { PrimaryButton } from '../../../components/buttons/PrimaryButton';
 import { QuantitySelector } from '../../../components/inputs/QuantitySelector';
+import { useCartStore } from '../../../store/cartStore';
 import { useFavoritesStore } from '../../../store/favoritesStore';
 import { bookingFeatureService } from '../services/bookingFeature.service';
 import { cartService } from '../services/cart.service';
@@ -15,11 +16,17 @@ export default function ProductDetailScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { colors } = useColorTheme();
-  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const addItem = useCartStore((s) => s.addItem);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const { isFavorite, toggleFavorite, loadFavorites } = useFavoritesStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
+
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
 
   useEffect(() => {
     (async () => {
@@ -33,10 +40,11 @@ export default function ProductDetailScreen() {
     if (product) setFavorite(isFavorite(product.id));
   }, [product, isFavorite]);
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = async () => {
     if (!product) return;
-    toggleFavorite(product.id);
-    setFavorite((prev) => !prev);
+    const next = !isFavorite(product.id);
+    setFavorite(next);
+    await toggleFavorite(product.id);
   };
 
   if (isLoading || !product) {
@@ -109,12 +117,9 @@ export default function ProductDetailScreen() {
       }}>
         <TouchableOpacity
           onPress={async () => {
-            try {
-              await cartService.create({ inventoryId: product.id, quantity, status: 'NOT_CHECKOUT' });
-              navigation.navigate('CartScreen');
-            } catch (e: any) {
-              Alert.alert('Error', e.message || 'Failed to add to cart');
-            }
+            addItem({ productId: product.id, productName: product.name, productImage: product.imageUrl, quantity, price: product.price });
+            try { await cartService.create({ inventoryId: product.id, quantity, status: 'active' }); } catch {}
+            navigation.navigate('CartScreen');
           }}
           activeOpacity={0.7}
           style={{ alignItems: 'center' }}>
@@ -124,14 +129,10 @@ export default function ProductDetailScreen() {
         <View style={{ flex: 1 }}>
           <PrimaryButton
             title="Buy Now"
-            onPress={async () => {
-              try {
-                await cartService.clearCart();
-                await cartService.create({ inventoryId: product.id, quantity, status: 'NOT_CHECKOUT' });
-                navigation.navigate('CheckoutScreen');
-              } catch (e: any) {
-                Alert.alert('Error', e.message || 'Failed to process');
-              }
+            onPress={() => {
+              clearCart();
+              addItem({ productId: product.id, productName: product.name, productImage: product.imageUrl, quantity, price: product.price });
+              navigation.navigate('CheckoutScreen');
             }}
           />
         </View>

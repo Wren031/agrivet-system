@@ -148,4 +148,16 @@ export const homeFeatureService = {
     const data = await handleResponse<BranchOrderApiItem[]>(res);
     return data.slice(0, limit).map(toBooking);
   },
+
+  async getLatestBooking(): Promise<Booking | null> {
+    const res = await fetch(`${API_BASE_URL}/branch-orders`, {
+      headers: await authHeaders(),
+    });
+    const data = await handleResponse<BranchOrderApiItem[]>(res);
+    if (data.length === 0) return null;
+    const sorted = [...data].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    return toBooking(sorted[0]);
+  },
 };

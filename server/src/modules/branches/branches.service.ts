@@ -48,6 +48,51 @@ export class BranchesService {
     });
   }
 
+  async updateProfile(userId: string, dto: UpdateBranchDto) {
+    const branch = await this.prisma.branchProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!branch) {
+      throw new NotFoundException('Branch profile not found');
+    }
+
+    const data: any = {};
+    if (dto.fullName) data.fullName = dto.fullName;
+    if (dto.storeBranch) data.storeBranch = dto.storeBranch;
+    if (dto.contactNumber) data.contactNumber = dto.contactNumber;
+    if (dto.email) data.email = dto.email;
+    if (dto.status) data.status = dto.status;
+    if (dto.address !== undefined) data.address = dto.address;
+    if (dto.verificationImage !== undefined) data.verificationImage = dto.verificationImage;
+
+    if (dto.password) {
+      await this.prisma.user.update({
+        where: { id: branch.userId },
+        data: { password: await bcrypt.hash(dto.password, 10) },
+      });
+    }
+
+    return this.prisma.branchProfile.update({
+      where: { userId },
+      data,
+      include: { user: { select: { id: true, role: true, createdAt: true } } },
+    });
+  }
+
+  async findProfile(userId: string) {
+    const branch = await this.prisma.branchProfile.findUnique({
+      where: { userId },
+      include: { user: { select: { id: true, role: true, createdAt: true } } },
+    });
+
+    if (!branch) {
+      throw new NotFoundException('Branch profile not found');
+    }
+
+    return branch;
+  }
+
   async findOne(id: string) {
     const branch = await this.prisma.branchProfile.findUnique({
       where: { id },

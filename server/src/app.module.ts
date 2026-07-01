@@ -14,6 +14,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { BranchesModule } from './modules/branches/branches.module';
 import { CartItemsModule } from './modules/cart-items/cart-items.module';
 import { BranchOrderModule } from './modules/branch-order/branch-order.module';
+import { AddToFavoriteModule } from './modules/add-to-favorite/add-to-favorite.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -36,6 +37,7 @@ import appConfig from './config/app.config';
     BranchesModule,
     CartItemsModule,
     BranchOrderModule,
+    AddToFavoriteModule,
   ],
 })
 export class AppModule {}

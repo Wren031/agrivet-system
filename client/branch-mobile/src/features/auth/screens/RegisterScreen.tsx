@@ -169,7 +169,7 @@ export default function RegisterScreen() {
         />
 
         <TouchableOpacity
-          onPress={() => setShowIDGuide(true)}
+          onPress={pickImage}
           activeOpacity={0.7}
           className="border-2 border-dashed rounded-xl items-center justify-center self-stretch mb-5 overflow-hidden"
           style={{

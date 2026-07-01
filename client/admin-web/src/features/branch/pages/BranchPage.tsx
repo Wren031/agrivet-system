@@ -28,7 +28,7 @@ const statusFilterOptions = [
 ]
 
 export default function BranchPage() {
-  const { branches, loading } = useBranches()
+  const { branches, loading, reload } = useBranches()
   const navigate = useNavigate()
   const { addNotification } = useApp()
   const [search, setSearch] = useState('')
@@ -159,10 +159,12 @@ export default function BranchPage() {
                             className="p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors" title="View Details">
                             <Eye size={16} />
                           </button>
-                          <button onClick={() => setTerminateTarget(branch)}
-                            className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Terminate">
-                            <Ban size={16} />
-                          </button>
+                          {(branch.status === 'APPROVED' || branch.status === 'ONLINE' || branch.status === 'OFFLINE') && (
+                            <button onClick={() => setTerminateTarget(branch)}
+                              className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Terminate">
+                              <Ban size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -202,6 +204,7 @@ export default function BranchPage() {
                   await updateBranchStatus(terminateTarget.id, 'TERMINATED')
                   addNotification({ message: 'Branch terminated', type: 'success' })
                   setTerminateTarget(null)
+                  reload()
                 } catch {
                   addNotification({ message: 'Failed to terminate branch', type: 'error' })
                 }

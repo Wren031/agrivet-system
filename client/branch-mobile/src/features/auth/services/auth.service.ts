@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL } from "../../../config/api.config";
 
 export const authApi = {
-  // ---------------- LOGIN ----------------
+
   async login(email: string, password: string) {
     const response = await fetch(
       `${API_BASE_URL}/auth/branches/login`,
