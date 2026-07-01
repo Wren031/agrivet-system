@@ -30,15 +30,15 @@ export class BranchOrderController {
   }
 
   @Get()
-  @Roles('BRANCH')
+  @Roles('BRANCH', 'ADMIN')
   findAll(@CurrentUser() user: { id: string; role: string }) {
-    return this.branchOrderService.findAll(user.id);
+    return this.branchOrderService.findAll(user.id, user.role);
   }
 
   @Get(':id')
-  @Roles('BRANCH')
+  @Roles('BRANCH', 'ADMIN')
   findOne(@Param('id') id: string, @CurrentUser() user: { id: string; role: string }) {
-    return this.branchOrderService.findOne(id, user.id);
+    return this.branchOrderService.findOne(id, user.id, user.role);
   }
 
   @Patch(':id')
@@ -65,6 +65,16 @@ export class BranchOrderController {
   @Roles('BRANCH')
   remove(@Param('id') id: string, @CurrentUser() user: { id: string; role: string }) {
     return this.branchOrderService.remove(id, user.id);
+  }
+
+  @Patch(':id/assign')
+  @Roles('ADMIN')
+  assign(
+    @Param('id') id: string,
+    @Body('adminProfileId') adminProfileId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.branchOrderService.assign(id, adminProfileId, user.id);
   }
 
   @Post(':id/items')

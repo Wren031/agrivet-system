@@ -15,6 +15,7 @@ export class BranchOrderService {
 
   private include = {
     branchProfile: true,
+    adminProfile: true,
     items: {
       include: { inventory: true },
     },
@@ -51,19 +52,25 @@ export class BranchOrderService {
     });
   }
 
-  async findAll(userId: string) {
-    const branchProfileId = await this.resolveBranchProfileId(userId);
+  async findAll(userId: string, role?: string) {
+    const where: any = {};
+    if (role !== 'ADMIN') {
+      where.branchProfileId = await this.resolveBranchProfileId(userId);
+    }
     return this.prisma.branchOrder.findMany({
-      where: { branchProfileId },
+      where,
       orderBy: { createdAt: 'desc' },
       include: this.include,
     });
   }
 
-  async findOne(id: string, userId: string) {
-    const branchProfileId = await this.resolveBranchProfileId(userId);
+  async findOne(id: string, userId: string, role?: string) {
+    const where: any = { id };
+    if (role !== 'ADMIN') {
+      where.branchProfileId = await this.resolveBranchProfileId(userId);
+    }
     const order = await this.prisma.branchOrder.findFirst({
-      where: { id, branchProfileId },
+      where,
       include: this.include,
     });
 
@@ -187,6 +194,16 @@ export class BranchOrderService {
     await this.recalculateTotal(orderId);
 
     return { message: 'Item removed' };
+  }
+
+  async assign(id: string, adminProfileId: string, userId: string) {
+    await this.findOne(id, userId, 'ADMIN');
+
+    return this.prisma.branchOrder.update({
+      where: { id },
+      data: { adminProfileId },
+      include: this.include,
+    });
   }
 
   private async recalculateTotal(orderId: string) {

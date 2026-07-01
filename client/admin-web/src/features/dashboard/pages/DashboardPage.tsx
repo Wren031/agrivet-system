@@ -79,10 +79,7 @@ export default function DashboardPage() {
           <h1 className="text-xl font-semibold text-surface-900 dark:text-white tracking-tight">Dashboard</h1>
           <p className="text-sm text-surface-400 dark:text-surface-500 mt-1">Overview of your inventory system</p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-surface-400 dark:text-surface-500">
-          <Clock size={14} />
-          <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
-        </div>
+
       </div>
 
       {/* Stats Cards */}

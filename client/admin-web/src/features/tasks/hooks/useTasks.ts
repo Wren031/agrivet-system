@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchBookings, updateBooking, deleteBooking } from '../../../data/booking/bookingService'
+import { fetchBookings, updateBooking, deleteBooking } from '../../../data/booking/customer-order-Service'
 import { fetchStaffById } from '../../staff/services/staffService'
 import type { Booking } from '../../../data/booking/types'
 import { useApp } from '../../../context/AppContext'

@@ -57,6 +57,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Agrivet</h1>
           <p className="text-surface-400 mt-3 text-sm leading-relaxed">
+          
             Streamline your agricultural supply chain. Manage inventory, orders, and deliveries with ease.
           </p>
         </div>
@@ -66,6 +67,7 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
           <div className="mb-10">
+
             <h1 className="text-xl font-bold text-surface-900 dark:text-white">Welcome back</h1>
             <p className="text-sm text-surface-500 dark:text-surface-400 mt-1.5">Sign in to your account to continue</p>
           </div>

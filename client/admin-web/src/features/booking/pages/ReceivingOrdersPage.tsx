@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, Search, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react'
+import { CalendarDays, Search, ChevronLeft, ChevronRight, Eye, Calendar, Store } from 'lucide-react'
 import { useBookings } from '../hooks/useBookings'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonTable } from '../../../components/Skeleton'
+import { fetchBranchOrders } from '../../../data/branch-booking/branchBookingService'
+import type { BranchOrder } from '../../../data/branch-booking/types'
 
 const statusStyles: Record<string, string> = {
   Pending: 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
@@ -19,7 +21,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function BookingPage() {
   const { bookings, loading } = useBookings()
   const { settings } = useApp()
-  const [tab, setTab] = useState<'list' | 'calendar'>('list')
+  const [tab, setTab] = useState<'list' | 'calendar' | 'branch'>('list')
   const [calYear, setCalYear] = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [selectedDate, setSelectedDate] = useState('')
@@ -30,6 +32,24 @@ export default function BookingPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   const PAGE_SIZE = 10
+
+  const [branchOrders, setBranchOrders] = useState<BranchOrder[]>([])
+  const [branchLoading, setBranchLoading] = useState(false)
+  const [branchError, setBranchError] = useState('')
+  const [branchSearch, setBranchSearch] = useState('')
+  const [branchStatusFilter, setBranchStatusFilter] = useState('')
+  const [branchPage, setBranchPage] = useState(1)
+  const [branchSortKey, setBranchSortKey] = useState('createdAt')
+  const [branchSortDir, setBranchSortDir] = useState<'asc' | 'desc'>('desc')
+
+  useEffect(() => {
+    setBranchLoading(true)
+    setBranchError('')
+    fetchBranchOrders()
+      .then(setBranchOrders)
+      .catch(err => setBranchError(err.message || 'Failed to load branch bookings'))
+      .finally(() => setBranchLoading(false))
+  }, [])
 
   function prevMonth() {
     if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) }
@@ -98,12 +118,49 @@ export default function BookingPage() {
     setSelectedDate(now.toISOString().split('T')[0])
   }
 
+  const branchStatusStyles: Record<string, string> = {
+    PENDING: 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
+    CONFIRMED: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
+    PROCESSING: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
+    APPROVED: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
+    COMPLETED: 'bg-surface-100 dark:bg-surface-700 text-surface-500 dark:text-surface-400',
+    CANCELLED: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+  }
+
+  const branchFiltered = useMemo(() => {
+    let result = branchOrders
+    if (branchSearch) {
+      const q = branchSearch.toLowerCase()
+      result = result.filter(o =>
+        o.id.toLowerCase().includes(q) ||
+        o.branchProfile.storeBranch.toLowerCase().includes(q) ||
+        o.branchProfile.location.toLowerCase().includes(q)
+      )
+    }
+    if (branchStatusFilter) result = result.filter(o => o.status === branchStatusFilter)
+    result.sort((a, b) => {
+      const aVal = (a as any)[branchSortKey] || ''
+      const bVal = (b as any)[branchSortKey] || ''
+      const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
+      return branchSortDir === 'asc' ? cmp : -cmp
+    })
+    return result
+  }, [branchOrders, branchSearch, branchStatusFilter, branchSortKey, branchSortDir])
+
+  const branchTotalPages = Math.max(1, Math.ceil(branchFiltered.length / PAGE_SIZE))
+  const branchPaginated = branchFiltered.slice((branchPage - 1) * PAGE_SIZE, branchPage * PAGE_SIZE)
+
+  function toggleBranchSort(key: string) {
+    if (branchSortKey === key) setBranchSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setBranchSortKey(key); setBranchSortDir('asc') }
+  }
+
   const todayStr = new Date().toISOString().split('T')[0]
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Bookings</h1>
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Receiving Orders</h1>
         <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Manage customer bookings and appointments</p>
       </div>
 
@@ -116,7 +173,15 @@ export default function BookingPage() {
                 ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
                 : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
             }`}>
-            Booking List
+            Agent Bookings
+          </button>
+          <button onClick={() => { setTab('branch'); setBranchPage(1) }}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'branch'
+                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
+                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
+            }`}>
+            Branch Bookings
           </button>
           <button onClick={() => setTab('calendar')}
             className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
@@ -129,7 +194,101 @@ export default function BookingPage() {
         </nav>
       </div>
 
-      {loading ? (
+      {tab === 'branch' ? (
+        branchLoading ? (
+          <SkeletonTable rows={6} />
+        ) : branchError ? (
+          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-sm rounded-lg px-4 py-3">{branchError}</div>
+        ) : (
+          <div>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4">
+              <div className="relative w-full sm:max-w-xs">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500 dark:text-surface-400" />
+                <input type="text" placeholder="Search by branch, location..." value={branchSearch} onChange={e => { setBranchSearch(e.target.value); setBranchPage(1) }}
+                  className="w-full pl-9 pr-3 py-2 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 placeholder:text-surface-400 dark:placeholder:text-surface-500" />
+              </div>
+              <select value={branchStatusFilter} onChange={e => { setBranchStatusFilter(e.target.value); setBranchPage(1) }}
+                className="py-2 px-3 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600">
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="APPROVED">Approved</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-surface-50 dark:bg-surface-800/50 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 cursor-pointer select-none" onClick={() => toggleBranchSort('id')}>
+                      ID {branchSortKey === 'id' && <span>{branchSortDir === 'asc' ? '↑' : '↓'}</span>}
+                    </th>
+                    <th className="py-3.5 px-4 cursor-pointer select-none" onClick={() => toggleBranchSort('branchProfile')}>
+                      Branch {branchSortKey === 'branchProfile' && <span>{branchSortDir === 'asc' ? '↑' : '↓'}</span>}
+                    </th>
+                    <th className="py-3.5 px-4 cursor-pointer select-none" onClick={() => toggleBranchSort('totalAmount')}>
+                      Amount {branchSortKey === 'totalAmount' && <span>{branchSortDir === 'asc' ? '↑' : '↓'}</span>}
+                    </th>
+                    <th className="py-3.5 px-4 cursor-pointer select-none" onClick={() => toggleBranchSort('status')}>
+                      Status {branchSortKey === 'status' && <span>{branchSortDir === 'asc' ? '↑' : '↓'}</span>}
+                    </th>
+                    <th className="py-3.5 px-4 cursor-pointer select-none" onClick={() => toggleBranchSort('createdAt')}>
+                      Date {branchSortKey === 'createdAt' && <span>{branchSortDir === 'asc' ? '↑' : '↓'}</span>}
+                    </th>
+                    <th className="py-3.5 px-4">Items</th>
+                    <th className="py-3.5 px-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {branchPaginated.length === 0 ? (
+                    <tr><td colSpan={7} className="px-5 py-12 text-center text-surface-500 dark:text-surface-400">
+                      <Store size={40} className="mx-auto mb-2 opacity-40" /><p>No branch bookings found</p>
+                    </td></tr>
+                  ) : (
+                    branchPaginated.map(o => (
+                      <tr key={o.id} className="border-b border-surface-100 dark:border-surface-800 transition-colors hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
+                        <td className="py-3 px-4 text-xs font-mono text-surface-500 dark:text-surface-400">#{o.id.slice(0, 6)}</td>
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-surface-800 dark:text-surface-200">{o.branchProfile.storeBranch}</div>
+                          <div className="text-xs text-surface-500 dark:text-surface-400">{o.branchProfile.location}</div>
+                        </td>
+                        <td className="py-3 px-4 text-surface-700 dark:text-surface-200 font-medium">{settings.currencySymbol}{Number(o.totalAmount).toLocaleString()}</td>
+                        <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-md text-xs font-medium ${branchStatusStyles[o.status] || 'bg-surface-100 text-surface-700'}`}>{o.status}</span></td>
+                        <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                        <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{o.items.length} item{o.items.length !== 1 ? 's' : ''}</td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Link to={`/bookings/branch/${o.id}`} className="p-1.5 text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors" title="View Details"><Eye size={15} /></Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {branchTotalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 text-sm">
+                <p className="text-surface-500 dark:text-surface-400">Page {branchPage} of {branchTotalPages}</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setBranchPage(p => Math.max(1, p - 1))} disabled={branchPage === 1}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                    <ChevronLeft size={14} /> Prev
+                  </button>
+                  <button onClick={() => setBranchPage(p => Math.min(branchTotalPages, p + 1))} disabled={branchPage === branchTotalPages}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                    Next <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      ) : loading ? (
         <SkeletonTable rows={6} />
       ) : tab === 'calendar' ? (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

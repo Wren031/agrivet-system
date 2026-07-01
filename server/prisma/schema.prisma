@@ -35,6 +35,7 @@ model User {
   id           String        @id @default(uuid())
   password     String
   role         Role          @default(AGENT)
+  refreshToken String?       @map("refresh_token")
   createdAt    DateTime      @default(now()) @map("created_at")
   adminProfile  AdminProfile?
   agentProfile  AgentProfile?
@@ -45,14 +46,15 @@ model User {
 }
 
 model AdminProfile {
-  id            String   @id @default(uuid())
-  fullName      String   @map("full_name")
-  contactNumber String   @map("contact_number")
-  email         String   @unique
-  createdAt     DateTime @default(now()) @map("created_at")
-  userId        String   @unique @map("user_id")
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String        @id @default(uuid())
+  fullName      String        @map("full_name")
+  contactNumber String        @map("contact_number")
+  email         String        @unique
+  createdAt     DateTime      @default(now()) @map("created_at")
+  userId        String        @unique @map("user_id")
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders        Order[]
+  branchOrders  BranchOrder[]
 
   @@map("admin_profiles")
 }
@@ -188,6 +190,8 @@ model BranchOrder {
   id              String             @id @default(uuid())
   branchProfileId String             @map("branch_profile_id")
   branchProfile   BranchProfile      @relation(fields: [branchProfileId], references: [id], onDelete: Cascade)
+  adminProfileId  String?            @map("admin_profile_id")
+  adminProfile    AdminProfile?      @relation(fields: [adminProfileId], references: [id], onDelete: SetNull)
   status          String             @default("PENDING")
   totalAmount     Decimal            @default(0) @map("total_amount") @db.Decimal(10, 2)
   notes           String?

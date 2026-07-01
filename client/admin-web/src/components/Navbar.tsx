@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { Bell, X, LogOut, Sun, Moon, Menu } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useNavigate } from 'react-router-dom'
+import Modal from './Modal'
 
 export default function Navbar() {
   const { notifications, removeNotification, user, setUser, addNotification, darkMode, setDarkMode, sidebarOpen, setSidebarOpen } = useApp()
   const navigate = useNavigate()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
@@ -26,7 +28,9 @@ export default function Navbar() {
     hour12: true
   })
 
-  function handleLogout() {
+  function confirmLogout() {
+    setShowLogoutModal(false)
+    setShowProfile(false)
     setUser(null)
     localStorage.removeItem('auth_user')
     addNotification({ message: 'Logged out successfully', type: 'info' })
@@ -129,7 +133,7 @@ export default function Navbar() {
                 </div>
                 <div className="p-1.5">
                   <button
-                    onClick={handleLogout}
+                    onClick={() => { setShowProfile(false); setShowLogoutModal(true) }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                   >
                     <LogOut size={14} />
@@ -141,6 +145,27 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      <Modal open={showLogoutModal} onClose={() => setShowLogoutModal(false)} title="Sign out" size="sm">
+        <div className="text-center">
+          <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-4">
+            <LogOut size={24} className="text-red-500" />
+          </div>
+          <p className="text-sm text-surface-600 dark:text-surface-400 mb-6">
+            Are you sure you want to sign out?
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowLogoutModal(false)}
+              className="flex-1 py-2.5 border border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-300 rounded-lg text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+              Cancel
+            </button>
+            <button onClick={confirmLogout}
+              className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+              Sign out
+            </button>
+          </div>
+        </div>
+      </Modal>
     </header>
   )
 }

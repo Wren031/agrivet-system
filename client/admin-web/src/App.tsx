@@ -14,8 +14,9 @@ import CustomerDetailPage from './features/customers/pages/CustomerDetailPage'
 import OrdersPage from './features/orders/pages/OrdersPage'
 import OrderDetailPage from './features/orders/pages/OrderDetailPage'
 import SettingsPage from './features/settings/pages/SettingsPage'
-import BookingPage from './features/booking/pages/BookingPage'
+import BookingPage from './features/booking/pages/ReceivingOrdersPage'
 import BookingDetailPage from './features/booking/pages/BookingDetailPage'
+import BranchBookingDetailPage from './features/booking/pages/BranchBookingDetailPage'
 import BranchPage from './features/branch/pages/BranchPage'
 import BranchDetailPage from './features/branch/pages/BranchDetailPage'
 import StaffPage from './features/staff/pages/StaffPage'
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="orders/:id" element={<OrderDetailPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="bookings" element={<BookingPage />} />
+            <Route path="bookings/branch/:id" element={<BranchBookingDetailPage />} />
             <Route path="bookings/:id" element={<BookingDetailPage />} />
             <Route path="branches" element={<BranchPage />} />
             <Route path="branches/:id" element={<BranchDetailPage />} />

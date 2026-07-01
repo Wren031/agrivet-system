@@ -18,6 +18,7 @@ function removeUser() {
 }
 
 export async function login(email: string, password: string): Promise<AuthUser> {
+  
   const data = await apiFetch<{
     accessToken: string
     user: { id: string; email: string; fullName: string; role: string }

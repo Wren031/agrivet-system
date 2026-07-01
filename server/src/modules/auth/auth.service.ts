@@ -15,36 +15,72 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+
+  generateAccessToken(user: { id: string; role: string; email: string }) {
+    return this.jwtService.sign(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      {
+        secret: process.env.JWT_ACCESS_SECRET,
+        expiresIn: '15m',
+      },
+    );
+  }
+
+  generateRefreshToken(user: { id: string }) {
+    return this.jwtService.sign(
+      {
+        sub: user.id,
+      },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      },
+    );
+  }
+
   async adminLogin(dto: LoginDto) {
     const adminProfile = await this.prisma.adminProfile.findUnique({
       where: { email: dto.email },
       include: { user: true },
     });
 
-    if (!adminProfile) {
+    if (!adminProfile || !adminProfile.user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, adminProfile.user.password);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      adminProfile.user.password,
+    );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      sub: adminProfile.user.id,
+
+    const user = {
+      id: adminProfile.user.id,
       email: adminProfile.email,
       role: adminProfile.user.role,
     };
 
+
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken({ id: user.id });
+
     return {
       message: `Welcome back, ${adminProfile.fullName}`,
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: adminProfile.user.id,
         email: adminProfile.email,
         fullName: adminProfile.fullName,
         role: adminProfile.user.role,
-
       },
     };
   }
@@ -115,20 +151,27 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      sub: agentProfile.user.id,
+    const user = {
+      id: agentProfile.user.id,
       email: agentProfile.email,
       role: agentProfile.user.role,
     };
 
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken({ id: user.id });
+
     return {
       message: `Welcome back, ${agentProfile.fullName}`,
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: agentProfile.user.id,
         email: agentProfile.email,
         fullName: agentProfile.fullName,
         role: agentProfile.user.role,
+        status: agentProfile.status,
+        contactNumber: agentProfile.contactNumber,
+        idVerificationUrl: agentProfile.idVerificationUrl,
         agentProfileId: agentProfile.id,
       },
     };
@@ -206,25 +249,29 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      sub: branchProfile.user.id,
+    const user = {
+      id: branchProfile.user.id,
       email: branchProfile.email,
       role: branchProfile.user.role,
-    };
+    }
+
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken({ id: user.id });
 
     return {
       message: `Welcome back, ${branchProfile.fullName}`,
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: branchProfile.user.id,
         email: branchProfile.email,
         fullName: branchProfile.fullName,
         storeName: branchProfile.storeBranch,
+        role: branchProfile.user.role,
+        status: branchProfile.status,
         contactNumber: branchProfile.contactNumber,
         address: branchProfile.address,
         idVerificationUrl: branchProfile.verificationImage,
-        role: branchProfile.user.role,
-        status: branchProfile.status,
         branchProfileId: branchProfile.id,
       },
     };
@@ -309,5 +356,12 @@ export class AuthService {
     });
 
     return { message: 'Password changed successfully' };
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null },
+    });
   }
 }

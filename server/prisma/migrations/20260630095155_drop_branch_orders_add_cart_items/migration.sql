@@ -1,4 +1,4 @@
-﻿-- Drop branch_orders table and related references
+-- Drop branch_orders table and related references
 ALTER TABLE IF EXISTS "order_items" DROP CONSTRAINT IF EXISTS "order_items_branch_order_id_fkey";
 DROP TABLE IF EXISTS "branch_orders";
 

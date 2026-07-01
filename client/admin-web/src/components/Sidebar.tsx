@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, Users2, UserCircle, ShoppingCart, Settings,
   Tags, LogOut, Store, ClipboardList, ClipboardCheck, ShieldCheck,
   TrendingUp, CalendarDays, Sliders
-} from 'lucide-react' // Added a few extra contextual icons here
+} from 'lucide-react' 
 import { useApp } from '../context/AppContext'
+import Modal from './Modal'
 
 interface NavItem {
   to: string
@@ -24,18 +26,25 @@ const navigationConfig: NavGroup[] = [
     label: 'Operations',
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/orders', label: 'Orders & Sales', icon: TrendingUp },      // Changed: ShoppingCart -> TrendingUp (better for sales metrics)
-      { to: '/bookings', label: 'ReceivingBookings', icon: CalendarDays }, // Changed: ClipboardList -> CalendarDays (better for timed bookings)
+      { to: '/orders', label: 'Orders & Sales', icon: TrendingUp },      
+      { to: '/bookings', label: 'Receiving Orders', icon: CalendarDays }, 
       { to: '/inventory', label: 'Inventory Items', icon: Package },
+    ]
+  },
+  {
+    id: 'users_management',
+    label: 'Users & Branches',
+    items: [
+      { to: '/customers', label: 'Customers', icon: UserCircle },
+      { to: '/agents', label: 'Agents', icon: Users2 },                  
+      { to: '/staff', label: 'Admin Staff', icon: Users },            
+      { to: '/branches', label: 'Branches', icon: Store },
     ]
   },
   {
     id: 'transactions',
     label: 'Transactions',
     items: [
-      { to: '/customers', label: 'Customers', icon: UserCircle },
-      { to: '/agents', label: 'Agents', icon: Users2 },                  // Changed: Users -> Users2 (cleaner grouping icon)
-      { to: '/staff', label: 'Users and Roles', icon: Users },            // Changed: BadgeCheck -> Users (classic user management icon)
       { to: '/tasks', label: 'My Task', icon: ClipboardCheck },
       { to: '/verification', label: 'Verification', icon: ShieldCheck },
     ]
@@ -45,8 +54,7 @@ const navigationConfig: NavGroup[] = [
     label: 'Administration',
     items: [
       { to: '/categories', label: 'Categories', icon: Tags },
-      { to: '/branches', label: 'Branches', icon: Store },
-      { to: '/settings', label: 'Settings', icon: Sliders },              // Changed: Settings -> Sliders (modern setup/control icon)
+      { to: '/settings', label: 'Settings', icon: Sliders },              
     ]
   }
 ]
@@ -54,8 +62,10 @@ const navigationConfig: NavGroup[] = [
 export default function Sidebar() {
   const navigate = useNavigate()
   const { settings, setUser, addNotification, sidebarOpen, setSidebarOpen } = useApp()
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
-  const handleLogout = () => {
+  function confirmLogout() {
+    setShowLogoutModal(false)
     setUser(null)
     localStorage.removeItem('auth_user')
     addNotification({ message: 'Logged out successfully', type: 'info' })
@@ -64,6 +74,7 @@ export default function Sidebar() {
   }
 
   return (
+    <>
     <aside
       className={`
         fixed lg:sticky top-0 left-0 h-screen w-64 bg-white dark:bg-surface-950 text-surface-600 dark:text-surface-400 flex flex-col shrink-0
@@ -146,7 +157,7 @@ export default function Sidebar() {
             </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogoutModal(true)}
             aria-label="Log Out"
             className="p-1.5 rounded-lg text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-all duration-150"
           >
@@ -155,5 +166,27 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+
+    <Modal open={showLogoutModal} onClose={() => setShowLogoutModal(false)} title="Sign out" size="sm">
+      <div className="text-center">
+        <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-4">
+          <LogOut size={24} className="text-red-500" />
+        </div>
+        <p className="text-sm text-surface-600 dark:text-surface-400 mb-6">
+          Are you sure you want to sign out?
+        </p>
+        <div className="flex gap-3">
+          <button onClick={() => setShowLogoutModal(false)}
+            className="flex-1 py-2.5 border border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-300 rounded-lg text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+            Cancel
+          </button>
+          <button onClick={confirmLogout}
+            className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+            Sign out
+          </button>
+        </div>
+      </div>
+    </Modal>
+    </>
   )
 }
