@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateBranchOrderDto } from './dto/create-branch-order.dto';
 import { UpdateBranchOrderDto } from './dto/update-branch-order.dto';
 import { CreateBranchOrderItemDto } from './dto/create-branch-order-item.dto';
@@ -7,7 +8,10 @@ import { UpdateBranchOrderItemDto } from './dto/update-branch-order-item.dto';
 
 @Injectable()
 export class BranchOrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private include = {
     branchProfile: true,
@@ -84,13 +88,40 @@ export class BranchOrderService {
   }
 
   async updateStatus(id: string, userId: string, status: string) {
-    await this.findOne(id, userId);
+    const order = await this.findOne(id, userId);
 
-    return this.prisma.branchOrder.update({
+    const updated = await this.prisma.branchOrder.update({
       where: { id },
       data: { status },
-      include: this.include,
+      include: { ...this.include, branchProfile: true },
     });
+
+    const title = 'Order Status Updated';
+    const message = `Order #${id.slice(0, 8)} status changed from ${order.status} to ${status} by ${updated.branchProfile.storeBranch}`;
+    const adminUsers = await this.prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+    });
+
+    for (const admin of adminUsers) {
+      await this.notificationsService.create({
+        userId: admin.id,
+        title,
+        message,
+        type: 'BRANCH_ORDER_STATUS',
+        referenceId: id,
+      });
+    }
+
+    await this.notificationsService.create({
+      userId: updated.branchProfile.userId,
+      title,
+      message,
+      type: 'BRANCH_ORDER_STATUS',
+      referenceId: id,
+    });
+
+    return updated;
   }
 
   async remove(id: string, userId: string) {

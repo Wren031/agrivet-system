@@ -1,8 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Package, Users, UserCircle, ShoppingCart, Settings,
-  Tags, LogOut, Store, ClipboardList, ClipboardCheck, BadgeCheck, ShieldCheck
-} from 'lucide-react'
+  LayoutDashboard, Package, Users, Users2, UserCircle, ShoppingCart, Settings,
+  Tags, LogOut, Store, ClipboardList, ClipboardCheck, ShieldCheck,
+  TrendingUp, CalendarDays, Sliders
+} from 'lucide-react' // Added a few extra contextual icons here
 import { useApp } from '../context/AppContext'
 
 interface NavItem {
@@ -19,33 +20,33 @@ interface NavGroup {
 
 const navigationConfig: NavGroup[] = [
   {
-    id: 'core',
-    label: 'Main',
+    id: 'operations',
+    label: 'Operations',
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/orders', label: 'Orders & Sales', icon: ShoppingCart },
-      { to: '/bookings', label: 'Bookings', icon: ClipboardList },
+      { to: '/orders', label: 'Orders & Sales', icon: TrendingUp },      // Changed: ShoppingCart -> TrendingUp (better for sales metrics)
+      { to: '/bookings', label: 'ReceivingBookings', icon: CalendarDays }, // Changed: ClipboardList -> CalendarDays (better for timed bookings)
       { to: '/inventory', label: 'Inventory Items', icon: Package },
     ]
   },
   {
-    id: 'management',
-    label: 'Management',
+    id: 'transactions',
+    label: 'Transactions',
     items: [
       { to: '/customers', label: 'Customers', icon: UserCircle },
-      { to: '/agents', label: 'Agents', icon: Users },
-      { to: '/staff', label: 'Staff', icon: BadgeCheck },
-      { to: '/tasks', label: 'Staff Punch', icon: ClipboardCheck },
+      { to: '/agents', label: 'Agents', icon: Users2 },                  // Changed: Users -> Users2 (cleaner grouping icon)
+      { to: '/staff', label: 'Users and Roles', icon: Users },            // Changed: BadgeCheck -> Users (classic user management icon)
+      { to: '/tasks', label: 'My Task', icon: ClipboardCheck },
       { to: '/verification', label: 'Verification', icon: ShieldCheck },
     ]
   },
   {
-    id: 'system',
-    label: 'System',
+    id: 'administration',
+    label: 'Administration',
     items: [
       { to: '/categories', label: 'Categories', icon: Tags },
       { to: '/branches', label: 'Branches', icon: Store },
-      { to: '/settings', label: 'Settings', icon: Settings },
+      { to: '/settings', label: 'Settings', icon: Sliders },              // Changed: Settings -> Sliders (modern setup/control icon)
     ]
   }
 ]

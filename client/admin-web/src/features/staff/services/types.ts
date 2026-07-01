@@ -33,4 +33,5 @@ export interface UpdateAdminStaffData {
   email?: string
   contactNumber?: string
   password?: string
+  currentPassword?: string
 }

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, ListOrdered, Search, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react'
+import { CalendarDays, Search, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react'
 import { useBookings } from '../hooks/useBookings'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonTable } from '../../../components/Skeleton'
@@ -19,7 +19,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function BookingPage() {
   const { bookings, loading } = useBookings()
   const { settings } = useApp()
-  const [tab, setTab] = useState<'calendar' | 'list'>('calendar')
+  const [tab, setTab] = useState<'list' | 'calendar'>('list')
   const [calYear, setCalYear] = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [selectedDate, setSelectedDate] = useState('')
@@ -108,19 +108,25 @@ export default function BookingPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6">
-        <button onClick={() => setTab('calendar')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'calendar' ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900' : 'text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800'
-          }`}>
-          <CalendarDays size={16} /> Calendar View
-        </button>
-        <button onClick={() => { setTab('list'); setPage(1) }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'list' ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900' : 'text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800'
-          }`}>
-          <ListOrdered size={16} /> Booking List
-        </button>
+      <div className="border-b border-surface-200 dark:border-surface-700 mb-6">
+        <nav className="flex gap-6">
+          <button onClick={() => { setTab('list'); setPage(1) }}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'list'
+                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
+                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
+            }`}>
+            Booking List
+          </button>
+          <button onClick={() => setTab('calendar')}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'calendar'
+                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
+                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
+            }`}>
+            Calendar View
+          </button>
+        </nav>
       </div>
 
       {loading ? (

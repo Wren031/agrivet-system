@@ -190,7 +190,7 @@ function SecurityTab() {
     }
     setSaving(true)
     try {
-      await updateStaff(user.id, { password: form.newPassword })
+      await updateStaff(user.id, { currentPassword: form.currentPassword, password: form.newPassword })
       addNotification({ message: 'Password updated successfully', type: 'success' })
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
     } catch {
