@@ -42,6 +42,8 @@ export class AuthService {
     );
   }
 
+  // admin login
+
   async adminLogin(dto: LoginDto) {
     const adminProfile = await this.prisma.adminProfile.findUnique({
       where: { email: dto.email },
@@ -60,7 +62,6 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
 
     const user = {
       id: adminProfile.user.id,

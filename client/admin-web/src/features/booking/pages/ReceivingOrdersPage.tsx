@@ -38,6 +38,7 @@ export default function BookingPage() {
   const [branchError, setBranchError] = useState('')
   const [branchSearch, setBranchSearch] = useState('')
   const [branchStatusFilter, setBranchStatusFilter] = useState('')
+
   const [branchPage, setBranchPage] = useState(1)
   const [branchSortKey, setBranchSortKey] = useState('createdAt')
   const [branchSortDir, setBranchSortDir] = useState<'asc' | 'desc'>('desc')
@@ -88,25 +89,39 @@ export default function BookingPage() {
     return bookings.filter(b => b.date === selectedDate)
   }, [bookings, selectedDate])
 
-  const filtered = useMemo(() => {
-    let result = bookings
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter(b =>
-        b.id.toLowerCase().includes(q) ||
-        b.customer.toLowerCase().includes(q) ||
-        b.agent.toLowerCase().includes(q)
-      )
-    }
-    if (statusFilter) result = result.filter(b => b.status === statusFilter)
-    result.sort((a, b) => {
-      const aVal = (a as any)[sortKey] || ''
-      const bVal = (b as any)[sortKey] || ''
-      const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
-      return sortDir === 'asc' ? cmp : -cmp
-    })
-    return result
-  }, [bookings, search, statusFilter, sortKey, sortDir])
+const filtered = useMemo(() => {
+  let result = bookings
+
+  // 🚫 hide completed bookings
+  result = result.filter(b => b.status !== 'Completed')
+
+  if (search) {
+    const q = search.toLowerCase()
+    result = result.filter(b =>
+      b.id.toLowerCase().includes(q) ||
+      b.customer.toLowerCase().includes(q) ||
+      b.agent.toLowerCase().includes(q)
+    )
+  }
+
+  if (statusFilter) {
+    result = result.filter(b => b.status === statusFilter)
+  }
+
+  result.sort((a, b) => {
+    const aVal = (a as any)[sortKey] || ''
+    const bVal = (b as any)[sortKey] || ''
+
+    const cmp =
+      typeof aVal === 'string'
+        ? aVal.localeCompare(bVal)
+        : aVal - bVal
+
+    return sortDir === 'asc' ? cmp : -cmp
+  })
+
+  return result
+}, [bookings, search, statusFilter, sortKey, sortDir])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)

@@ -103,12 +103,9 @@ export default function BranchDetailPage() {
                   disabled={updating === 'status'}
                   className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
                 >
-                  <option value="PENDING">Pending</option>
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
                   <option value="TERMINATED">Terminated</option>
-                  <option value="ONLINE">Online</option>
-                  <option value="OFFLINE">Offline</option>
                 </select>
               </div>
               <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium ${statusStyles[branch.status]}`}>

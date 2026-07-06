@@ -16,17 +16,21 @@ export default function TasksPage() {
   const [search, setSearch] = useState('')
 
   const filtered = tasks.filter(t =>
-    !search ||
-    t.customer.toLowerCase().includes(search.toLowerCase()) ||
-    t.agent?.toLowerCase().includes(search.toLowerCase()) ||
-    t.assignedStaff?.toLowerCase().includes(search.toLowerCase())
+    t.status !== 'Completed' && (
+      !search ||
+      t.customer.toLowerCase().includes(search.toLowerCase()) ||
+      t.agent?.toLowerCase().includes(search.toLowerCase()) ||
+      t.assignedStaff?.toLowerCase().includes(search.toLowerCase())
+    )
   )
 
   const branchFiltered = branchOrders.filter(o =>
-    !search ||
-    o.id.toLowerCase().includes(search.toLowerCase()) ||
-    o.branchProfile.storeBranch.toLowerCase().includes(search.toLowerCase()) ||
-    o.branchProfile.location.toLowerCase().includes(search.toLowerCase())
+    o.status !== 'COMPLETED' && (
+      !search ||
+      o.id.toLowerCase().includes(search.toLowerCase()) ||
+      o.branchProfile.storeBranch.toLowerCase().includes(search.toLowerCase()) ||
+      o.branchProfile.location.toLowerCase().includes(search.toLowerCase())
+    )
   )
 
   return (

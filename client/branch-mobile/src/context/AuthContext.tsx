@@ -49,7 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load stored user
   useEffect(() => {
     (async () => {
       try {
@@ -65,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // ---------------- LOGIN ----------------
   const login = useCallback(
     async (
       email: string,

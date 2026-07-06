@@ -1,5 +1,6 @@
 import type { Item, InventoryApiResponse } from './types'
 import { apiFetch } from '../../../config/apiClient'
+import { getImageUrl } from '../../../config/api.config'
 
 function fromApi(item: InventoryApiResponse): Item {
   return {
@@ -14,7 +15,7 @@ function fromApi(item: InventoryApiResponse): Item {
     reorderLevel: item.reorderPoint,
     price: Number(item.sellingPrice),
     stock: item.stockLevel,
-    image: item.imageUrl || '',
+    image: getImageUrl(item.imageUrl) || '',
     createdAt: item.createdAt,
   }
 }

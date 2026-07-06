@@ -21,7 +21,8 @@ import BranchPage from './features/branch/pages/BranchPage'
 import BranchDetailPage from './features/branch/pages/BranchDetailPage'
 import StaffPage from './features/staff/pages/StaffPage'
 import TasksPage from './features/tasks/pages/TasksPage'
-import TaskDetailPage from './features/tasks/pages/TaskDetailPage'
+import AgentTaskDetailPage from './features/tasks/pages/AgentTaskDetailPage'
+import BranchTaskDetailsPage from './features/tasks/pages/BranchTaskDetailsPage'
 import VerificationPage from './features/verification/pages/VerificationPage'
 
 export default function App() {
@@ -53,7 +54,10 @@ export default function App() {
             <Route path="branches/:id" element={<BranchDetailPage />} />
             <Route path="staff" element={<StaffPage />} />
             <Route path="tasks" element={<TasksPage />} />
-            <Route path="tasks/:id" element={<TaskDetailPage />} />
+
+            <Route path="tasks/branch/:id" element={<BranchTaskDetailsPage />} />
+            <Route path="tasks/:id" element={<AgentTaskDetailPage />} />
+            
             <Route path="verification" element={<VerificationPage />} />
           </Route>
         </Routes>

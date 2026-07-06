@@ -1,4 +1,5 @@
 import { apiFetch } from '../../config/apiClient'
+import { getImageUrl } from '../../config/api.config'
 import type { Branch, BranchApiResponse, BranchStatus } from './types'
 
 function fromApi(item: BranchApiResponse): Branch {
@@ -10,7 +11,7 @@ function fromApi(item: BranchApiResponse): Branch {
     address: item.address || '',
     contactNumber: item.contactNumber,
     status: item.status as BranchStatus,
-    verificationImage: item.verificationImage || undefined,
+    verificationImage: getImageUrl(item.verificationImage),
     verificationId: item.id,
     date: item.user.createdAt ? new Date(item.user.createdAt).toISOString().split('T')[0] : '',
   }

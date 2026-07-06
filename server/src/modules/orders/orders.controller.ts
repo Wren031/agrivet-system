@@ -26,7 +26,7 @@ export class OrdersController {
   @Roles('ADMIN', 'AGENT')
   create(@Body() dto: CreateOrderDto, @CurrentUser() user: { id: string; role: string }) {
     return this.ordersService.create(dto, user);
-  }
+  } 
 
   @Get()
   findAll(@CurrentUser() user: { id: string; role: string }) {

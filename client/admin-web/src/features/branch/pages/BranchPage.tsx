@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Store, Search, Eye, ChevronLeft, ChevronRight, CheckSquare, Square, Ban } from 'lucide-react'
+import { Store, Search, Eye, ChevronLeft, ChevronRight, CheckSquare, Square, Ban, X } from 'lucide-react'
 import { useBranches } from '../hooks/useBranches'
 import { updateBranchStatus } from '../../../data/branch/branchService'
 import { SkeletonCards } from '../../../components/Skeleton'
@@ -162,7 +162,7 @@ export default function BranchPage() {
                           {(branch.status === 'APPROVED' || branch.status === 'ONLINE' || branch.status === 'OFFLINE') && (
                             <button onClick={() => setTerminateTarget(branch)}
                               className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Terminate">
-                              <Ban size={16} />
+                              <X size={16} />
                             </button>
                           )}
                         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Phone, MapPin, Store, ShoppingBag, User } from 'lucide-react'
-import { fetchCustomer, updateCustomerStatus } from '../services/customerService'
+import { ArrowLeft, Phone, MapPin, Store, ShoppingBag, User, Trash2 } from 'lucide-react'
+import { fetchCustomer, updateCustomerStatus, deleteCustomer } from '../services/customerService'
 import type { Customer } from '../services/types'
 import { useApp } from '../../../context/AppContext'
 
@@ -12,6 +12,7 @@ export default function CustomerDetailPage() {
 
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -30,6 +31,22 @@ export default function CustomerDetailPage() {
       addNotification({ message: `Customer ${status.toLowerCase()}`, type: 'success' })
     } catch {
       addNotification({ message: 'Failed to update status', type: 'error' })
+    }
+  }
+
+  async function handleDelete() {
+    if (!customer) return
+    if (!window.confirm(`Are you sure you want to delete ${customer.fullName}?`)) return
+
+    try {
+      setIsDeleting(true)
+      await deleteCustomer(customer.id)
+      addNotification({ message: 'Customer successfully deleted', type: 'success' })
+      navigate('/customers')
+    } catch {
+      addNotification({ message: 'Failed to delete customer', type: 'error' })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -76,11 +93,19 @@ export default function CustomerDetailPage() {
                   onChange={e => handleStatusChange(e.target.value)}
                   className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-500 disabled:opacity-40 cursor-pointer"
                 >
-                  <option value="APPROVED">Approve</option>
-                  <option value="REJECTED">Reject</option>
                   <option value="TERMINATED">Terminate</option>
+                  <option value="ACTIVE">Active</option>
                 </select>
               </div>
+              
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
+              >
+                <Trash2 size={14} />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>
@@ -100,7 +125,7 @@ export default function CustomerDetailPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Contact Number</p>
-                      <p className="text-sm font-medium text-surface-800 dark:text-surface-200">{customer.phone}</p>
+                      <p className="text-sm font-medium text-surface-880 dark:text-surface-200">{customer.phone}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">

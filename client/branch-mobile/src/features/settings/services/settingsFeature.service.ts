@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL } from "../../../config/api.config";
-import { User } from "../../../types";
+
 
 async function authHeaders() {
   const token = await AsyncStorage.getItem("@agrivet_token");

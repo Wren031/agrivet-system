@@ -1,18 +1,31 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Search, Package, User, Calendar, DollarSign, BadgeCheck, Building2, XCircle, Printer } from 'lucide-react'
+import { ArrowLeft, Search, Package, User, Calendar, BadgeCheck, Building2, Printer, ChevronDown, Trash2 } from 'lucide-react'
 import { useTasks } from '../hooks/useTasks'
 import { useApp } from '../../../context/AppContext'
 import { statusStyles, handlePrint } from '../services/taskUtils'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 
-export default function TaskDetailPage() {
+export default function AgentTaskDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { tasks, loading, handleCancel } = useTasks()
+  const { tasks, loading, handleUpdateStatus, handleDelete } = useTasks()
   const { settings } = useApp()
   const [itemSearch, setItemSearch] = useState('')
+  const [statusOpen, setStatusOpen] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const task = tasks.find(b => b.id === id)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setStatusOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const filteredItems = useMemo(() => {
     if (!task?.items) return []
@@ -39,7 +52,7 @@ export default function TaskDetailPage() {
         <div className="w-16 h-16 rounded-2xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center mb-5">
           <Package size={32} className="text-surface-300 dark:text-surface-600" />
         </div>
-        <p className="text-lg font-medium">Task not found</p>
+        <p className="text-lg font-medium">Task not found</p>asf
         <button onClick={() => navigate('/tasks')}
           className="mt-4 text-sm text-surface-600 dark:text-surface-400 hover:underline transition-colors">
           Back to Tasks
@@ -48,7 +61,22 @@ export default function TaskDetailPage() {
     )
   }
 
-  const canCancel = task.status !== 'Completed' && task.status !== 'Cancelled'
+  const statusOptions = [
+    { label: 'Approved', value: 'Approved' as const },
+    { label: 'Processing', value: 'Processing' as const },
+    { label: 'Complete', value: 'Completed' as const },
+  ]
+
+  async function handleStatusSelect(status: 'Approved' | 'Cancelled' | 'Completed') {
+    setStatusOpen(false)
+    await handleUpdateStatus(task.id, status)
+  }
+
+  async function handleDeleteTask() {
+    setShowDeleteConfirm(false)
+    await handleDelete(task.id)
+    navigate('/tasks')
+  }
 
   return (
     <div>
@@ -62,10 +90,25 @@ export default function TaskDetailPage() {
         <div className="px-4 sm:px-6 py-5 border-b border-surface-100 dark:border-surface-700">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-white">Task Details</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-white">Agent Task Details</h1>
               <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Booking #{task.id.slice(0, 8)}</p>
             </div>
-            <span className={`px-3 py-1 rounded-md text-xs font-medium ${statusStyles[task.status]}`}>{task.status}</span>
+            <div className="relative" ref={dropdownRef}>
+              <button onClick={() => setStatusOpen(!statusOpen)}
+                className={`px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer ${statusStyles[task.status]}`}>
+                {task.status} <ChevronDown size={12} />
+              </button>
+              {statusOpen && (
+                <div className="absolute right-0 mt-1.5 w-36 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg shadow-lg z-10 py-1">
+                  {statusOptions.map(opt => (
+                    <button key={opt.value} onClick={() => handleStatusSelect(opt.value)}
+                      className="w-full text-left px-3 py-1.5 text-xs text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors">
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -169,12 +212,10 @@ export default function TaskDetailPage() {
             </div>
           </div>
         <div className="flex items-center justify-end gap-2 mt-4">
-          {canCancel && (
-            <button onClick={() => handleCancel(task.id)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-600 transition-colors text-sm font-medium">
-              <XCircle size={15} /> Cancel
-            </button>
-          )}
+          <button onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-surface-700 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-sm font-medium">
+            <Trash2 size={15} /> Delete
+          </button>
           <button onClick={() => handlePrint(task, settings.currencySymbol)}
             className="flex items-center gap-1.5 px-4 py-2 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-lg hover:bg-surface-800 dark:hover:bg-surface-200 transition-colors text-sm font-medium">
             <Printer size={15} /> Print
@@ -182,6 +223,28 @@ export default function TaskDetailPage() {
         </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-surface-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-surface-900 dark:text-white mb-2">Delete Task</h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400 mb-6">
+              Are you sure you want to delete this task? This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-700 rounded-lg transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleDeleteTask}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

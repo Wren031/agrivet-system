@@ -30,19 +30,19 @@ export class BranchOrderController {
   }
 
   @Get()
-  @Roles('BRANCH', 'ADMIN')
+  @Roles('BRANCH', 'ADMIN', 'AGENT')
   findAll(@CurrentUser() user: { id: string; role: string }) {
     return this.branchOrderService.findAll(user.id, user.role);
   }
 
   @Get(':id')
-  @Roles('BRANCH', 'ADMIN')
+  @Roles('BRANCH', 'ADMIN', 'AGENT')
   findOne(@Param('id') id: string, @CurrentUser() user: { id: string; role: string }) {
     return this.branchOrderService.findOne(id, user.id, user.role);
   }
 
   @Patch(':id')
-  @Roles('BRANCH')
+  @Roles('BRANCH', 'ADMIN', 'AGENT')
   update(
     @Param('id') id: string,
     @Body() dto: UpdateBranchOrderDto,
@@ -52,7 +52,7 @@ export class BranchOrderController {
   }
 
   @Patch(':id/status')
-  @Roles('BRANCH')
+  @Roles('BRANCH', 'ADMIN', 'AGENT')
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: string,
@@ -62,7 +62,7 @@ export class BranchOrderController {
   }
 
   @Delete(':id')
-  @Roles('BRANCH')
+  @Roles('BRANCH', 'ADMIN', 'AGENT')
   remove(@Param('id') id: string, @CurrentUser() user: { id: string; role: string }) {
     return this.branchOrderService.remove(id, user.id);
   }

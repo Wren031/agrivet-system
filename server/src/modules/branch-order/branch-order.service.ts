@@ -24,11 +24,13 @@ export class BranchOrderService {
   private async resolveBranchProfileId(userId: string) {
     const branch = await this.prisma.branchProfile.findUnique({
       where: { userId },
-    });
+    })
+
     if (!branch) {
-      throw new NotFoundException('Branch profile not found');
+      return null
     }
-    return branch.id;
+
+    return branch.id
   }
 
   async create(dto: CreateBranchOrderDto, userId: string) {
@@ -52,34 +54,50 @@ export class BranchOrderService {
     });
   }
 
-  async findAll(userId: string, role?: string) {
-    const where: any = {};
-    if (role !== 'ADMIN') {
-      where.branchProfileId = await this.resolveBranchProfileId(userId);
+async findAll(userId: string, role?: string) {
+  const where: any = {}
+
+  if (role === 'BRANCH') {
+    const branchProfileId = await this.resolveBranchProfileId(userId)
+
+    if (!branchProfileId) {
+      return []
     }
-    return this.prisma.branchOrder.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: this.include,
-    });
+
+    where.branchProfileId = branchProfileId
   }
 
-  async findOne(id: string, userId: string, role?: string) {
-    const where: any = { id };
-    if (role !== 'ADMIN') {
-      where.branchProfileId = await this.resolveBranchProfileId(userId);
-    }
-    const order = await this.prisma.branchOrder.findFirst({
-      where,
-      include: this.include,
-    });
+  return this.prisma.branchOrder.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    include: this.include,
+  })
+}
 
-    if (!order) {
-      throw new NotFoundException('Branch order not found');
+async findOne(id: string, userId: string, role?: string) {
+  const where: any = { id }
+
+  if (role === 'BRANCH') {
+    const branchProfileId = await this.resolveBranchProfileId(userId)
+
+    if (!branchProfileId) {
+      throw new NotFoundException('Branch profile not found for this user')
     }
 
-    return order;
+    where.branchProfileId = branchProfileId
   }
+
+  const order = await this.prisma.branchOrder.findFirst({
+    where,
+    include: this.include,
+  })
+
+  if (!order) {
+    throw new NotFoundException('Branch order not found')
+  }
+
+  return order
+}
 
   async update(id: string, userId: string, dto: UpdateBranchOrderDto) {
     await this.findOne(id, userId);
@@ -94,42 +112,17 @@ export class BranchOrderService {
     });
   }
 
-  async updateStatus(id: string, userId: string, status: string) {
-    const order = await this.findOne(id, userId);
+async updateStatus(id: string, userId: string, status: string) {
+  const order = await this.findOne(id, userId)
 
-    const updated = await this.prisma.branchOrder.update({
-      where: { id },
-      data: { status },
-      include: { ...this.include, branchProfile: true },
-    });
+  const updated = await this.prisma.branchOrder.update({
+    where: { id },
+    data: { status },
+    include: { ...this.include, branchProfile: true },
+  })
 
-    const title = 'Order Status Updated';
-    const message = `Order #${id.slice(0, 8)} status changed from ${order.status} to ${status} by ${updated.branchProfile.storeBranch}`;
-    const adminUsers = await this.prisma.user.findMany({
-      where: { role: 'ADMIN' },
-      select: { id: true },
-    });
-
-    for (const admin of adminUsers) {
-      await this.notificationsService.create({
-        userId: admin.id,
-        title,
-        message,
-        type: 'BRANCH_ORDER_STATUS',
-        referenceId: id,
-      });
-    }
-
-    await this.notificationsService.create({
-      userId: updated.branchProfile.userId,
-      title,
-      message,
-      type: 'BRANCH_ORDER_STATUS',
-      referenceId: id,
-    });
-
-    return updated;
-  }
+  return updated
+}
 
   async remove(id: string, userId: string) {
     await this.findOne(id, userId);

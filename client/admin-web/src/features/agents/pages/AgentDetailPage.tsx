@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, MapPin, Navigation, Users, MapPinned, BadgeCheck, XCircle, Clock, UserCheck, UserX } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, MapPin, Navigation, Users, MapPinned, BadgeCheck, XCircle, Clock, UserCheck, UserX, Printer } from 'lucide-react'
 import { fetchAgent, fetchAgentCustomers, updateStatus, deleteAgent } from '../services/agentService'
 import { apiFetch } from '../../../config/apiClient'
 import type { Agent, AgentStatus } from '../services/types'
@@ -224,20 +224,13 @@ export default function AgentDetailPage() {
                   disabled={updating === 'status'}
                   className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
                 >
-                  <option value="PENDING">Pending</option>
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
                   <option value="TERMINATED">Terminated</option>
-                  <option value="ONLINE">Online</option>
-                  <option value="OFFLINE">Offline</option>
                 </select>
                 <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
               </div>
               <span className={`px-3 py-1 rounded-md text-xs font-medium ${statusStyles[agent.status]}`}>{agent.status}</span>
-              <button onClick={() => setShowDelete(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-                <Trash2 size={14} /> Delete
-              </button>
             </div>
           </div>
         </div>
@@ -375,6 +368,18 @@ export default function AgentDetailPage() {
                       <span className="text-xs font-mono font-semibold text-surface-700 dark:text-surface-300">{agent.id.slice(0, 12)}...</span>
                     </div>
                   </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button onClick={() => window.print()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+                    <Printer size={14} /> Print
+                  </button>
+
+                  <button onClick={() => setShowDelete(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+                    <Trash2 size={14} /> Delete
+                  </button>
                 </div>
               </div>
             </div>

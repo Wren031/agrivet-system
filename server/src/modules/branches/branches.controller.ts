@@ -41,31 +41,31 @@ export class BranchesController {
   }
 
   @Get()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'AGENT')
   findAll() {
     return this.branchesService.findAll();
   }
 
   @Get(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'AGENT')
   findOne(@Param('id') id: string) {
     return this.branchesService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'AGENT')
   update(@Param('id') id: string, @Body() dto: UpdateBranchDto) {
     return this.branchesService.update(id, dto);
   }
 
   @Patch(':id/status')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'AGENT')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateBranchStatusDto) {
     return this.branchesService.updateStatus(id, dto);
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'AGENT')
   remove(@Param('id') id: string) {
     return this.branchesService.remove(id);
   }

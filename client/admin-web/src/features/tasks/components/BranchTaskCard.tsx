@@ -80,7 +80,7 @@ export default function BranchTaskCard({ order }: BranchTaskCardProps) {
           <span className="text-slate-300 dark:text-slate-600">·</span>
           <span className="font-medium text-slate-600 dark:text-slate-300">{settings.currencySymbol}{Number(order.totalAmount).toLocaleString()}</span>
         </div>
-        <button onClick={() => navigate(`/bookings/branch/${order.id}`)}
+        <button onClick={() => navigate(`/tasks/branch/${order.id}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-900 dark:bg-white text-white dark:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-200 transition-colors text-xs font-medium">
           <Eye size={14} /> View Details
         </button>

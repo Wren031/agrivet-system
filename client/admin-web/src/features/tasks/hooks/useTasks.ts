@@ -67,5 +67,15 @@ export function useTasks() {
     }
   }, [addNotification])
 
-  return { tasks, myAdminProfileId, loading, handleApprove, handleCancel, handleComplete, handleDelete, reload: load }
+  const handleUpdateStatus = useCallback(async (id: string, status: Booking['status']) => {
+    try {
+      const updated = await updateBooking(id, { status })
+      setTasks(prev => prev.map(t => t.id === id ? updated : t))
+      addNotification({ message: `Booking status updated to ${status}`, type: 'success' })
+    } catch {
+      addNotification({ message: 'Failed to update booking status', type: 'error' })
+    }
+  }, [addNotification])
+
+  return { tasks, myAdminProfileId, loading, handleApprove, handleCancel, handleComplete, handleDelete, handleUpdateStatus, reload: load }
 }

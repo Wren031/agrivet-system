@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Search, Eye, Ban, CheckSquare, Square } from 'lucide-react'
+import { Users, Search, Eye, Ban, CheckSquare, Square, X } from 'lucide-react'
 import { useCustomers } from '../hooks/useCustomers'
 import { sendAnnouncement } from '../services/customerService'
 import { useApp } from '../../../context/AppContext'
@@ -172,7 +172,7 @@ export default function CustomersPage() {
                             </button>
                             <button onClick={() => confirmTerminate(customer)}
                               className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Terminate">
-                              <Ban size={16} />
+                              <X size={16} />
                             </button>
                           </div>
                         </td>

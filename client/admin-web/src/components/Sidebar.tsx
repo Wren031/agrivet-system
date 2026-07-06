@@ -35,7 +35,7 @@ const navigationConfig: NavGroup[] = [
     id: 'users_management',
     label: 'Users & Branches',
     items: [
-      { to: '/customers', label: 'Customers', icon: UserCircle },
+
       { to: '/agents', label: 'Agents', icon: Users2 },                  
       { to: '/staff', label: 'Admin Staff', icon: Users },            
       { to: '/branches', label: 'Branches', icon: Store },
@@ -45,6 +45,7 @@ const navigationConfig: NavGroup[] = [
     id: 'transactions',
     label: 'Transactions',
     items: [
+            { to: '/customers', label: 'Customers', icon: UserCircle },
       { to: '/tasks', label: 'My Task', icon: ClipboardCheck },
       { to: '/verification', label: 'Verification', icon: ShieldCheck },
     ]
