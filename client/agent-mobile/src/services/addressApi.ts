@@ -1,66 +1,49 @@
-const PSGC_BASE = "https://psgc.gitlab.io/api";
+import {
+  regions,
+  getProvincesByRegion,
+  getCitiesByProvince,
+  getBarangaysByCity,
+} from "../data/philippineAddress";
 
-interface PsgcItem {
+export interface AddressItem {
   code: string;
   name: string;
 }
 
-interface Region extends PsgcItem {
-  regionName: string;
-}
-
-interface Province extends PsgcItem {}
-interface City extends PsgcItem {}
-interface Barangay extends PsgcItem {}
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-  return res.json();
-}
+const resolveDelayed = <T>(value: T): Promise<T> =>
+  new Promise((resolve) => setTimeout(() => resolve(value), 50));
 
 export const addressApi = {
-  async getRegions(): Promise<Region[]> {
-    const data = await fetchJson<any[]>(`${PSGC_BASE}/regions/`);
-    return data.map((r) => ({
-      code: r.code,
-      name: r.regionName,
-      regionName: r.regionName,
-    }));
+  async getRegions(): Promise<AddressItem[]> {
+    return resolveDelayed(
+      regions.map((r) => ({ code: r.code, name: r.name }))
+    );
   },
 
-  async getProvinces(regionCode: string): Promise<Province[]> {
-    const data = await fetchJson<any[]>(
-      `${PSGC_BASE}/regions/${regionCode}/provinces/`
-    );
-    return data.map((p) => ({ code: p.code, name: p.name }));
+  async getProvinces(regionCode: string): Promise<AddressItem[]> {
+    const list = getProvincesByRegion(regionCode);
+    return resolveDelayed(list.map((p) => ({ code: p.code, name: p.name })));
   },
 
-  async getCities(regionCode: string): Promise<City[]> {
-    const data = await fetchJson<any[]>(
-      `${PSGC_BASE}/regions/${regionCode}/cities/`
-    );
-    return data.map((c) => ({ code: c.code, name: c.name }));
+  async getCities(_regionCode: string): Promise<AddressItem[]> {
+    return [];
   },
 
-  async getMunicipalities(provinceCode: string): Promise<City[]> {
-    const data = await fetchJson<any[]>(
-      `${PSGC_BASE}/provinces/${provinceCode}/municipalities/`
+  async getMunicipalities(provinceCode: string): Promise<AddressItem[]> {
+    const list = getCitiesByProvince(provinceCode);
+    return resolveDelayed(
+      list.map((c) => ({ code: c.code, name: c.name }))
     );
-    return data.map((m) => ({ code: m.code, name: m.name }));
   },
 
-  async getComponentCities(provinceCode: string): Promise<City[]> {
-    const data = await fetchJson<any[]>(
-      `${PSGC_BASE}/provinces/${provinceCode}/cities/`
-    );
-    return data.map((c) => ({ code: c.code, name: c.name }));
+  async getComponentCities(_provinceCode: string): Promise<AddressItem[]> {
+    return [];
   },
 
-  async getBarangays(cityCode: string): Promise<Barangay[]> {
-    const data = await fetchJson<any[]>(
-      `${PSGC_BASE}/cities-municipalities/${cityCode}/barangays/`
+  async getBarangays(cityCode: string): Promise<AddressItem[]> {
+    const list = getBarangaysByCity(cityCode);
+    return resolveDelayed(
+      list.map((b) => ({ code: b.code, name: b.name }))
     );
-    return data.map((b) => ({ code: b.code, name: b.name }));
   },
 };

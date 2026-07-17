@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, Res } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -8,7 +8,7 @@ import { CreateAgentDto } from '../agents/dto/create-agent.dto';
 import { CreateBranchAuthDto } from './dto/create-branch-auth.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -21,7 +21,7 @@ export class AuthController {
     return this.authService.changePassword(user.id, dto);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('admin/login')
   async adminLogin(@Body() dto: LoginDto) {
     return this.authService.adminLogin(dto);
@@ -33,7 +33,7 @@ export class AuthController {
     return this.authService.adminRegister(dto);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('agent/login')
   async agentLogin(@Body() dto: LoginDto) {
     return this.authService.agentLogin(dto);
@@ -55,6 +55,20 @@ export class AuthController {
   @Post('branches/register')
   async branchRegister(@Body() dto: CreateBranchAuthDto) {
     return this.authService.branchRegister(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@CurrentUser() user: { id: string }) {
+    return this.authService.getProfile(user.id);
+  }
+
+  @Post('refresh')
+  async refresh(@Body('refreshToken') refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
+    return this.authService.refreshAccessToken(refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -15,21 +15,21 @@ export function EmptyState({ icon, title, description }: EmptyStateProps) {
     <View className="flex-1 items-center justify-center py-16 px-8">
       <View
         className={`w-20 h-20 rounded-2xl items-center justify-center mb-5 ${
-          isDark ? "bg-white/5" : "bg-brand/8"
+          isDark ? "bg-white/5" : "bg-brand/5"
         }`}
       >
         <Text className="text-4xl">{icon}</Text>
       </View>
       <Text
         className={`text-lg font-bold text-center mb-2 ${
-          isDark ? "text-white" : "text-black"
+          isDark ? "text-white" : "text-slate-900"
         }`}
       >
         {title}
       </Text>
       <Text
         className={`text-sm text-center leading-5 max-w-[280px] ${
-          isDark ? "text-white/55" : "text-black/55"
+          isDark ? "text-white/50" : "text-slate-500"
         }`}
       >
         {description}

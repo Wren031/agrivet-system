@@ -4,6 +4,9 @@ import { Users, ChevronLeft, ChevronRight, Search, MapPin, Navigation, MapPinned
 import { useAgents } from '../hooks/useAgents'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
+import Pagination from '../../../components/Pagination'
 import type { Agent, AgentWithLocation, AgentStatus } from '../services/types'
 import { fetchAgentsWithLocations } from '../services/agentService'
 import L from 'leaflet'
@@ -274,33 +277,13 @@ export default function AgentsPage() {
         }
       `}</style>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Agents</h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            <span className="font-medium text-surface-600 dark:text-surface-300">{agents.length}</span> total agents
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Agents" subtitle={`${agents.length} total agents`} />
 
-      {/* Tab Navigation */}
-      <div className="border-b border-surface-200 dark:border-surface-700 mb-6">
-        <nav className="flex gap-6">
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                  : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <TabNav
+        tabs={tabs.map(t => ({ key: t.key, label: t.label }))}
+        activeKey={activeTab}
+        onTabChange={key => setActiveTab(key as TabKey)}
+      />
 
       {activeTab === 'list' && (
         <>
@@ -366,21 +349,19 @@ export default function AgentsPage() {
                                 className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-20 w-44 bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden py-1 origin-top-right">
                                 <button onClick={() => { navigate(`/agents/${agent.id}`); setOpenDropdownId(null) }}
                                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-950/20 hover:text-surface-700 dark:hover:text-surface-400 transition-colors">
-                                  <Eye size={16} className="text-surface-400" />
                                   View Details
                                 </button>
                                 <div className="my-1 border-t border-surface-100 dark:border-surface-700" />
                                 {agent.status !== 'APPROVED' && (
                                   <button onClick={() => { handleStatusChange(agent.id, 'APPROVED'); setOpenDropdownId(null) }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors">
-                                    <Check size={16} />
                                     Approve
                                   </button>
                                 )}
                                 {agent.status !== 'REJECTED' && agent.status !== 'TERMINATED' && (
                                   <button onClick={() => { handleStatusChange(agent.id, 'REJECTED'); setOpenDropdownId(null) }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
-                                    <X size={16} />
+
                                     Reject
                                   </button>
                                 )}
@@ -395,23 +376,7 @@ export default function AgentsPage() {
                 </table>
               </div>
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6 text-sm">
-                  <p className="text-surface-500 dark:text-surface-400">
-                    Page {page} of {totalPages}
-                  </p>
-                  <div className="flex gap-2">
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                      <ChevronLeft size={14} /> Prev
-                    </button>
-                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                      Next <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </>

@@ -4,16 +4,14 @@ import { CalendarDays, Search, ChevronLeft, ChevronRight, Eye, Calendar, Store }
 import { useBookings } from '../hooks/useBookings'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonTable } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
+import Pagination from '../../../components/Pagination'
+import StatusBadge from '../../../components/StatusBadge'
 import { fetchBranchOrders } from '../../../data/branch-booking/branchBookingService'
 import type { BranchOrder } from '../../../data/branch-booking/types'
 
-const statusStyles: Record<string, string> = {
-  Pending: 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
-  Process: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-  Approved: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
-  Completed: 'bg-surface-100 dark:bg-surface-700 text-surface-500 dark:text-surface-400',
-  Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
-}
+
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -89,39 +87,38 @@ export default function BookingPage() {
     return bookings.filter(b => b.date === selectedDate)
   }, [bookings, selectedDate])
 
-const filtered = useMemo(() => {
-  let result = bookings
+  const filtered = useMemo(() => {
+    let result = bookings
 
-  // 🚫 hide completed bookings
-  result = result.filter(b => b.status !== 'Completed')
+    result = result.filter(b => b.status !== 'Completed')
 
-  if (search) {
-    const q = search.toLowerCase()
-    result = result.filter(b =>
-      b.id.toLowerCase().includes(q) ||
-      b.customer.toLowerCase().includes(q) ||
-      b.agent.toLowerCase().includes(q)
-    )
-  }
+    if (search) {
+      const q = search.toLowerCase()
+      result = result.filter(b =>
+        b.id.toLowerCase().includes(q) ||
+        b.customer.toLowerCase().includes(q) ||
+        b.agent.toLowerCase().includes(q)
+      )
+    }
 
-  if (statusFilter) {
-    result = result.filter(b => b.status === statusFilter)
-  }
+    if (statusFilter) {
+      result = result.filter(b => b.status === statusFilter)
+    }
 
-  result.sort((a, b) => {
-    const aVal = (a as any)[sortKey] || ''
-    const bVal = (b as any)[sortKey] || ''
+    result.sort((a, b) => {
+      const aVal = (a as any)[sortKey] || ''
+      const bVal = (b as any)[sortKey] || ''
 
-    const cmp =
-      typeof aVal === 'string'
-        ? aVal.localeCompare(bVal)
-        : aVal - bVal
+      const cmp =
+        typeof aVal === 'string'
+          ? aVal.localeCompare(bVal)
+          : aVal - bVal
 
-    return sortDir === 'asc' ? cmp : -cmp
-  })
+      return sortDir === 'asc' ? cmp : -cmp
+    })
 
-  return result
-}, [bookings, search, statusFilter, sortKey, sortDir])
+    return result
+  }, [bookings, search, statusFilter, sortKey, sortDir])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -134,12 +131,12 @@ const filtered = useMemo(() => {
   }
 
   const branchStatusStyles: Record<string, string> = {
-    PENDING: 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300',
-    CONFIRMED: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-    PROCESSING: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-    APPROVED: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
-    COMPLETED: 'bg-surface-100 dark:bg-surface-700 text-surface-500 dark:text-surface-400',
-    CANCELLED: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+    PENDING: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30',
+    CONFIRMED: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30',
+    PROCESSING: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30',
+    APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30',
+    COMPLETED: 'bg-surface-100 text-surface-500 border-surface-200 dark:bg-surface-700 dark:text-surface-400 dark:border-surface-700',
+    CANCELLED: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30',
   }
 
   const branchFiltered = useMemo(() => {
@@ -174,40 +171,17 @@ const filtered = useMemo(() => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Receiving Orders</h1>
-        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Manage customer bookings and appointments</p>
-      </div>
+      <PageHeader title="Receiving Orders" subtitle="Manage customer bookings and appointments" />
 
-      {/* Tabs */}
-      <div className="border-b border-surface-200 dark:border-surface-700 mb-6">
-        <nav className="flex gap-6">
-          <button onClick={() => { setTab('list'); setPage(1) }}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'list'
-                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}>
-            Agent Bookings
-          </button>
-          <button onClick={() => { setTab('branch'); setBranchPage(1) }}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'branch'
-                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}>
-            Branch Bookings
-          </button>
-          <button onClick={() => setTab('calendar')}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'calendar'
-                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}>
-            Calendar View
-          </button>
-        </nav>
-      </div>
+      <TabNav
+        tabs={[
+          { key: 'list', label: 'Agent Bookings' },
+          { key: 'branch', label: 'Branch Bookings' },
+          { key: 'calendar', label: 'Calendar View' },
+        ]}
+        activeKey={tab}
+        onTabChange={key => { setTab(key as 'list' | 'calendar' | 'branch'); if (key === 'list') setPage(1); if (key === 'branch') setBranchPage(1) }}
+      />
 
       {tab === 'branch' ? (
         branchLoading ? (
@@ -286,21 +260,7 @@ const filtered = useMemo(() => {
               </table>
             </div>
 
-            {branchTotalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 text-sm">
-                <p className="text-surface-500 dark:text-surface-400">Page {branchPage} of {branchTotalPages}</p>
-                <div className="flex gap-2">
-                  <button onClick={() => setBranchPage(p => Math.max(1, p - 1))} disabled={branchPage === 1}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <button onClick={() => setBranchPage(p => Math.min(branchTotalPages, p + 1))} disabled={branchPage === branchTotalPages}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination page={branchPage} totalPages={branchTotalPages} onPageChange={setBranchPage} />
           </div>
         )
       ) : loading ? (
@@ -505,8 +465,8 @@ const filtered = useMemo(() => {
                       <td className="py-3 px-4 font-medium text-surface-800 dark:text-surface-200">{b.customer}</td>
                       <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{b.agent}</td>
                       <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{new Date(b.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                      <td className="py-3 px-4 text-surface-700 dark:text-surface-200 font-medium">{settings.currencySymbol}{b.amount.toLocaleString()}</td>
-                      <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-md text-xs font-medium ${statusStyles[b.status]}`}>{b.status}</span></td>
+                  <td className="py-3 px-4 text-surface-700 dark:text-surface-200 font-medium">{settings.currencySymbol}{b.amount.toLocaleString()}</td>
+                  <td className="py-3 px-4"><StatusBadge status={b.status} /></td>
                       <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{b.assignedStaff || '—'}</td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
@@ -520,21 +480,7 @@ const filtered = useMemo(() => {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 text-sm">
-              <p className="text-surface-500 dark:text-surface-400">Page {page} of {totalPages}</p>
-              <div className="flex gap-2">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                  <ChevronLeft size={14} /> Prev
-                </button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                  Next <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

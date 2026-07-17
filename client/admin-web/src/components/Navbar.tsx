@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Bell, X, LogOut, Sun, Moon, Menu } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../features/auth/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { logout as apiLogout } from '../features/auth/services/authService'
 import Modal from './Modal'
 
 export default function Navbar() {
-  const { notifications, removeNotification, user, setUser, addNotification, darkMode, setDarkMode, sidebarOpen, setSidebarOpen } = useApp()
+  const { notifications, removeNotification, addNotification, darkMode, setDarkMode, sidebarOpen, setSidebarOpen } = useApp()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
@@ -31,10 +34,11 @@ export default function Navbar() {
   function confirmLogout() {
     setShowLogoutModal(false)
     setShowProfile(false)
-    setUser(null)
-    localStorage.removeItem('auth_user')
-    addNotification({ message: 'Logged out successfully', type: 'info' })
-    navigate('/login')
+    apiLogout().finally(() => {
+      signOut()
+      addNotification({ message: 'Logged out successfully', type: 'info' })
+      navigate('/login')
+    })
   }
 
   return (

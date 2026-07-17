@@ -1,7 +1,15 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, LogIn, Check } from "lucide-react-native";
+import { LogIn, Check } from "lucide-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input } from "../../../components/Input";
@@ -17,6 +25,28 @@ export function LoginScreen({ navigation }: any) {
   const [showPending, setShowPending] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
+  useEffect(() => {
+    const loadSavedCredentials = async () => {
+      try {
+        const savedEmail = await AsyncStorage.getItem("remembered_email");
+        const savedPassword = await AsyncStorage.getItem("remembered_password");
+        const savedRememberMe = await AsyncStorage.getItem("remember_me_status");
+
+        if (savedRememberMe === "true") {
+          setRememberMe(true);
+          if (savedEmail) setEmail(savedEmail);
+          if (savedPassword) setPassword(savedPassword);
+        } else if (savedRememberMe === "false") {
+          setRememberMe(false);
+        }
+      } catch (e) {
+        console.error("Failed to load saved credentials", e);
+      }
+    };
+
+    loadSavedCredentials();
+  }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
       setError("Please fill in all fields");
@@ -24,8 +54,24 @@ export function LoginScreen({ navigation }: any) {
     }
     setLoading(true);
     setError("");
+
+    try {
+      if (rememberMe) {
+        await AsyncStorage.setItem("remembered_email", email);
+        await AsyncStorage.setItem("remembered_password", password);
+        await AsyncStorage.setItem("remember_me_status", "true");
+      } else {
+        await AsyncStorage.removeItem("remembered_email");
+        await AsyncStorage.removeItem("remembered_password");
+        await AsyncStorage.setItem("remember_me_status", "false");
+      }
+    } catch (e) {
+      console.error("Failed to update credentials storage", e);
+    }
+
     const result = await login(email, password, rememberMe);
     setLoading(false);
+
     if (!result.success) {
       if (result.message === "pending_approval") {
         setShowPending(true);
@@ -37,115 +83,182 @@ export function LoginScreen({ navigation }: any) {
 
   if (showPending || isPendingApproval) {
     return (
-      <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
+      <SafeAreaView
+        className={`flex-1 ${isDark ? "bg-[#0f172a]" : "bg-[#f8f9fa]"}`}
+      >
         <View className="flex-1 items-center justify-center px-8">
-          <View className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 items-center justify-center mb-6">
-            <Text className="text-3xl">⏳</Text>
-          </View>
-          <Text className={`text-2xl font-bold text-${isDark ? "white" : "black"} text-center mb-3`}>
-            Awaiting Approval
-          </Text>
-          <Text className={`text-base text-${isDark ? "white/60" : "black/60"} text-center leading-6 mb-8`}>
-            Your account is pending approval from an administrator. You will be notified once your account has been reviewed.
-          </Text>
-          <TouchableOpacity
-            onPress={() => {
-              logout();
-              setShowPending(false);
-              setEmail("");
-              setPassword("");
-            }}
-            className="bg-brand/5 border border-brand/20 rounded-xl px-6 py-3"
+          <View
+            className={`w-full max-w-md rounded-3xl p-8 ${
+              isDark
+                ? "bg-[#1e293b] border border-white/[0.08]"
+                : "bg-white shadow-xl shadow-black/5"
+            }`}
           >
-            <Text className={`text-${isDark ? "white" : "black"} font-semibold`}>
-              Back to Login
-            </Text>
-          </TouchableOpacity>
+            <View className="items-center mb-6">
+              <View className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 items-center justify-center mb-5">
+                <Text className="text-3xl">⏳</Text>
+              </View>
+              <Text
+                className={`text-xl font-bold text-center ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
+              >
+                Awaiting Approval
+              </Text>
+              <Text
+                className={`text-sm text-center mt-2 leading-5 ${
+                  isDark ? "text-white/50" : "text-slate-500"
+                }`}
+              >
+                Your account is pending approval from an administrator. You will
+                be notified once your account has been reviewed.
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                logout();
+                setShowPending(false);
+                if (!rememberMe) {
+                  setEmail("");
+                  setPassword("");
+                }
+              }}
+              className="bg-brand/5 border border-brand/20 rounded-xl px-6 py-3 items-center"
+              activeOpacity={0.7}
+            >
+              <Text
+                className={`font-semibold ${
+                  isDark ? "text-white" : "text-brand"
+                }`}
+              >
+                Back to Login
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className={`flex-1 bg-${isDark ? "[#1e293b]" : "[#f4f7f5]"}`}>
+    <SafeAreaView
+      className={`flex-1 ${isDark ? "bg-[#0f172a]" : "bg-[#f8f9fa]"}`}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <ScrollView contentContainerClassName="flex-grow px-6 pt-6 pb-8">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="w-10 h-10 items-center justify-center rounded-full bg-brand/5 mb-6"
-          >
-            <ArrowLeft size={20} color="#2d6a4f" />
-          </TouchableOpacity>
-
-          <View className="mb-8">
-            <View className="w-14 h-14 rounded-2xl bg-brand items-center justify-center mb-6">
-              <LogIn size={28} color="white" />
+        <ScrollView
+          contentContainerClassName="flex-grow"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 justify-center px-8 py-10 max-w-md mx-auto w-full">
+            <View className="items-center mb-10">
+              <View className="w-16 h-16 rounded-2xl bg-brand items-center justify-center mb-5">
+                <LogIn size={28} color="white" />
+              </View>
+              <Text
+                className={`text-3xl font-bold text-center ${
+                  isDark ? "text-white" : "text-slate-900"
+                }`}
+              >
+                Welcome Back
+              </Text>
+              <Text
+                className={`text-base mt-1.5 ${
+                  isDark ? "text-white/50" : "text-slate-500"
+                }`}
+              >
+                Sign in to your account
+              </Text>
             </View>
-            <Text className={`text-3xl font-bold text-${isDark ? "white" : "black"}`}>
-              Welcome Back
-            </Text>
-            <Text className={`text-base text-${isDark ? "white/50" : "black/50"} mt-1.5`}>
-              Sign in to continue
-            </Text>
-          </View>
 
-          {error ? (
-            <View className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 mb-5 border border-red-200 dark:border-red-800">
-              <Text className="text-red-600 dark:text-red-400 text-sm">{error}</Text>
-            </View>
-          ) : null}
+            {error ? (
+              <View
+                className={`rounded-xl p-4 mb-6 border ${
+                  isDark
+                    ? "bg-red-500/10 border-red-500/20"
+                    : "bg-red-50 border-red-200"
+                }`}
+              >
+                <Text
+                  className={`text-sm ${
+                    isDark ? "text-red-400" : "text-red-600"
+                  }`}
+                >
+                  {error}
+                </Text>
+              </View>
+            ) : null}
 
-          <Input
-            label="Email"
-            placeholder="you@example.com"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <Input
-            label="Password"
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+            <Input
+              label="Email Address"
+              placeholder="you@example.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+            <Input
+              label="Password"
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete="password"
+            />
 
-          <TouchableOpacity
-            onPress={() => setRememberMe(!rememberMe)}
-            className="flex-row items-center mt-3 mb-6"
-            activeOpacity={0.7}
-          >
-            <View className={`w-5 h-5 rounded border-2 items-center justify-center mr-2 ${
-              rememberMe
-                ? "bg-brand border-brand"
-                : isDark
-                  ? "border-white/30"
-                  : "border-black/30"
-            }`}>
-              {rememberMe && <Check size={14} color="white" />}
-            </View>
-            <Text className={`text-sm text-${isDark ? "white/60" : "black/60"}`}>
-              Remember Me
-            </Text>
-          </TouchableOpacity>
-
-          <View className="mb-6">
-            <Button title="Sign In" onPress={handleLogin} loading={loading} size="lg" />
-          </View>
-
-          <View className="flex-row items-center justify-center gap-1.5">
-            <Text className={`text-sm text-${isDark ? "white/50" : "black/50"}`}>
-              Don't have an account?
-            </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text className="text-sm text-brand font-bold">
-                Create One
+            <TouchableOpacity
+              onPress={() => setRememberMe(!rememberMe)}
+              className="flex-row items-center mt-1 mb-8"
+              activeOpacity={0.7}
+            >
+              <View
+                className={`w-5 h-5 rounded border-2 items-center justify-center mr-2.5 ${
+                  rememberMe
+                    ? "bg-brand border-brand"
+                    : isDark
+                      ? "border-white/25"
+                      : "border-slate-300"
+                }`}
+              >
+                {rememberMe && (
+                  <Check size={13} color="white" strokeWidth={3} />
+                )}
+              </View>
+              <Text
+                className={`text-sm ${
+                  isDark ? "text-white/60" : "text-slate-500"
+                }`}
+              >
+                Remember me
               </Text>
             </TouchableOpacity>
+
+            <Button
+              title="Sign In"
+              onPress={handleLogin}
+              loading={loading}
+              size="lg"
+            />
+
+            <View className="flex-row items-center justify-center mt-8">
+              <Text
+                className={`text-sm ${
+                  isDark ? "text-white/50" : "text-slate-500"
+                }`}
+              >
+                Don't have an account?{" "}
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Register")}
+              >
+                <Text className="text-sm text-brand font-bold">
+                  Create Account
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

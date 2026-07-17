@@ -9,6 +9,8 @@ import { useApp } from '../../../context/AppContext'
 import Drawer from '../../../components/Drawer'
 import Modal from '../../../components/Modal'
 import { SkeletonCards } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import Pagination from '../../../components/Pagination'
 import ItemForm from '../components/ItemForm'
 import type { Item } from '../services/types'
 
@@ -175,16 +177,12 @@ export default function InventoryPage() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Inventory</h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Manage your agrivet supply products</p>
-        </div>
+      <PageHeader title="Inventory" subtitle="Manage your agrivet supply products">
         <button onClick={openAdd}
           className="flex items-center gap-2 px-4 py-2 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-lg hover:bg-surface-800 dark:hover:bg-surface-200 transition-colors text-sm font-medium w-full sm:w-auto justify-center">
           <Plus size={16} /> Add Product
         </button>
-      </div>
+      </PageHeader>
 
       <div className="rounded-xl">
         <div className="px-4 sm:px-5 py-4 border-b border-surface-100 dark:border-surface-700 flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -282,23 +280,9 @@ export default function InventoryPage() {
               </div>
             </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-4 border-t border-surface-100 dark:border-surface-700 text-sm">
-                <p className="text-surface-500 dark:text-surface-400">
-                  Page {page} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="px-5 py-4 border-t border-surface-100 dark:border-surface-700">
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
           </>
         )}
       </div>

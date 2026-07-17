@@ -1,6 +1,6 @@
 import type { Agent, AgentApiResponse, AgentWithLocation, CreateAgentData, UpdateAgentData, UpdateAgentStatusData, AgentCustomer } from './types'
 import { apiFetch } from '../../../config/apiClient'
-import { fetchOrders } from '../../orders/services/orderService'
+import { fetchAgentOrders } from '../../orders/services/orderService'
 
 function fromApi(item: AgentApiResponse): Agent {
   return {
@@ -64,7 +64,7 @@ export async function fetchAgentCustomers(id: string): Promise<AgentCustomer[]> 
 export async function fetchAgentCustomersWithOrders(id: string): Promise<AgentCustomer[]> {
   const [customers, orders] = await Promise.all([
     fetchAgentCustomers(id),
-    fetchOrders(),
+    fetchAgentOrders(),
   ])
 
   return customers.map(customer => {

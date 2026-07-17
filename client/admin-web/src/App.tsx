@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
+import { AuthProvider } from './features/auth/context/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './features/auth/pages/LoginPage'
@@ -28,40 +29,43 @@ import VerificationPage from './features/verification/pages/VerificationPage'
 export default function App() {
   return (
     <BrowserRouter>
-      <AppProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<DashboardPage />} />
-            <Route path="inventory" element={<InventoryPage />} />
-            <Route path="inventory/:id" element={<InventoryDetailPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="agents" element={<AgentsPage />} />
-            <Route path="agents/:id" element={<AgentDetailPage />} />
-            <Route path="customers" element={<CustomersPage />} />
-            <Route path="customers/:id" element={<CustomerDetailPage />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="orders/:id" element={<OrderDetailPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="bookings" element={<BookingPage />} />
-            <Route path="bookings/branch/:id" element={<BranchBookingDetailPage />} />
-            <Route path="bookings/:id" element={<BookingDetailPage />} />
-            <Route path="branches" element={<BranchPage />} />
-            <Route path="branches/:id" element={<BranchDetailPage />} />
-            <Route path="staff" element={<StaffPage />} />
-            <Route path="tasks" element={<TasksPage />} />
+      <AuthProvider>
+        <AppProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<DashboardPage />} />
+              <Route path="inventory" element={<InventoryPage />} />
+              <Route path="inventory/:id" element={<InventoryDetailPage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="agents" element={<AgentsPage />} />
+              <Route path="agents/:id" element={<AgentDetailPage />} />
+              <Route path="customers" element={<CustomersPage />} />
+              <Route path="customers/:id" element={<CustomerDetailPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/branch/:id" element={<BranchBookingDetailPage />} />
+              <Route path="orders/:id" element={<OrderDetailPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="bookings" element={<BookingPage />} />
+              <Route path="bookings/branch/:id" element={<BranchBookingDetailPage />} />
+              <Route path="bookings/:id" element={<BookingDetailPage />} />
+              <Route path="branches" element={<BranchPage />} />
+              <Route path="branches/:id" element={<BranchDetailPage />} />
+              <Route path="staff" element={<StaffPage />} />
+              <Route path="tasks" element={<TasksPage />} />
 
-            <Route path="tasks/branch/:id" element={<BranchTaskDetailsPage />} />
-            <Route path="tasks/:id" element={<AgentTaskDetailPage />} />
-            
-            <Route path="verification" element={<VerificationPage />} />
-          </Route>
-        </Routes>
-      </AppProvider>
+              <Route path="tasks/branch/:id" element={<BranchTaskDetailsPage />} />
+              <Route path="tasks/:id" element={<AgentTaskDetailPage />} />
+              
+              <Route path="verification" element={<VerificationPage />} />
+            </Route>
+          </Routes>
+        </AppProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

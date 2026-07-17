@@ -5,7 +5,6 @@ import {
   deleteBranchOrder,
   updateBranchOrderStatus,
 } from '../../../data/branch-booking/branchBookingService'
-
 import { fetchStaffById } from '../../staff/services/staffService'
 import type { BranchOrder } from '../../../data/branch-booking/types'
 import { useApp } from '../../../context/AppContext'
@@ -30,13 +29,13 @@ export function useBranchTasks() {
         fetchStaffById(user.id),
       ])
 
-      // ✅ SAFE: only filter if adminProfileId exists
+
       const adminProfileId = profile?.adminProfileId
 
       setOrders(
         adminProfileId
           ? all.filter(o => o.adminProfileId === adminProfileId)
-          : all // fallback instead of empty crash
+          : all 
       )
     } catch (err) {
       console.error(err)
@@ -54,7 +53,7 @@ export function useBranchTasks() {
     load()
   }, [load])
 
-  // ✅ FIXED STATUS UPDATE
+
   const handleUpdateStatus = useCallback(
     async (id: string, status: string) => {
       try {

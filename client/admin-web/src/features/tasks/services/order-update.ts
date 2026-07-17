@@ -1,11 +1,10 @@
 import { apiFetch } from "../../../config/apiClient";
-
-export async function updateOrderBranchStatus(orderId: string, status: string) {
-  return apiFetch(`/branch-orders/${orderId}/status`, {
-    method: "PATCH",
+export async function updateBranchOrderStatus(id: string, status: string) {
+  return apiFetch(`/branch-orders/${id}/status`, {
+    method: 'PATCH',
     body: JSON.stringify({ status }),
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-  });
+  })
 }

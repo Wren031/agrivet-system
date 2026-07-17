@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { View, ViewProps } from "react-native";
+import { View, ViewProps, Platform } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
 interface CardProps extends ViewProps {
@@ -17,19 +17,19 @@ export const Card = memo(function Card({
 
   return (
     <View
-      className={`rounded-2xl p-4 border ${
+      className={`rounded-2xl p-5 border ${
         isDark
-          ? "bg-white/5 border-white/10"
-          : "bg-white border-black/5"
+          ? "bg-[#1e293b] border-white/[0.08]"
+          : "bg-white border-slate-200"
       } ${className}`}
       style={
         elevated
           ? {
               shadowColor: "#1b4332",
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isDark ? 0 : 0.06,
+              shadowOpacity: isDark ? 0.2 : 0.06,
               shadowRadius: 8,
-              elevation: isDark ? 0 : 2,
+              elevation: Platform.OS === "android" ? (isDark ? 4 : 2) : 0,
             }
           : undefined
       }

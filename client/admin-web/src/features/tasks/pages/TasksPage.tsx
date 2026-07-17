@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { ClipboardCheck, Search, Store } from 'lucide-react'
 import { useTasks } from '../hooks/useTasks'
 import { useBranchTasks } from '../hooks/useBranchTasks'
+import { useApp } from '../../../context/AppContext'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
 import TaskCard from '../components/TaskCard'
 import BranchTaskCard from '../components/BranchTaskCard'
 
@@ -12,6 +15,7 @@ export default function TasksPage() {
   const navigate = useNavigate()
   const { tasks, myAdminProfileId, loading, handleApprove, handleComplete } = useTasks()
   const { orders: branchOrders, loading: branchLoading } = useBranchTasks()
+  const { counts } = useApp()
   const [tab, setTab] = useState<Tab>('agent')
   const [search, setSearch] = useState('')
 
@@ -35,44 +39,28 @@ export default function TasksPage() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Assign Booking</h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            {tab === 'agent'
-              ? `${filtered.length} task${filtered.length !== 1 ? 's' : ''} found`
-              : `${branchFiltered.length} branch order${branchFiltered.length !== 1 ? 's' : ''} found`
-            }
-          </p>
-        </div>
+      <PageHeader
+        title="Assign Booking"
+        subtitle={tab === 'agent'
+          ? `${filtered.length} task${filtered.length !== 1 ? 's' : ''} found`
+          : `${branchFiltered.length} branch order${branchFiltered.length !== 1 ? 's' : ''} found`
+        }
+      >
         <div className="relative max-w-xs w-full sm:w-72">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks..."
             className="w-full pl-9 pr-3 py-2 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 transition-shadow" />
         </div>
-      </div>
+      </PageHeader>
 
-      {/* Tabs */}
-      <div className="border-b border-surface-200 dark:border-surface-700 mb-6">
-        <nav className="flex gap-6">
-          <button onClick={() => setTab('agent')}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'agent'
-                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}>
-            Agent Task
-          </button>
-          <button onClick={() => setTab('branch')}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'branch'
-                ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}>
-            Branches Task
-          </button>
-        </nav>
-      </div>
+      <TabNav
+        tabs={[
+          { key: 'agent', label: 'Agent Task', badge: counts.pendingTasks },
+          { key: 'branch', label: 'Branches Task', icon: <Store size={16} /> },
+        ]}
+        activeKey={tab}
+        onTabChange={key => setTab(key as Tab)}
+      />
 
       {tab === 'agent' ? (
         loading ? (

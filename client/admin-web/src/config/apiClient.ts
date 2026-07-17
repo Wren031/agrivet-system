@@ -1,6 +1,7 @@
 import { API_BASE_URL } from './api.config'
 
 const TOKEN_KEY = 'auth_token'
+const REFRESH_KEY = 'refresh_token'
 
 function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -10,8 +11,35 @@ export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token)
 }
 
+function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_KEY)
+}
+
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(REFRESH_KEY)
+  localStorage.removeItem('auth_user')
+}
+
+async function tryRefreshToken(): Promise<string | null> {
+  const refresh = getRefreshToken()
+  if (!refresh) return null
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refresh }),
+    })
+
+    if (!res.ok) return null
+
+    const data = await res.json()
+    setToken(data.accessToken)
+    return data.accessToken
+  } catch {
+    return null
+  }
 }
 
 export async function apiFetch<T>(
@@ -27,18 +55,27 @@ export async function apiFetch<T>(
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  let res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
   })
 
-  if (!res.ok) {
-    if (res.status === 401) {
+  if (res.status === 401) {
+    const newToken = await tryRefreshToken()
+    if (newToken) {
+      headers['Authorization'] = `Bearer ${newToken}`
+      res = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers,
+      })
+    } else {
       clearToken()
-      localStorage.removeItem('auth_user')
       window.location.href = '/login'
       return undefined as T
     }
+  }
+
+  if (!res.ok) {
     const body = await res.json().catch(() => null)
     throw new Error(body?.message || `Request failed (${res.status})`)
   }

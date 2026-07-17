@@ -21,7 +21,7 @@ export function SettingsGroup({ title, children }: SettingsGroupProps) {
     <View className="px-5 mt-6">
       <Text
         className={`text-xs font-bold uppercase tracking-widest mb-2.5 ${
-          isDark ? "text-white/40" : "text-black/40"
+          isDark ? "text-white/40" : "text-slate-400"
         }`}
       >
         {title}
@@ -29,15 +29,15 @@ export function SettingsGroup({ title, children }: SettingsGroupProps) {
       <View
         className={`rounded-2xl overflow-hidden border ${
           isDark
-            ? "bg-white/5 border-white/10"
-            : "bg-white border-black/5"
+            ? "bg-[#1e293b] border-white/[0.08]"
+            : "bg-white border-slate-200"
         }`}
         style={{
           shadowColor: "#1b4332",
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: isDark ? 0 : 0.06,
+          shadowOpacity: isDark ? 0.15 : 0.05,
           shadowRadius: 8,
-          elevation: isDark ? 0 : 2,
+          elevation: isDark ? 1 : 2,
         }}
       >
         {children}
@@ -67,12 +67,12 @@ export function SettingsRow({
   ...props
 }: SettingsRowProps) {
   const { isDark } = useTheme();
-  const iconColor = destructive ? "#EF4444" : "#1b4332";
+  const iconColor = destructive ? "#EF4444" : "#2d6a4f";
   const textColor = destructive
     ? "text-red-500"
     : isDark
       ? "text-white"
-      : "text-black";
+      : "text-slate-900";
 
   return (
     <TouchableOpacity
@@ -95,7 +95,7 @@ export function SettingsRow({
         <Text className={`text-base font-semibold ${textColor}`}>{label}</Text>
         {subtitle ? (
           <Text
-            className={`text-xs mt-0.5 ${isDark ? "text-white/45" : "text-black/45"}`}
+            className={`text-xs mt-0.5 ${isDark ? "text-white/45" : "text-slate-400"}`}
             numberOfLines={1}
           >
             {subtitle}
@@ -104,14 +104,14 @@ export function SettingsRow({
       </View>
       {rightElement}
       {value ? (
-        <Text className={`text-sm mr-1 ${isDark ? "text-white/50" : "text-black/50"}`}>
+        <Text className={`text-sm mr-1 ${isDark ? "text-white/50" : "text-slate-400"}`}>
           {value}
         </Text>
       ) : null}
       {showChevron && !rightElement ? (
         <ChevronRight
           size={18}
-          color={isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.25)"}
+          color={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}
         />
       ) : null}
     </TouchableOpacity>
@@ -122,7 +122,7 @@ export function SettingsDivider() {
   const { isDark } = useTheme();
   return (
     <View
-      className={`h-px ml-[60px] ${isDark ? "bg-white/8" : "bg-black/6"}`}
+      className={`h-px ml-[60px] ${isDark ? "bg-white/[0.06]" : "bg-slate-100"}`}
     />
   );
 }

@@ -1,21 +1,24 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Package, Users, Users2, UserCircle, ShoppingCart, Settings,
-  Tags, LogOut, Store, ClipboardList, ClipboardCheck, ShieldCheck,
-  TrendingUp, CalendarDays, Sliders
+  LayoutDashboard, Package, Users, Users2, UserCircle, Settings,
+  Tags, LogOut, Store, ClipboardCheck, ShieldCheck,
+  TrendingUp, CalendarDays, Sliders, ChevronDown
 } from 'lucide-react' 
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../features/auth/context/AuthContext'
+import { logout as apiLogout } from '../features/auth/services/authService'
 import Modal from './Modal'
 
 interface NavItem {
   to: string
   label: string
   icon: React.ComponentType<{ size?: number; className?: string }>
+  badge?: 'newOrders' | 'newAgents' | 'newBranches' | 'pendingTasks'
 }
 
 interface NavGroup {
-  id: string | number
+  id: string
   label: string
   items: NavItem[]
 }
@@ -26,7 +29,7 @@ const navigationConfig: NavGroup[] = [
     label: 'Operations',
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/orders', label: 'Orders & Sales', icon: TrendingUp },      
+      { to: '/orders', label: 'Orders & Sales', icon: TrendingUp, badge: 'newOrders' },      
       { to: '/bookings', label: 'Receiving Orders', icon: CalendarDays }, 
       { to: '/inventory', label: 'Inventory Items', icon: Package },
     ]
@@ -35,18 +38,17 @@ const navigationConfig: NavGroup[] = [
     id: 'users_management',
     label: 'Users & Branches',
     items: [
-
-      { to: '/agents', label: 'Agents', icon: Users2 },                  
+      { to: '/agents', label: 'Agents', icon: Users2, badge: 'newAgents' },                  
       { to: '/staff', label: 'Admin Staff', icon: Users },            
-      { to: '/branches', label: 'Branches', icon: Store },
+      { to: '/branches', label: 'Branches', icon: Store, badge: 'newBranches' },
     ]
   },
   {
     id: 'transactions',
     label: 'Transactions',
     items: [
-            { to: '/customers', label: 'Customers', icon: UserCircle },
-      { to: '/tasks', label: 'My Task', icon: ClipboardCheck },
+      { to: '/customers', label: 'Customers', icon: UserCircle },
+      { to: '/tasks', label: 'My Task', icon: ClipboardCheck, badge: 'pendingTasks' },
       { to: '/verification', label: 'Verification', icon: ShieldCheck },
     ]
   },
@@ -62,16 +64,34 @@ const navigationConfig: NavGroup[] = [
 
 export default function Sidebar() {
   const navigate = useNavigate()
-  const { settings, setUser, addNotification, sidebarOpen, setSidebarOpen } = useApp()
+  const { settings, addNotification, sidebarOpen, setSidebarOpen, counts } = useApp()
+  const { signOut } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  
+  // Track open/collapsed status of navigation categories
+  // CHANGED: users_management is now false so it starts closed
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    operations: true,
+    users_management: false,
+    transactions: true,
+    administration: true,
+  })
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }))
+  }
 
   function confirmLogout() {
     setShowLogoutModal(false)
-    setUser(null)
-    localStorage.removeItem('auth_user')
-    addNotification({ message: 'Logged out successfully', type: 'info' })
-    setSidebarOpen(false)
-    navigate('/login')
+    apiLogout().finally(() => {
+      signOut()
+      addNotification({ message: 'Logged out successfully', type: 'info' })
+      setSidebarOpen(false)
+      navigate('/login')
+    })
   }
 
   return (
@@ -98,49 +118,75 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
-        {navigationConfig.map((group) => (
-          <div key={group.id}>
-            <div className="px-3 mb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-surface-400 dark:text-surface-500">
-                {group.label}
-              </span>
+      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-4">
+        {navigationConfig.map((group) => {
+          const isOpen = !!openGroups[group.id]
+          
+          return (
+            <div key={group.id} className="space-y-1">
+              {/* Dropdown Category Trigger Button */}
+              <button
+                onClick={() => toggleGroup(group.id)}
+                className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-md hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors group"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-surface-400 dark:text-surface-500 group-hover:text-surface-600 dark:group-hover:text-surface-300">
+                  {group.label}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`text-surface-400 dark:text-surface-500 transition-transform duration-200 ${
+                    isOpen ? 'transform rotate-0' : 'transform -rotate-90'
+                  }`}
+                />
+              </button>
+
+              {/* Collapsible Dropdown Items Container */}
+              <div
+                className={`space-y-0.5 overflow-hidden transition-all duration-200 origin-top ${
+                  isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+                }`}
+              >
+                {group.items.map((link) => {
+                  const Icon = link.icon
+                  const count = link.badge ? counts[link.badge] : 0
+                  return (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) => `
+                        group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 w-full text-sm
+                        ${isActive
+                          ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white font-medium'
+                          : 'text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800/50 hover:text-surface-700 dark:hover:text-surface-200'
+                        }
+                      `}
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <Icon
+                            size={18}
+                            className={`shrink-0 transition-colors duration-150 ${
+                              isActive
+                                ? 'text-surface-700 dark:text-surface-200'
+                                : 'text-surface-400 dark:text-surface-500 group-hover:text-surface-500 dark:group-hover:text-surface-300'
+                            }`}
+                          />
+                          <span className="truncate">{link.label}</span>
+                          {count > 0 && (
+                            <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-[10px] font-bold leading-none">
+                              {count > 99 ? '99+' : count}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </NavLink>
+                  )
+                })}
+              </div>
             </div>
-            <div className="space-y-0.5">
-            {group.items.map((link) => {
-              const Icon = link.icon
-              return (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setSidebarOpen(false)}
-                  className={({ isActive }) => `
-                    group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 w-full text-sm
-                    ${isActive
-                      ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white font-medium'
-                      : 'text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800/50 hover:text-surface-700 dark:hover:text-surface-200'
-                    }
-                  `}
-                >
-                  {({ isActive }) => (
-                    <>
-                      <Icon
-                        size={18}
-                        className={`shrink-0 transition-colors duration-150 ${
-                          isActive
-                            ? 'text-surface-700 dark:text-surface-200'
-                            : 'text-surface-400 dark:text-surface-500 group-hover:text-surface-500 dark:group-hover:text-surface-300'
-                        }`}
-                      />
-                      <span className="truncate">{link.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              )
-            })}
-          </div>
-          </div>
-        ))}
+          )
+        })}
       </nav>
 
       {/* Profile */}

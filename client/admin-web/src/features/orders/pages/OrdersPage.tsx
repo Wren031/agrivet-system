@@ -1,216 +1,330 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Eye, ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react'
+import { ShoppingCart, Store, Eye, Search, AlertCircle, RefreshCw } from 'lucide-react'
 import { useOrders } from '../hooks/useOrders'
 import { SkeletonTable } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
+import Pagination from '../../../components/Pagination'
+import StatusBadge from '../../../components/StatusBadge'
 import { useApp } from '../../../context/AppContext'
 
 const PAGE_SIZE = 8
 
-function getWeekRange() {
-  const now = new Date()
-  const weekAgo = new Date(now)
-  weekAgo.setDate(weekAgo.getDate() - 7)
-  return { start: weekAgo.toISOString().split('T')[0], end: now.toISOString().split('T')[0] }
-}
 
-function getMonthRange() {
-  const now = new Date()
-  const monthAgo = new Date(now)
-  monthAgo.setMonth(monthAgo.getMonth() - 1)
-  return { start: monthAgo.toISOString().split('T')[0], end: now.toISOString().split('T')[0] }
-}
 
 export default function OrdersPage() {
-  const { orders, loading } = useOrders()
-  const { settings } = useApp()
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'new' | 'weekly' | 'monthly'>('all')
-  const [page, setPage] = useState(1)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const { agentOrders, branchOrders, loading, error, reload } = useOrders()
+  const { settings, counts } = useApp()
+  const [activeTab, setActiveTab] = useState<'agent' | 'branch'>('agent')
 
-  const weekRange = getWeekRange()
-  const monthRange = getMonthRange()
+  const [agentSearch, setAgentSearch] = useState('')
+  const [agentStatusFilter, setAgentStatusFilter] = useState('')
+  const [agentPage, setAgentPage] = useState(1)
 
-  const filtered = useMemo(() => {
-    let result = orders
+  const [branchSearch, setBranchSearch] = useState('')
+  const [branchStatusFilter, setBranchStatusFilter] = useState('')
+  const [branchPage, setBranchPage] = useState(1)
 
-    if (filter === 'new') {
-      result = result.filter(o => o.status === 'Pending')
-    } else if (filter === 'weekly') {
-      result = result.filter(o => o.date >= weekRange.start && o.date <= weekRange.end)
-    } else if (filter === 'monthly') {
-      result = result.filter(o => o.date >= monthRange.start && o.date <= monthRange.end)
-    }
+  const totalOrders = agentOrders.length + branchOrders.length
+  const totalRevenue = [...agentOrders, ...branchOrders].reduce((sum, o) => sum + o.totalAmount, 0)
+  const agentCount = agentOrders.length
+  const branchCount = branchOrders.length
 
-    if (search) {
-      const q = search.toLowerCase()
+  const agentFiltered = useMemo(() => {
+    let result = agentOrders
+    if (agentSearch) {
+      const q = agentSearch.toLowerCase()
       result = result.filter(o =>
         o.id.toLowerCase().includes(q) ||
         o.customerName.toLowerCase().includes(q) ||
         o.agentName.toLowerCase().includes(q)
       )
     }
-
+    if (agentStatusFilter) {
+      result = result.filter(o => o.status === agentStatusFilter)
+    }
     return result
-  }, [orders, filter, search, weekRange, monthRange])
+  }, [agentOrders, agentSearch, agentStatusFilter])
 
-  const totalOrders = orders.length
-  const newOrders = orders.filter(o => o.status === 'Pending').length
-  const weeklyOrders = orders.filter(o => o.date >= weekRange.start && o.date <= weekRange.end).length
-  const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0)
+  const agentTotalPages = Math.max(1, Math.ceil(agentFiltered.length / PAGE_SIZE))
+  const agentPaginated = agentFiltered.slice((agentPage - 1) * PAGE_SIZE, agentPage * PAGE_SIZE)
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const branchFiltered = useMemo(() => {
+    let result = branchOrders
+    if (branchSearch) {
+      const q = branchSearch.toLowerCase()
+      result = result.filter(o =>
+        o.id.toLowerCase().includes(q) ||
+        o.branchName.toLowerCase().includes(q) ||
+        o.address.toLowerCase().includes(q)
+      )
+    }
+    if (branchStatusFilter) {
+      result = result.filter(o => o.status === branchStatusFilter)
+    }
+    return result
+  }, [branchOrders, branchSearch, branchStatusFilter])
 
-  const allSelected = paginated.length > 0 && paginated.every(o => selectedIds.has(o.id))
+  const branchTotalPages = Math.max(1, Math.ceil(branchFiltered.length / PAGE_SIZE))
+  const branchPaginated = branchFiltered.slice((branchPage - 1) * PAGE_SIZE, branchPage * PAGE_SIZE)
 
-  function toggleAll() {
-    if (allSelected) setSelectedIds(new Set())
-    else setSelectedIds(new Set(paginated.map(o => o.id)))
+  if (error) {
+    return (
+      <div>
+        <PageHeader title="Orders" subtitle="View all transactions and order details" />
+        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-xl p-8 text-center">
+          <AlertCircle size={48} className="mx-auto mb-3 text-red-400 dark:text-red-500" />
+          <p className="text-red-700 dark:text-red-400 font-medium mb-1">Failed to load orders</p>
+          <p className="text-red-500 dark:text-red-400 text-sm mb-4">{error}</p>
+          <button onClick={reload}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
+            <RefreshCw size={16} /> Retry
+          </button>
+        </div>
+      </div>
+    )
   }
-
-  function toggleOne(id: string) {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const statusColors: Record<string, string> = {
-    Pending: 'bg-surface-50 dark:bg-surface-950/30 text-surface-700 dark:text-surface-400',
-    Completed: 'bg-surface-100 dark:bg-surface-900/40 text-surface-700 dark:text-surface-300',
-    Cancelled: 'bg-surface-200/50 dark:bg-surface-800/50 text-surface-800 dark:text-surface-300',
-  }
-
-  const tabs: { key: typeof filter; label: string }[] = [
-    { key: 'all', label: 'All Orders' },
-    { key: 'new', label: 'New Orders' },
-    { key: 'weekly', label: 'Weekly' },
-    { key: 'monthly', label: 'Monthly' },
-  ]
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Orders</h1>
-        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">View all transactions and order details</p>
-      </div>
+      <PageHeader title="Orders" subtitle="View all transactions and order details" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl">
+        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl bg-white dark:bg-surface-900">
           <p className="text-sm text-surface-500 dark:text-surface-400">Total Orders</p>
           <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{totalOrders}</p>
         </div>
-        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl">
-          <p className="text-sm text-surface-500 dark:text-surface-400">New Orders</p>
-          <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{newOrders}</p>
+        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl bg-white dark:bg-surface-900">
+          <p className="text-sm text-surface-500 dark:text-surface-400">Agent Orders</p>
+          <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{agentCount}</p>
         </div>
-        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl">
-          <p className="text-sm text-surface-500 dark:text-surface-400">Weekly Orders</p>
-          <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{weeklyOrders}</p>
+        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl bg-white dark:bg-surface-900">
+          <p className="text-sm text-surface-500 dark:text-surface-400">Branch Orders</p>
+          <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{branchCount}</p>
         </div>
-        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl">
-          <p className="text-sm text-surface-500 dark:text-surface-400">Total Sales</p>
-          <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{settings.currencySymbol}{totalSales.toFixed(2)}</p>
+        <div className="p-5 border border-surface-200 dark:border-surface-700 rounded-xl bg-white dark:bg-surface-900">
+          <p className="text-sm text-surface-500 dark:text-surface-400">Total Revenue</p>
+          <p className="text-2xl font-bold text-surface-900 dark:text-white mt-1">{settings.currencySymbol}{totalRevenue.toLocaleString()}</p>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
-        <div className="flex gap-1 flex-wrap">
-          {tabs.map(tab => (
-            <button key={tab.key} onClick={() => { setFilter(tab.key); setPage(1) }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                filter === tab.key
-                  ? 'bg-surface-50 dark:bg-surface-950/30 text-surface-700 dark:text-surface-400'
-                  : 'text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-700'
-              }`}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <input type="text" placeholder="Search orders..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-          className="w-full sm:w-64 px-3 py-2 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 placeholder:text-surface-400 dark:placeholder:text-surface-500" />
-      </div>
-      <div className="overflow-x-auto">
-        {loading ? (
+      <TabNav
+        tabs={[
+          { key: 'agent', label: 'Agent Booking Orders', badge: counts.agentBookingOrders },
+          { key: 'branch', label: 'Branch Booking Orders', badge: counts.branchBookingOrders },
+        ]}
+        activeKey={activeTab}
+        onTabChange={key => { setActiveTab(key as 'agent' | 'branch'); key === 'agent' ? setAgentPage(1) : setBranchPage(1) }}
+      />
+
+      {activeTab === 'agent' && (
+        loading ? (
           <SkeletonTable rows={6} />
         ) : (
-          <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-surface-50 dark:bg-surface-800/50 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
-                  <th className="py-3.5 px-4 w-10">
-                    <button onClick={toggleAll} className="flex items-center justify-center">
-                      {allSelected ? <CheckSquare size={15} className="text-surface-500" /> : <Square size={15} className="text-surface-400" />}
-                    </button>
-                  </th>
-                  <th className="py-3.5 px-4">ID</th>
-                  <th className="py-3.5 px-4">Customer</th>
-                  <th className="py-3.5 px-4">Agent</th>
-                  <th className="py-3.5 px-4">Date</th>
-                  <th className="py-3.5 px-4">Amount</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr><td colSpan={8} className="px-5 py-12 text-center text-surface-500 dark:text-surface-400">
-                    <ShoppingCart size={40} className="mx-auto mb-2 opacity-40" /><p>No orders found</p>
-                  </td></tr>
-                ) : (
-                  paginated.map(order => {
-                    const checked = selectedIds.has(order.id)
-                    return (
-                      <tr key={order.id} className={`border-b border-surface-100 dark:border-surface-800 transition-colors ${checked ? 'bg-surface-50/50 dark:bg-surface-950/20' : ''}`}>
-                        <td className="py-3 px-4">
-                          <button onClick={() => toggleOne(order.id)} className="flex items-center justify-center">
-                            {checked ? <CheckSquare size={15} className="text-surface-600" /> : <Square size={15} className="text-surface-400" />}
-                          </button>
-                        </td>
-                        <td className="py-3 px-4 text-xs font-mono text-surface-500 dark:text-surface-400">#{order.id.slice(0, 6)}</td>
-                        <td className="py-3 px-4 font-medium text-surface-800 dark:text-surface-200">{order.customerName}</td>
-                        <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{order.agentName}</td>
-                        <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                        <td className="py-3 px-4 text-surface-700 dark:text-surface-200 font-medium">{settings.currencySymbol}{order.totalAmount.toFixed(2)}</td>
-                        <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-md text-xs font-medium ${statusColors[order.status]}`}>{order.status}</span></td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <Link to={`/orders/${order.id}`}
-                              className="p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors"
-                              title="View Details"><Eye size={16} /></Link>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+          <AgentOrdersTab
+            orders={agentPaginated}
+            totalPages={agentTotalPages}
+            page={agentPage}
+            setPage={setAgentPage}
+            search={agentSearch}
+            setSearch={v => { setAgentSearch(v); setAgentPage(1) }}
+            statusFilter={agentStatusFilter}
+            setStatusFilter={v => { setAgentStatusFilter(v); setAgentPage(1) }}
+            currencySymbol={settings.currencySymbol}
+          />
+        )
+      )}
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 text-sm">
-                <p className="text-surface-500 dark:text-surface-400">
-                  Page {page} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {activeTab === 'branch' && (
+        loading ? (
+          <SkeletonTable rows={6} />
+        ) : (
+          <BranchOrdersTab
+            orders={branchPaginated}
+            totalPages={branchTotalPages}
+            page={branchPage}
+            setPage={setBranchPage}
+            search={branchSearch}
+            setSearch={v => { setBranchSearch(v); setBranchPage(1) }}
+            statusFilter={branchStatusFilter}
+            setStatusFilter={v => { setBranchStatusFilter(v); setBranchPage(1) }}
+            currencySymbol={settings.currencySymbol}
+          />
+        )
+      )}
     </div>
   )
 }
+
+function AgentOrdersTab({
+  orders, totalPages, page, setPage,
+  search, setSearch, statusFilter, setStatusFilter, currencySymbol,
+}: {
+  orders: import('../services/types').AgentOrder[]
+  totalPages: number
+  page: number
+  setPage: (n: number) => void
+  search: string
+  setSearch: (v: string) => void
+  statusFilter: string
+  setStatusFilter: (v: string) => void
+  currencySymbol: string
+}) {
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4">
+        <div className="relative w-full sm:max-w-xs">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500 dark:text-surface-400" />
+          <input type="text" placeholder="Search by ID, customer, agent..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 placeholder:text-surface-400 dark:placeholder:text-surface-500" />
+        </div>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+          className="py-2 px-3 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Process">Process</option>
+          <option value="Approved">Approved</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div className="overflow-x-auto bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-surface-50 dark:bg-surface-800/50 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+              <th className="py-3.5 px-4">ID</th>
+              <th className="py-3.5 px-4">Customer</th>
+              <th className="py-3.5 px-4">Agent</th>
+              <th className="py-3.5 px-4">Date</th>
+              <th className="py-3.5 px-4">Amount</th>
+              <th className="py-3.5 px-4">Status</th>
+              <th className="py-3.5 px-4">Assigned Staff</th>
+              <th className="py-3.5 px-4 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length === 0 ? (
+              <tr><td colSpan={8} className="px-5 py-12 text-center text-surface-500 dark:text-surface-400">
+                <ShoppingCart size={40} className="mx-auto mb-2 opacity-40" /><p>No agent orders found</p>
+              </td></tr>
+            ) : (
+              orders.map(order => (
+                <tr key={order.id} className="border-b border-surface-100 dark:border-surface-800 transition-colors hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
+                  <td className="py-3 px-4 text-xs font-mono text-surface-500 dark:text-surface-400">#{order.id.slice(0, 6)}</td>
+                  <td className="py-3 px-4">
+                    <div className="font-medium text-surface-800 dark:text-surface-200">{order.customerName}</div>
+                    <div className="text-xs text-surface-500 dark:text-surface-400">{order.customerPhone}</div>
+                  </td>
+                  <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{order.agentName || '—'}</td>
+                  <td className="py-3 px-4 text-surface-500 dark:text-surface-400">
+                    {new Date(order.orderDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td className="py-3 px-4 text-surface-700 dark:text-surface-200 font-medium">{currencySymbol}{order.totalAmount.toLocaleString()}</td>
+                  <td className="py-3 px-4"><StatusBadge status={order.status} /></td>
+                  <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{order.assignedStaff || '—'}</td>
+                  <td className="py-3 px-4 text-center">
+                    <Link to={`/orders/${order.id}`}
+                      className="inline-flex p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                      title="View Details"><Eye size={16} /></Link>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+    </div>
+  )
+}
+
+function BranchOrdersTab({
+  orders, totalPages, page, setPage,
+  search, setSearch, statusFilter, setStatusFilter, currencySymbol,
+}: {
+  orders: import('../services/types').BranchOrder[]
+  totalPages: number
+  page: number
+  setPage: (n: number) => void
+  search: string
+  setSearch: (v: string) => void
+  statusFilter: string
+  setStatusFilter: (v: string) => void
+  currencySymbol: string
+}) {
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4">
+        <div className="relative w-full sm:max-w-xs">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500 dark:text-surface-400" />
+          <input type="text" placeholder="Search by ID, branch, location..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 placeholder:text-surface-400 dark:placeholder:text-surface-500" />
+        </div>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+          className="py-2 px-3 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-800 dark:text-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Process">Process</option>
+          <option value="Approved">Approved</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div className="overflow-x-auto bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-surface-50 dark:bg-surface-800/50 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+              <th className="py-3.5 px-4">ID</th>
+              <th className="py-3.5 px-4">Branch</th>
+              <th className="py-3.5 px-4">Location</th>
+              <th className="py-3.5 px-4">Date</th>
+              <th className="py-3.5 px-4">Amount</th>
+              <th className="py-3.5 px-4">Items</th>
+              <th className="py-3.5 px-4">Status</th>
+              <th className="py-3.5 px-4">Assigned Staff</th>
+              <th className="py-3.5 px-4 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length === 0 ? (
+              <tr><td colSpan={9} className="px-5 py-12 text-center text-surface-500 dark:text-surface-400">
+                <Store size={40} className="mx-auto mb-2 opacity-40" /><p>No branch orders found</p>
+              </td></tr>
+            ) : (
+              orders.map(order => (
+                <tr key={order.id} className="border-b border-surface-100 dark:border-surface-800 transition-colors hover:bg-surface-50/50 dark:hover:bg-surface-800/20">
+                  <td className="py-3 px-4 text-xs font-mono text-surface-500 dark:text-surface-400">#{order.id.slice(0, 6)}</td>
+                  <td className="py-3 px-4">
+                    <div className="font-medium text-surface-800 dark:text-surface-200">{order.branchName}</div>
+                    <div className="text-xs text-surface-500 dark:text-surface-400">{order.branchContact}</div>
+                  </td>
+                  <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{order.address}</td>
+                  <td className="py-3 px-4 text-surface-500 dark:text-surface-400">
+                    {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td className="py-3 px-4 text-surface-700 dark:text-surface-200 font-medium">{currencySymbol}{order.totalAmount.toLocaleString()}</td>
+                  <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{order.itemCount} item{order.itemCount !== 1 ? 's' : ''}</td>
+                  <td className="py-3 px-4"><StatusBadge status={order.status} /></td>
+                  <td className="py-3 px-4 text-surface-500 dark:text-surface-400">{order.assignedStaff || '—'}</td>
+                  <td className="py-3 px-4 text-center">
+                    <Link to={`/orders/branch/${order.id}`}
+                      className="inline-flex p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg transition-colors"
+                      title="View Details"><Eye size={16} /></Link>
+                  </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </div>
+    )
+  }

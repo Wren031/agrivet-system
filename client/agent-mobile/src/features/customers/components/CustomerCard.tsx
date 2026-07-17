@@ -1,7 +1,6 @@
-import React, { memo, useMemo } from "react";
+import React, { memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Customer } from "../../../types";
-import { getCityName, getProvinceName } from "../../../data/philippineAddress";
 import { useTheme } from "../../../context/ThemeContext";
 
 interface CustomerCardProps {
@@ -11,11 +10,15 @@ interface CustomerCardProps {
 }
 
 function formatAddress(c: Customer): string {
-  const parts = [c.address, getCityName(c.city), getProvinceName(c.province)].filter(Boolean);
+  const parts = [c.address, c.city, c.province].filter(Boolean);
   return parts.join(", ") || "No address";
 }
 
-export const CustomerCard = memo(function CustomerCard({ customer, onEdit, onDelete }: CustomerCardProps) {
+export const CustomerCard = memo(function CustomerCard({
+  customer,
+  onEdit,
+  onDelete,
+}: CustomerCardProps) {
   const { isDark } = useTheme();
   const initials = customer.name
     .split(" ")
@@ -25,21 +28,58 @@ export const CustomerCard = memo(function CustomerCard({ customer, onEdit, onDel
     .slice(0, 2);
 
   return (
-    <View className="bg-brand/5 rounded-2xl p-4 mb-3 border border-brand/20">
+    <View
+      className={`rounded-2xl p-4 mb-3 border ${
+        isDark
+          ? "bg-[#1e293b] border-white/[0.08]"
+          : "bg-white border-slate-200"
+      }`}
+      style={{
+        shadowColor: "#1b4332",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isDark ? 0.15 : 0.05,
+        shadowRadius: 6,
+        elevation: isDark ? 1 : 2,
+      }}
+    >
       <View className="flex-row items-center">
-        <View className="w-12 h-12 rounded-full bg-brand/10 items-center justify-center mr-3">
-          <Text className={`text-${isDark ? "white" : "black"} font-bold text-sm`}>
+        <View
+          className={`w-12 h-12 rounded-full items-center justify-center mr-3 ${
+            isDark ? "bg-brand/20" : "bg-brand/10"
+          }`}
+        >
+          <Text
+            className={`font-bold text-sm ${
+              isDark ? "text-white" : "text-brand"
+            }`}
+          >
             {initials}
           </Text>
         </View>
         <View className="flex-1">
-          <Text className={`text-base font-bold text-${isDark ? "white" : "black"}`}>
+          <Text
+            className={`text-base font-bold ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+            numberOfLines={1}
+          >
             {customer.name}
           </Text>
-          <Text className={`text-sm text-${isDark ? "white/70" : "black/70"}`}>
-            {customer.storeName}
-          </Text>
-          <Text className={`text-xs text-${isDark ? "white/50" : "black/50"} mt-0.5`}>
+          {customer.storeName ? (
+            <Text
+              className={`text-sm ${
+                isDark ? "text-white/60" : "text-slate-500"
+              }`}
+              numberOfLines={1}
+            >
+              {customer.storeName}
+            </Text>
+          ) : null}
+          <Text
+            className={`text-xs mt-0.5 ${
+              isDark ? "text-white/40" : "text-slate-400"
+            }`}
+          >
             {customer.phone}
           </Text>
         </View>
@@ -48,24 +88,49 @@ export const CustomerCard = memo(function CustomerCard({ customer, onEdit, onDel
             {onEdit && (
               <TouchableOpacity
                 onPress={() => onEdit(customer)}
-                className="w-8 h-8 rounded-lg bg-brand/10 items-center justify-center"
+                className={`w-8 h-8 rounded-lg items-center justify-center ${
+                  isDark ? "bg-white/10" : "bg-slate-100"
+                }`}
               >
-                <Text className={`text-${isDark ? "white" : "black"} text-xs`}>✎</Text>
+                <Text
+                  className={`text-xs ${
+                    isDark ? "text-white/70" : "text-slate-600"
+                  }`}
+                >
+                  ✎
+                </Text>
               </TouchableOpacity>
             )}
             {onDelete && (
               <TouchableOpacity
                 onPress={() => onDelete(customer)}
-                className="w-8 h-8 rounded-lg bg-brand/5 items-center justify-center"
+                className={`w-8 h-8 rounded-lg items-center justify-center ${
+                  isDark ? "bg-red-500/10" : "bg-red-50"
+                }`}
               >
-                <Text className={`text-${isDark ? "white/70" : "black/70"} text-xs`}>✕</Text>
+                <Text
+                  className={`text-xs ${
+                    isDark ? "text-red-400" : "text-red-500"
+                  }`}
+                >
+                  ✕
+                </Text>
               </TouchableOpacity>
             )}
           </View>
         ) : null}
       </View>
-      <View className="mt-3 pt-3 border-t border-brand/10">
-        <Text className={`text-xs text-${isDark ? "white/50" : "black/50"}`}>
+      <View
+        className={`mt-3 pt-3 border-t ${
+          isDark ? "border-white/[0.06]" : "border-slate-100"
+        }`}
+      >
+        <Text
+          className={`text-xs ${
+            isDark ? "text-white/40" : "text-slate-400"
+          }`}
+          numberOfLines={2}
+        >
           {formatAddress(customer)}
         </Text>
       </View>

@@ -14,7 +14,7 @@ import { useHideTabBar } from "../../../hooks/useHideTabBar";
 import { getScrollBottomPadding } from "../../../theme/layout";
 import { Customer } from "../../../types";
 
-export function CustomerListScreen() {
+export function CustomerListScreen({ navigation }: any) {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -51,12 +51,10 @@ export function CustomerListScreen() {
   const handleFormSubmit = useCallback(async (data: Omit<Customer, "id" | "createdAt">) => {
     if (editingCustomer) {
       await updateCustomer(editingCustomer.id, data);
-    } else {
-      await addCustomer(data);
     }
     setShowForm(false);
     setEditingCustomer(null);
-  }, [editingCustomer, updateCustomer, addCustomer]);
+  }, [editingCustomer, updateCustomer]);
 
   const handleCloseForm = useCallback(() => {
     setShowForm(false);
@@ -68,6 +66,10 @@ export function CustomerListScreen() {
     await fetchCustomers();
     setRefreshing(false);
   }, [fetchCustomers]);
+
+  const navigateToAdd = useCallback(() => {
+    navigation.navigate("AddCustomer");
+  }, [navigation]);
 
   const keyExtractor = useCallback((item: Customer) => item.id, []);
 
@@ -84,17 +86,24 @@ export function CustomerListScreen() {
             ? `${filteredCustomers.length} of ${customers.length} customer${customers.length !== 1 ? "s" : ""}`
             : `${customers.length} customer${customers.length !== 1 ? "s" : ""}`
         }
-        action={{ label: "+ Add", onPress: () => setShowForm(true) }}
+        action={{ label: "+ Add", onPress: navigateToAdd }}
       />
       <View className="px-5 mb-3">
         <View
           className={`flex-row items-center rounded-xl px-4 border ${
-            isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5"
+            isDark ? "bg-white/5 border-white/[0.08]" : "bg-white border-slate-200"
           }`}
+          style={{
+            shadowColor: "#1b4332",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: isDark ? 0 : 0.04,
+            shadowRadius: 3,
+            elevation: isDark ? 0 : 1,
+          }}
         >
           <Search size={18} color="rgba(27,67,50,0.45)" />
           <TextInput
-            className={`flex-1 ml-2 py-3 text-base text-${isDark ? "white" : "black"}`}
+            className={`flex-1 ml-2 py-3 text-base ${isDark ? "text-white" : "text-slate-900"}`}
             placeholder="Search customers..."
             placeholderTextColor="rgba(45,106,79,0.4)"
             value={search}
@@ -125,7 +134,7 @@ export function CustomerListScreen() {
       <Modal
         visible={showForm}
         onClose={handleCloseForm}
-        title={editingCustomer ? "Edit Customer" : "New Customer"}
+        title="Edit Customer"
       >
         <CustomerForm
           customer={editingCustomer}

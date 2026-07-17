@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import type { NotificationCounts } from '../services/notificationService'
+import { fetchNotificationCounts } from '../services/notificationService'
 
 interface Settings {
   storeName: string
@@ -33,6 +35,8 @@ interface AppContextType {
   setDarkMode: (v: boolean) => void
   sidebarOpen: boolean
   setSidebarOpen: (v: boolean) => void
+  counts: NotificationCounts
+  refreshCounts: () => Promise<void>
 }
 
 const defaultSettings: Settings = {
@@ -59,6 +63,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return localStorage.getItem('darkMode') === 'true'
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const [counts, setCounts] = useState<NotificationCounts>({
+    newOrders: 0,
+    newAgents: 0,
+    newBranches: 0,
+    pendingTasks: 0,
+    agentBookingOrders: 0,
+    branchBookingOrders: 0,
+  })
+
+  const refreshCounts = useCallback(async () => {
+    try {
+      const result = await fetchNotificationCounts()
+      setCounts(result)
+    } catch {
+      // silently ignore errors
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshCounts()
+    const interval = setInterval(refreshCounts, 30000)
+    return () => clearInterval(interval)
+  }, [refreshCounts])
 
   useEffect(() => {
     localStorage.setItem('appSettings', JSON.stringify(settings))
@@ -109,6 +137,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       user, setUser,
       darkMode, setDarkMode,
       sidebarOpen, setSidebarOpen,
+      counts, refreshCounts,
     }}>
       {children}
     </AppContext.Provider>

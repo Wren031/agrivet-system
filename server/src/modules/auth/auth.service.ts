@@ -15,7 +15,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-
   generateAccessToken(user: { id: string; role: string; email: string }) {
     return this.jwtService.sign(
       {
@@ -41,8 +40,6 @@ export class AuthService {
       },
     );
   }
-
-  // admin login
 
   async adminLogin(dto: LoginDto) {
     const adminProfile = await this.prisma.adminProfile.findUnique({
@@ -329,6 +326,74 @@ export class AuthService {
         branchProfileId: user.branchProfile.id,
       },
     };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        adminProfile: true,
+        agentProfile: true,
+        branchProfile: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const result: any = {
+      id: user.id,
+      role: user.role,
+    };
+
+    if (user.adminProfile) {
+      result.email = user.adminProfile.email;
+      result.fullName = user.adminProfile.fullName;
+      result.contactNumber = user.adminProfile.contactNumber;
+    } else if (user.agentProfile) {
+      result.email = user.agentProfile.email;
+      result.fullName = user.agentProfile.fullName;
+      result.contactNumber = user.agentProfile.contactNumber;
+      result.status = user.agentProfile.status;
+      result.idVerificationUrl = user.agentProfile.idVerificationUrl;
+    } else if (user.branchProfile) {
+      result.email = user.branchProfile.email;
+      result.fullName = user.branchProfile.fullName;
+      result.contactNumber = user.branchProfile.contactNumber;
+      result.status = user.branchProfile.status;
+      result.storeName = user.branchProfile.storeBranch;
+      result.address = user.branchProfile.address;
+      result.idVerificationUrl = user.branchProfile.verificationImage;
+    }
+
+    return result;
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const accessToken = this.generateAccessToken({
+        id: user.id,
+        email: payload.email ?? '',
+        role: user.role,
+      });
+
+      return { accessToken };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {

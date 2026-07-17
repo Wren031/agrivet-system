@@ -2,12 +2,14 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Package, Mail, Lock } from 'lucide-react'
 import { login } from '../services/authService'
+import { useAuth } from '../context/AuthContext'
 import { useApp } from '../../../context/AppContext'
 
 const REMEMBER_KEY = 'remembered_email'
 
 export default function LoginPage() {
-  const { setUser, addNotification } = useApp()
+  const { signIn } = useAuth()
+  const { addNotification } = useApp()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,14 +33,14 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      const u = await login(email, password)
+      const result = await login(email, password)
       if (remember) {
         localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email }))
       } else {
         localStorage.removeItem(REMEMBER_KEY)
       }
-      setUser(u)
-      addNotification({ message: `Welcome back, ${u.name}!`, type: 'success' })
+      signIn(result.accessToken, result.refreshToken, result.user)
+      addNotification({ message: `Welcome back, ${result.user.name}!`, type: 'success' })
       navigate('/')
     } catch (err: any) {
       setError(err.message || 'Login failed')

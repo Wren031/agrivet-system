@@ -224,14 +224,6 @@ export default function BranchDetailPage() {
                       {branch.date ? new Date(branch.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-2.5 px-4">
-                    <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Branch ID</span>
-                    <span className="text-xs font-mono font-semibold text-surface-700 dark:text-surface-300">{branch.id.slice(0, 12)}...</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2.5 px-4">
-                    <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Verification ID</span>
-                    <span className="text-xs font-mono font-semibold text-surface-600 dark:text-surface-400">{branch.verificationId}</span>
-                  </div>
                 </div>
               </div>
             </div>

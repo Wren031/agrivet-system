@@ -1,6 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Save, User, Mail, Phone, Shield, Lock, Store, Palette, Eye, EyeOff } from 'lucide-react'
 import { useApp } from '../../../context/AppContext'
+import { useAuth } from '../../auth/context/AuthContext'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
 import { fetchStaffById, updateStaff } from '../../staff/services/staffService'
 import type { AppSettings } from '../services/settingsService'
 import type { AdminStaff } from '../../staff/services/types'
@@ -15,37 +18,20 @@ const tabs = [
 type TabKey = (typeof tabs)[number]['key']
 
 export default function SettingsPage() {
-  const { settings, updateSettings, addNotification, darkMode, setDarkMode, user } = useApp()
+  const { settings, updateSettings, addNotification, darkMode, setDarkMode } = useApp()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabKey>('account')
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Settings</h1>
-        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Configure your inventory system</p>
-      </div>
+      <PageHeader title="Settings" subtitle="Configure your inventory system" />
 
-      <div className="border-b border-surface-200 dark:border-surface-700 mb-8 overflow-x-auto">
-        <nav className="flex gap-6 min-w-max sm:min-w-0">
-          {tabs.map(tab => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key
-                    ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                    : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-                }`}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            )
-          })}
-        </nav>
-      </div>
+      <TabNav
+        tabs={tabs.map(t => ({ key: t.key, label: t.label, icon: <t.icon size={16} /> }))}
+        activeKey={activeTab}
+        onTabChange={key => setActiveTab(key as TabKey)}
+        className="mb-8"
+      />
 
       {activeTab === 'account' && <AccountTab />}
       {activeTab === 'security' && <SecurityTab />}
@@ -56,7 +42,8 @@ export default function SettingsPage() {
 }
 
 function AccountTab() {
-  const { user, addNotification } = useApp()
+  const { addNotification } = useApp()
+  const { user } = useAuth()
   const [profile, setProfile] = useState<AdminStaff | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -172,7 +159,8 @@ function AccountTab() {
 }
 
 function SecurityTab() {
-  const { user, addNotification } = useApp()
+  const { addNotification } = useApp()
+  const { user } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })

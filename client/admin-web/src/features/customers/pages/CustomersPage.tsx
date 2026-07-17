@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Search, Eye, Ban, CheckSquare, Square, X } from 'lucide-react'
+import { Users, Search, MoreVertical, CheckSquare, Square } from 'lucide-react'
 import { useCustomers } from '../hooks/useCustomers'
 import { sendAnnouncement } from '../services/customerService'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonTable } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
 import Modal from '../../../components/Modal'
 import type { Customer } from '../services/types'
 
@@ -24,6 +26,9 @@ export default function CustomersPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('list')
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  
+  // Track which customer item action row popover is currently active
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
 
   const storeNames = useMemo(() =>
     [...new Set(customers.map(c => c.storeName).filter(Boolean))].sort()
@@ -80,30 +85,13 @@ export default function CustomersPage() {
 
   return (
     <div>
+      <PageHeader title="Customers" subtitle={`${customers.length} customer${customers.length !== 1 ? 's' : ''} registered`} />
 
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Customers</h1>
-        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">{customers.length} customer{customers.length !== 1 ? 's' : ''} registered</p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="border-b border-surface-200 dark:border-surface-700 mb-6">
-        <nav className="flex gap-6">
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-surface-900 dark:border-white text-surface-900 dark:text-white'
-                  : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <TabNav
+        tabs={tabs.map(t => ({ key: t.key, label: t.label }))}
+        activeKey={activeTab}
+        onTabChange={key => setActiveTab(key as TabKey)}
+      />
 
       {activeTab === 'list' && (
         <>
@@ -142,12 +130,14 @@ export default function CustomersPage() {
                     <th className="py-3.5 px-4">Contact</th>
                     <th className="py-3.5 px-4">Store</th>
                     <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-center">Action</th>
+                    <th className="py-3.5 px-4 text-right pr-6">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(customer => {
-                    const checked = selectedIds.has(customer.id)
+                    const checked = selectedIds.has(customer.id);
+                    const isMenuOpen = activeMenuId === customer.id;
+                    
                     return (
                       <tr key={customer.id} className={`border-b border-surface-100 dark:border-surface-800 transition-colors ${checked ? 'bg-surface-50/50 dark:bg-surface-950/20' : ''}`}>
                         <td className="py-3 px-4">
@@ -164,16 +154,47 @@ export default function CustomersPage() {
                             {customer.status ?? 'ACTIVE'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center relative">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button onClick={() => navigate(`/customers/${customer.id}`)}
-                              className="p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors" title="View Details">
-                              <Eye size={16} />
+                        
+                        {/* Dropdown Container Column */}
+                        <td className="py-3 px-4 text-right pr-6 relative">
+                          <div className="inline-block text-left">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(isMenuOpen ? null : customer.id);
+                              }}
+                              className={`p-1.5 text-surface-500 dark:text-surface-400 hover:text-surface-800 dark:hover:text-surface-200 rounded-lg transition-colors border ${isMenuOpen ? 'bg-surface-100 border-surface-300/60 dark:bg-surface-800 dark:border-surface-700' : 'bg-transparent border-transparent'}`}
+                            >
+                              <MoreVertical size={16} />
                             </button>
-                            <button onClick={() => confirmTerminate(customer)}
-                              className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Terminate">
-                              <X size={16} />
-                            </button>
+
+                            {isMenuOpen && (
+                              <>
+                                {/* Click Outside Target to close menu safely */}
+                                <div className="fixed inset-0 z-30" onClick={() => setActiveMenuId(null)} />
+                                
+                                <div className="absolute right-6 mt-1 w-40 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg p-1 z-40 origin-top-right">
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/customers/${customer.id}`);
+                                      setActiveMenuId(null);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 text-xs font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800/60 rounded-md transition-colors"
+                                  >
+                                    View Details
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      confirmTerminate(customer);
+                                      setActiveMenuId(null);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors border-t border-surface-100 dark:border-surface-800/80 mt-1 pt-1.5"
+                                  >
+                                    Terminate
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

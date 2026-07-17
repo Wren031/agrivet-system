@@ -17,6 +17,8 @@ import { getTabBarStyle } from "./tabBarStyles";
 import { LoginScreen } from "../features/auth/screens/LoginScreen";
 import { RegisterScreen } from "../features/auth/screens/RegisterScreen";
 import { CustomerListScreen } from "../features/customers/screens/CustomerListScreen";
+import { AddCustomerScreen } from "../features/customers/screens/AddCustomerScreen";
+import { CustomerConfirmationScreen } from "../features/customers/screens/CustomerConfirmationScreen";
 import { ItemGridScreen } from "../features/items/screens/ItemGridScreen";
 import { ItemDetailScreen } from "../features/items/screens/ItemDetailScreen";
 import { HomeScreen } from "../features/home/screens/HomeScreen";
@@ -54,7 +56,7 @@ const itemsTabBarIcon = ({ focused }: { focused: boolean }) => {
         shadowRadius: 5,
         elevation: 6,
         borderWidth: 3,
-        borderColor: isDark ? "#1e293b" : "#FFFFFF",
+        borderColor: isDark ? "#0f172a" : "#FFFFFF",
       }}
     >
       <Package
@@ -154,6 +156,8 @@ function AppStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="AddCustomer" component={AddCustomerScreen} />
+      <Stack.Screen name="CustomerConfirmation" component={CustomerConfirmationScreen} />
       <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
       <Stack.Screen name="CreateBooking" component={CreateBookingScreen} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} />

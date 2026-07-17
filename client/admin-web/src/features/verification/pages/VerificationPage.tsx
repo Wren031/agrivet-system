@@ -4,6 +4,9 @@ import { Users, Store, Search, CheckCircle, Building2, ChevronLeft, ChevronRight
 import { useVerification } from '../hooks/useVerification'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonCards } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import TabNav from '../../../components/TabNav'
+import Pagination from '../../../components/Pagination'
 import VerificationAgentRow from '../components/VerificationAgentRow'
 import VerificationBranchRow from '../components/VerificationBranchRow'
 import type { VerificationTab } from '../services/types'
@@ -68,50 +71,16 @@ export default function VerificationPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Verification</h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            Review and verify pending agents and branch registrations
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Verification" subtitle="Review and verify pending agents and branch registrations" />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-100 dark:border-surface-700 mb-5">
-        <div className="flex overflow-x-auto">
-          <button
-            onClick={() => { setActiveTab('agents'); setSearch(''); setPage(1) }}
-            className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'agents'
-                ? 'border-surface-800 text-surface-800 dark:border-white dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}
-          >
-            <Users size={16} />
-            Agents
-            {pendingAgents.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 text-[10px] font-bold">
-                {pendingAgents.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => { setActiveTab('branches'); setSearch(''); setPage(1) }}
-            className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'branches'
-                ? 'border-surface-800 text-surface-800 dark:border-white dark:text-white'
-                : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-            }`}
-          >
-            <Store size={16} />
-            Branches
-            {inactiveBranches.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 text-[10px] font-bold">
-                {inactiveBranches.length}
-              </span>
-            )}
-          </button>
-        </div>
+      <TabNav
+        tabs={[
+          { key: 'agents', label: 'Agents', icon: <Users size={16} />, badge: pendingAgents.length },
+          { key: 'branches', label: 'Branches', icon: <Store size={16} />, badge: inactiveBranches.length },
+        ]}
+        activeKey={activeTab}
+        onTabChange={key => { setActiveTab(key as VerificationTab); setSearch(''); setPage(1) }}
+      />
         <div className="px-4 pb-3 sm:pb-0">
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500 dark:text-surface-400" />
@@ -124,7 +93,6 @@ export default function VerificationPage() {
             />
           </div>
         </div>
-      </div>
 
       {loading ? (
         <SkeletonCards count={4} />
@@ -158,25 +126,11 @@ export default function VerificationPage() {
                     onReject={handleReject}
                     updating={updating}
                     setUpdating={setUpdating}
-                  />
-                ))}
-              </tbody>
-            </table>
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 text-sm">
-                <p className="text-surface-500 dark:text-surface-400">Page {page} of {totalPages}</p>
-                <div className="flex gap-2">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         )
       ) : filteredBranches.length === 0 ? (
@@ -213,21 +167,7 @@ export default function VerificationPage() {
               ))}
             </tbody>
           </table>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 text-sm">
-              <p className="text-surface-500 dark:text-surface-400">Page {page} of {totalPages}</p>
-              <div className="flex gap-2">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                  <ChevronLeft size={14} /> Prev
-                </button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                  Next <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

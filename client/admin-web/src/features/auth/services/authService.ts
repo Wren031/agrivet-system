@@ -1,35 +1,40 @@
-import { apiFetch, setToken, clearToken } from '../../../config/apiClient'
+import { apiFetch, setToken } from '../../../config/apiClient'
 
 export interface AuthUser {
   id: string
   email: string
   name: string
+  role: string
 }
 
-const AUTH_KEY = 'auth_user'
-const TOKEN_KEY = 'auth_token'
-
-function storeUser(user: AuthUser) {
-  localStorage.setItem(AUTH_KEY, JSON.stringify(user))
+export interface LoginResult {
+  accessToken: string
+  refreshToken: string
+  user: AuthUser
 }
 
-function removeUser() {
-  localStorage.removeItem(AUTH_KEY)
-}
-
-export async function login(email: string, password: string): Promise<AuthUser> {
-  
+export async function login(email: string, password: string): Promise<LoginResult> {
   const data = await apiFetch<{
     accessToken: string
+    refreshToken: string
     user: { id: string; email: string; fullName: string; role: string }
   }>('/auth/admin/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   })
-  setToken(data.accessToken)
-  const user: AuthUser = { id: data.user.id, email: data.user.email, name: data.user.fullName }
-  storeUser(user)
-  return user
+
+  const user: AuthUser = {
+    id: data.user.id,
+    email: data.user.email,
+    name: data.user.fullName,
+    role: data.user.role,
+  }
+
+  return {
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    user,
+  }
 }
 
 export async function logout(): Promise<void> {
@@ -38,15 +43,4 @@ export async function logout(): Promise<void> {
   } catch {
     // ignore logout errors
   }
-  clearToken()
-  removeUser()
-}
-
-export function getStoredUser(): AuthUser | null {
-  const data = localStorage.getItem(AUTH_KEY)
-  return data ? JSON.parse(data) : null
-}
-
-export function isAuthenticated(): boolean {
-  return !!localStorage.getItem(TOKEN_KEY)
 }

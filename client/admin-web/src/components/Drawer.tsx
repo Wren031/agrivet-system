@@ -1,11 +1,14 @@
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
+// Explicit full-string lookups so Tailwind can parse and output the classes safely
 const sizeMap = {
   sm: 'sm:max-w-sm',
   md: 'sm:max-w-md',
   lg: 'sm:max-w-lg',
   xl: 'sm:max-w-xl',
+  '350': 'sm:max-w-[350px]',
+  '650': 'sm:max-w-[650px]', 
   full: 'w-full',
 }
 
@@ -36,16 +39,21 @@ export default function Drawer({ open, onClose, title, children, className = '',
     return () => window.removeEventListener('keydown', handleKey)
   }, [open, onClose])
 
+  // Get the safe compiled Tailwind width layout string
+  const widthClass = sizeMap[size] || sizeMap['lg']
+
   return (
     <>
+      {/* Overlay Backdrop */}
       <div
         className={`fixed inset-0 bg-black/20 dark:bg-black/50 z-40 transition-opacity duration-200 ${
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
+      {/* Sliding Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-auto ${size !== 'full' ? `sm:${sizeMap[size]}` : ''} bg-white dark:bg-surface-950 border-l border-surface-200 dark:border-surface-800 z-50 transform transition-transform duration-200 ease-out ${
+        className={`fixed top-0 right-0 h-full w-full ${widthClass} bg-white dark:bg-surface-950 border-l border-surface-200 dark:border-surface-800 z-50 transform transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         } ${className}`}
       >

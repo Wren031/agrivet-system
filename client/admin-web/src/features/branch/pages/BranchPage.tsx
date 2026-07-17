@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Store, Search, Eye, ChevronLeft, ChevronRight, CheckSquare, Square, Ban, X } from 'lucide-react'
+import { Store, Search, MoreVertical, CheckSquare, Square } from 'lucide-react'
 import { useBranches } from '../hooks/useBranches'
 import { updateBranchStatus } from '../../../data/branch/branchService'
 import { SkeletonCards } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import Pagination from '../../../components/Pagination'
 import Modal from '../../../components/Modal'
 import { useApp } from '../../../context/AppContext'
 import type { Branch, BranchStatus } from '../../../data/branch/types'
@@ -36,6 +38,9 @@ export default function BranchPage() {
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [terminateTarget, setTerminateTarget] = useState<Branch | null>(null)
+  
+  // Track which branch row menu popover is currently active
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
 
   useEffect(() => {
     setPage(1)
@@ -80,14 +85,7 @@ export default function BranchPage() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">Branches</h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            <span className="font-medium text-surface-600 dark:text-surface-300">{branches.length}</span> total branches
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Branches" subtitle={`${branches.length} total branches`} />
 
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-6">
@@ -130,12 +128,15 @@ export default function BranchPage() {
                   <th className="py-3.5 px-4">Contact</th>
                   <th className="py-3.5 px-4">Join Date</th>
                   <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-center">Action</th>
+                  <th className="py-3.5 px-4 text-right pr-6">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.map(branch => {
-                  const checked = selectedIds.has(branch.id)
+                  const checked = selectedIds.has(branch.id);
+                  const isMenuOpen = activeMenuId === branch.id;
+                  const canTerminate = branch.status === 'APPROVED' || branch.status === 'ONLINE' || branch.status === 'OFFLINE';
+
                   return (
                     <tr key={branch.id} className={`border-b border-surface-100 dark:border-surface-800 transition-colors ${checked ? 'bg-surface-50/50 dark:bg-surface-950/20' : ''}`}>
                       <td className="py-3 px-4">
@@ -153,17 +154,49 @@ export default function BranchPage() {
                           {statusConfig[branch.status]?.label}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={() => navigate(`/branches/${branch.id}`)}
-                            className="p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors" title="View Details">
-                            <Eye size={16} />
+
+                      {/* Dropdown Action Wrapper Cell */}
+                      <td className="py-3 px-4 text-right pr-6 relative">
+                        <div className="inline-block text-left">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(isMenuOpen ? null : branch.id);
+                            }}
+                            className={`p-1.5 text-surface-500 dark:text-surface-400 hover:text-surface-800 dark:hover:text-surface-200 rounded-lg transition-colors border ${isMenuOpen ? 'bg-surface-100 border-surface-300/60 dark:bg-surface-800 dark:border-surface-700' : 'bg-transparent border-transparent'}`}
+                          >
+                            <MoreVertical size={16} />
                           </button>
-                          {(branch.status === 'APPROVED' || branch.status === 'ONLINE' || branch.status === 'OFFLINE') && (
-                            <button onClick={() => setTerminateTarget(branch)}
-                              className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Terminate">
-                              <X size={16} />
-                            </button>
+
+                          {isMenuOpen && (
+                            <>
+                              {/* Click-outside backdrop trap */}
+                              <div className="fixed inset-0 z-30" onClick={() => setActiveMenuId(null)} />
+                              
+                              <div className="absolute right-6 mt-1 w-40 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg p-1 z-40 origin-top-right">
+                                <button
+                                  onClick={() => {
+                                    navigate(`/branches/${branch.id}`);
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800/60 rounded-md transition-colors"
+                                >
+                                  View Details
+                                </button>
+                                
+                                {canTerminate && (
+                                  <button
+                                    onClick={() => {
+                                      setTerminateTarget(branch);
+                                      setActiveMenuId(null);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors border-t border-surface-100 dark:border-surface-800/80 mt-1 pt-1.5"
+                                  >
+                                    Terminate
+                                  </button>
+                                )}
+                              </div>
+                            </>
                           )}
                         </div>
                       </td>
@@ -174,26 +207,11 @@ export default function BranchPage() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 text-sm">
-              <p className="text-surface-500 dark:text-surface-400">
-                Page {page} of {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                  <ChevronLeft size={14} /> Prev
-                </button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                  Next <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
 
+      {/* Modal section remains clean and un-modified */}
       <Modal open={terminateTarget !== null} onClose={() => setTerminateTarget(null)} title="Terminate Branch" size="sm">
         {terminateTarget && (
           <div className="text-center">

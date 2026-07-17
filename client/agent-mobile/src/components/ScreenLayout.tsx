@@ -1,12 +1,8 @@
 import React from "react";
-import {
-  ScrollView,
-  ScrollViewProps,
-  View,
-} from "react-native";
+import { ScrollView, ScrollViewProps, View } from "react-native";
 import { SafeAreaView, Edge } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
-import { getScreenBg, getScrollBottomPadding } from "../theme/layout";
+import { getScrollBottomPadding } from "../theme/layout";
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
@@ -28,16 +24,22 @@ export function ScreenLayout({
   contentClassName = "",
 }: ScreenLayoutProps) {
   const { isDark } = useTheme();
-  const bg = getScreenBg(isDark);
   const bottomPadding = getScrollBottomPadding(withTabBarPadding);
+
+  const container = `flex-1 ${
+    isDark ? "bg-[#0f172a]" : "bg-[#f8f9fa]"
+  } ${className}`;
 
   if (scroll) {
     return (
-      <SafeAreaView className={`flex-1 ${bg} ${className}`} edges={edges}>
+      <SafeAreaView className={container} edges={edges}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: bottomPadding, flexGrow: 1 }}
+          contentContainerStyle={{
+            paddingBottom: bottomPadding,
+            flexGrow: 1,
+          }}
           {...scrollProps}
         >
           <View className={contentClassName}>{children}</View>
@@ -47,8 +49,13 @@ export function ScreenLayout({
   }
 
   return (
-    <SafeAreaView className={`flex-1 ${bg} ${className}`} edges={edges}>
-      <View className={`flex-1 ${contentClassName}`} style={{ paddingBottom: withTabBarPadding ? bottomPadding - 16 : 0 }}>
+    <SafeAreaView className={container} edges={edges}>
+      <View
+        className={`flex-1 ${contentClassName}`}
+        style={{
+          paddingBottom: withTabBarPadding ? bottomPadding - 16 : 0,
+        }}
+      >
         {children}
       </View>
     </SafeAreaView>

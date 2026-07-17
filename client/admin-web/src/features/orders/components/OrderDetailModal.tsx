@@ -1,9 +1,9 @@
 import { X, ShoppingCart } from 'lucide-react'
 import { useApp } from '../../../context/AppContext'
-import type { Order } from '../services/types'
+import type { AgentOrder } from '../services/types'
 
 interface OrderDetailModalProps {
-  order: Order | null
+  order: AgentOrder | null
   onClose: () => void
 }
 
@@ -38,7 +38,7 @@ export default function OrderDetailModal({ order, onClose }: OrderDetailModalPro
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="p-3"><p className="text-surface-500 dark:text-surface-400 text-xs">Customer</p><p className="font-medium text-surface-800 dark:text-surface-200">{order.customerName}</p></div>
             <div className="p-3"><p className="text-surface-500 dark:text-surface-400 text-xs">Agent</p><p className="font-medium text-surface-800 dark:text-surface-200">{order.agentName}</p></div>
-            <div className="p-3"><p className="text-surface-500 dark:text-surface-400 text-xs">Date</p><p className="font-medium text-surface-800 dark:text-surface-200">{new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p></div>
+            <div className="p-3"><p className="text-surface-500 dark:text-surface-400 text-xs">Date</p><p className="font-medium text-surface-800 dark:text-surface-200">{new Date(order.orderDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p></div>
             <div className="p-3"><p className="text-surface-500 dark:text-surface-400 text-xs">Total</p><p className="font-bold text-lg text-surface-600 dark:text-surface-400">{currency}{order.totalAmount.toFixed(2)}</p></div>
           </div>
         </div>

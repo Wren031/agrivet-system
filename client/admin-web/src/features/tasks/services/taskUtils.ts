@@ -8,6 +8,8 @@ export const statusStyles: Record<string, string> = {
   Cancelled: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 }
 
+
+
 export const statusColors: Record<string, string> = {
   Pending: '#f59e0b',
   Process: '#3b82f6',

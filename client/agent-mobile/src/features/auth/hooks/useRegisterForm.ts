@@ -35,8 +35,16 @@ export function useRegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [loadingRegions, setLoadingRegions] = useState(true);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [loadingBarangays, setLoadingBarangays] = useState(false);
+
   useEffect(() => {
-    addressApi.getRegions().then(setRegions).catch(() => {});
+    setLoadingRegions(true);
+    addressApi.getRegions().then((data) => {
+      setRegions(data.map((r: any) => ({ code: r.code, name: r.name })));
+    }).catch(() => {}).finally(() => setLoadingRegions(false));
   }, []);
 
   const onRegionSelect = (code: string) => {
@@ -53,19 +61,18 @@ export function useRegisterForm() {
     const region = regions.find((r) => r.code === code);
     setRegionName(region?.name || "");
 
-    addressApi.getProvinces(code).then((p) => {
-      if (p.length > 0) {
-        setProvinces(p);
-      } else {
-        setProvinces([]);
-        addressApi.getCities(code).then((c) => {
-          setCities(c);
-          if (c.length === 1) {
-            onCitySelect(c[0].code);
-          }
-        });
-      }
-    });
+    if (code) {
+      setLoadingProvinces(true);
+      addressApi.getProvinces(code).then((p) => {
+        const mapped = p.map((prov: any) => ({ code: prov.code, name: prov.name }));
+        setProvinces(mapped);
+        if (mapped.length === 0) {
+          addressApi.getCities(code).then((c) => {
+            setCities(c.map((city: any) => ({ code: city.code, name: city.name })));
+          });
+        }
+      }).finally(() => setLoadingProvinces(false));
+    }
   };
 
   const onProvinceSelect = (code: string) => {
@@ -79,12 +86,20 @@ export function useRegisterForm() {
     const province = provinces.find((p) => p.code === code);
     setProvinceName(province?.name || "");
 
-    Promise.all([
-      addressApi.getMunicipalities(code),
-      addressApi.getComponentCities(code),
-    ]).then(([municipalities, componentCities]) => {
-      setCities([...municipalities, ...componentCities]);
-    });
+    if (code) {
+      setLoadingCities(true);
+      Promise.all([
+        addressApi.getMunicipalities(code),
+        addressApi.getComponentCities(code),
+      ]).then(([municipalities, componentCities]) => {
+        setCities(
+          [...municipalities, ...componentCities].map((c: any) => ({
+            code: c.code,
+            name: c.name,
+          }))
+        );
+      }).finally(() => setLoadingCities(false));
+    }
   };
 
   const onCitySelect = (code: string) => {
@@ -95,7 +110,12 @@ export function useRegisterForm() {
     const city = cities.find((c) => c.code === code);
     setCityName(city?.name || "");
 
-    addressApi.getBarangays(code).then(setBarangays);
+    if (code) {
+      setLoadingBarangays(true);
+      addressApi.getBarangays(code).then((data) => {
+        setBarangays(data.map((b: any) => ({ code: b.code, name: b.name })));
+      }).finally(() => setLoadingBarangays(false));
+    }
   };
 
   const onBarangaySelect = (code: string) => {
@@ -175,5 +195,6 @@ export function useRegisterForm() {
     cities, cityCode, cityName, onCitySelect,
     barangays, barangayCode, barangayName, onBarangaySelect,
     buildAddress,
+    loadingRegions, loadingProvinces, loadingCities, loadingBarangays,
   };
 }

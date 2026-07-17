@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react'
-import { Users, Search, Plus, Phone, Mail, Trash2, Edit2, User, Lock, ShieldCheck, ChevronLeft, ChevronRight, X, CheckSquare, Square } from 'lucide-react'
+import { Users, Search, Plus, Phone, Mail, MoreVertical, User, Lock, ShieldCheck, ChevronLeft, ChevronRight, X, CheckSquare, Square } from 'lucide-react'
 import { useStaff } from '../hooks/useStaff'
 import { useApp } from '../../../context/AppContext'
 import { SkeletonTable } from '../../../components/Skeleton'
+import PageHeader from '../../../components/PageHeader'
+import Pagination from '../../../components/Pagination'
 import Drawer from '../../../components/Drawer'
 import Modal from '../../../components/Modal'
 import type { AdminStaff, CreateAdminStaffData, UpdateAdminStaffData } from '../services/types'
@@ -21,6 +23,9 @@ export default function StaffPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  
+  // Active drop-down actions overlay row identifier
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
 
   const filtered = useMemo(() =>
     staff.filter(s =>
@@ -106,17 +111,12 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-white tracking-tight">Staff</h1>
-          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Manage your team members and their access to the system</p>
-        </div>
+      <PageHeader title="Staff" subtitle="Manage your team members and their access to the system">
         <button onClick={openAdd}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-lg hover:bg-surface-800 dark:hover:bg-surface-200 transition-all duration-200 text-sm font-semibold active:scale-[0.97]">
           <Plus size={16} /> Add Staff
         </button>
-      </div>
+      </PageHeader>
 
       {/* Search */}
       <div className="relative max-w-sm">
@@ -170,12 +170,14 @@ export default function StaffPage() {
                   <th className="py-3.5 px-4">Name</th>
                   <th className="py-3.5 px-4">Email</th>
                   <th className="py-3.5 px-4">Contact</th>
-                  <th className="py-3.5 px-4 text-center">Actions</th>
+                  <th className="py-3.5 px-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.map(member => {
-                  const checked = selectedIds.has(member.id)
+                  const checked = selectedIds.has(member.id);
+                  const isMenuOpen = activeMenuId === member.id;
+
                   return (
                     <tr key={member.id} className={`border-b border-surface-100 dark:border-surface-800 transition-colors ${checked ? 'bg-surface-100/50 dark:bg-surface-800/50' : ''}`}>
                       <td className="py-3 px-4">
@@ -189,16 +191,46 @@ export default function StaffPage() {
                       </td>
                       <td className="py-3 px-4 text-surface-600 dark:text-surface-300 truncate max-w-[200px]">{member.email}</td>
                       <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{member.contactNumber}</td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={() => openEdit(member)}
-                            className="p-1.5 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors" title="Edit staff">
-                            <Edit2 size={16} />
+                      
+                      {/* Context Menu Action Call Container */}
+                      <td className="py-3 px-4 text-right pr-6 relative">
+                        <div className="inline-block text-left">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(isMenuOpen ? null : member.id);
+                            }}
+                            className={`p-1.5 text-surface-500 dark:text-surface-400 hover:text-surface-800 dark:hover:text-surface-200 rounded-lg transition-colors border ${isMenuOpen ? 'bg-surface-100 border-surface-300/60 dark:bg-surface-800 dark:border-surface-700' : 'bg-transparent border-transparent'}`}
+                          >
+                            <MoreVertical size={16} />
                           </button>
-                          <button onClick={() => setDeleteId(member.id)}
-                            className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors" title="Delete staff">
-                            <Trash2 size={16} />
-                          </button>
+
+                          {isMenuOpen && (
+                            <>
+                              <div className="fixed inset-0 z-30" onClick={() => setActiveMenuId(null)} />
+                              
+                              <div className="absolute right-6 mt-1 w-36 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg p-1 z-40 origin-top-right">
+                                <button
+                                  onClick={() => {
+                                    openEdit(member);
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800/60 rounded-md transition-colors"
+                                >
+                                  Edit Staff
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setDeleteId(member.id);
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors border-t border-surface-100 dark:border-surface-800/80 mt-1 pt-1.5"
+                                >
+                                  Delete Staff
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -235,17 +267,13 @@ export default function StaffPage() {
         </>
       )}
 
-      {/* Add / Edit Drawer */}
-      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editing ? 'Edit Staff' : 'Add Staff'} className="max-w-[350px]">
-        <div className="space-y-7">
+      {/* Add / Edit Drawer Panel using size 450 config key */}
+      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editing ? 'Edit Staff' : 'Add Staff'} size="650">
+        <div className="space-y-7"> 
           {/* Form Header */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
-              {editing ? (
-                <Edit2 size={20} className="text-surface-600 dark:text-surface-300" />
-              ) : (
-                <User size={20} className="text-surface-600 dark:text-surface-300" />
-              )}
+              <User size={20} className="text-surface-600 dark:text-surface-300" />
             </div>
             <div>
               <p className="text-sm font-bold text-surface-800 dark:text-surface-200">{editing ? 'Update Staff' : 'New Staff Member'}</p>
@@ -257,15 +285,7 @@ export default function StaffPage() {
 
           {/* Personal Information */}
           <div>
-            <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-surface-100 dark:border-surface-800">
-              <div className="w-7 h-7 rounded-lg bg-surface-100 dark:bg-surface-700 flex items-center justify-center">
-                <User size={14} className="text-surface-500 dark:text-surface-400" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-surface-800 dark:text-surface-200">Personal Information</p>
-                <p className="text-xs text-surface-500 dark:text-surface-400">Basic details about the staff member</p>
-              </div>
-            </div>
+
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-1.5">Full Name</label>
@@ -356,7 +376,7 @@ export default function StaffPage() {
       <Modal open={deleteId !== null} onClose={() => setDeleteId(null)} title="Delete Staff" size="sm">
         <div className="text-center">
           <div className="w-14 h-14 rounded-2xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mx-auto mb-4">
-            <Trash2 size={24} className="text-surface-500" />
+            <Users size={24} className="text-surface-500" />
           </div>
           <h3 className="text-base font-semibold text-surface-800 dark:text-surface-100 mb-2">Confirm Deletion</h3>
           <p className="text-sm text-surface-500 dark:text-surface-400 mb-6 leading-relaxed">
