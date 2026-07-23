@@ -23,7 +23,6 @@ export class AuthService {
         role: user.role,
       },
       {
-        secret: process.env.JWT_ACCESS_SECRET,
         expiresIn: '15m',
       },
     );
@@ -35,7 +34,6 @@ export class AuthService {
         sub: user.id,
       },
       {
-        secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: '7d',
       },
     );
@@ -109,14 +107,17 @@ export class AuthService {
       include: { adminProfile: true },
     });
 
-    const payload = {
-      sub: user.id,
+    const accessToken = this.generateAccessToken({
+      id: user.id,
       email: user.adminProfile.email,
       role: user.role,
-    };
+    });
+
+    const refreshToken = this.generateRefreshToken({ id: user.id });
 
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.adminProfile.email,
@@ -372,9 +373,7 @@ export class AuthService {
 
   async refreshAccessToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      });
+      const payload = this.jwtService.verify(refreshToken);
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },

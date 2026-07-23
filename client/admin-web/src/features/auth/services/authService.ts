@@ -1,4 +1,4 @@
-import { apiFetch, setToken } from '../../../config/apiClient'
+import { apiFetch } from '../../../config/apiClient'
 
 export interface AuthUser {
   id: string

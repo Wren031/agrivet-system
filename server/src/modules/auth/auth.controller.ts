@@ -8,7 +8,31 @@ import { CreateAgentDto } from '../agents/dto/create-agent.dto';
 import { CreateBranchAuthDto } from './dto/create-branch-auth.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+
+const ACCESS_TOKEN_COOKIE = 'access_token';
+const REFRESH_TOKEN_COOKIE = 'refresh_token';
+
+const COOKIE_OPTIONS_ACCESS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict' as const,
+  path: '/api',
+  maxAge: 15 * 60 * 1000,
+};
+
+const COOKIE_OPTIONS_REFRESH = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict' as const,
+  path: '/api/auth/refresh',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
+  res.cookie(ACCESS_TOKEN_COOKIE, accessToken, COOKIE_OPTIONS_ACCESS);
+  res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_OPTIONS_REFRESH);
+}
 
 @Controller('auth')
 export class AuthController {
@@ -23,20 +47,26 @@ export class AuthController {
 
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('admin/login')
-  async adminLogin(@Body() dto: LoginDto) {
-    return this.authService.adminLogin(dto);
+  async adminLogin(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.adminLogin(dto);
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    return result;
   }
 
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('admin/register')
-  async adminRegister(@Body() dto: CreateUserDto) {
-    return this.authService.adminRegister(dto);
+  async adminRegister(@Body() dto: CreateUserDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.adminRegister(dto);
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    return result;
   }
 
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('agent/login')
-  async agentLogin(@Body() dto: LoginDto) {
-    return this.authService.agentLogin(dto);
+  async agentLogin(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.agentLogin(dto);
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    return result;
   }
 
   @Throttle({ default: { limit: 3, ttl: 60000 } })
@@ -47,8 +77,10 @@ export class AuthController {
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('branches/login')
-  async branchLogin(@Body() dto: LoginDto) {
-    return this.authService.branchLogin(dto);
+  async branchLogin(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.branchLogin(dto);
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    return result;
   }
 
   @Throttle({ default: { limit: 3, ttl: 60000 } })
@@ -64,11 +96,14 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Body('refreshToken') refreshToken: string) {
+  async refresh(@Body('refreshToken') bodyToken: string, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = bodyToken || req.cookies?.refresh_token;
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
     }
-    return this.authService.refreshAccessToken(refreshToken);
+    const result = await this.authService.refreshAccessToken(refreshToken);
+    res.cookie(ACCESS_TOKEN_COOKIE, result.accessToken, COOKIE_OPTIONS_ACCESS);
+    return result;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -76,8 +111,8 @@ export class AuthController {
   async logout(@CurrentUser() user: { id: string }, @Res() res: Response) {
     await this.authService.logout(user.id);
 
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    res.clearCookie(ACCESS_TOKEN_COOKIE);
+    res.clearCookie(REFRESH_TOKEN_COOKIE);
 
     return res.send({ message: 'Logout successful' });
   }

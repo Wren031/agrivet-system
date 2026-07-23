@@ -365,7 +365,6 @@ export default function AgentsPage() {
                                     Reject
                                   </button>
                                 )}
-
                               </div>
                             )}
                           </td>

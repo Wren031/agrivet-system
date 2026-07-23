@@ -39,7 +39,7 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem(REMEMBER_KEY)
       }
-      signIn(result.accessToken, result.refreshToken, result.user)
+      signIn(result.user)
       addNotification({ message: `Welcome back, ${result.user.name}!`, type: 'success' })
       navigate('/')
     } catch (err: any) {

@@ -7,6 +7,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import * as fs from 'fs';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const configService = new ConfigService();
@@ -24,6 +25,8 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix('api');
+
+  app.use(cookieParser());
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
