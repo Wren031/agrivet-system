@@ -1,14 +1,5 @@
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL } from "../../../config/api.config";
-
-async function getSecureToken(): Promise<string | null> {
-  try {
-    if (await SecureStore.isAvailableAsync()) {
-      return await SecureStore.getItemAsync("auth_token");
-    }
-  } catch {}
-  return null;
-}
 
 export const authApi = {
 
@@ -44,6 +35,7 @@ export const authApi = {
     };
   },
 
+  // ---------------- REGISTER ----------------
   async register(
     storeName: string,
     fullName: string,
@@ -92,6 +84,7 @@ export const authApi = {
     };
   },
 
+  // ---------------- UPLOAD ID IMAGE ----------------
   async uploadIdImage(imageUri: string) {
     const formData = new FormData();
 
@@ -131,6 +124,7 @@ export const authApi = {
     return data.url as string;
   },
 
+  // ---------------- FORGOT PASSWORD ----------------
   async forgotPassword(email: string) {
     const response = await fetch(
       `${API_BASE_URL}/auth/branches/forgot-password`,
@@ -160,11 +154,14 @@ export const authApi = {
     return data;
   },
 
+  // ---------------- CHANGE PASSWORD ----------------
   async changePassword(
     currentPassword: string,
     newPassword: string
   ) {
-    const token = await getSecureToken();
+    const token = await AsyncStorage.getItem(
+      "@agrivet_token"
+    );
 
     const response = await fetch(
       `${API_BASE_URL}/auth/agent/change-password`,

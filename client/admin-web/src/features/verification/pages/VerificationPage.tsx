@@ -75,8 +75,8 @@ export default function VerificationPage() {
 
       <TabNav
         tabs={[
-          { key: 'agents', label: 'Agents', icon: <Users size={16} />, badge: pendingAgents.length },
-          { key: 'branches', label: 'Branches', icon: <Store size={16} />, badge: inactiveBranches.length },
+          { key: 'agents', label: 'Agents', badge: pendingAgents.length },
+          { key: 'branches', label: 'Branches', badge: inactiveBranches.length },
         ]}
         activeKey={activeTab}
         onTabChange={key => { setActiveTab(key as VerificationTab); setSearch(''); setPage(1) }}

@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Store, Mail, Phone, MapPin, Calendar, CheckCircle, XCircle, Clock, AlertTriangle, Ban, BadgeCheck, UserX } from 'lucide-react'
+import { Store, BadgeCheck, CheckCircle, XCircle, Clock, AlertTriangle, Ban } from 'lucide-react'
 import { fetchBranch, updateBranchStatus } from '../../../data/branch/branchService'
 import type { Branch, BranchStatus } from '../../../data/branch/types'
 import { useApp } from '../../../context/AppContext'
-import Modal from '../../../components/Modal'
-
-const statusStyles: Record<string, string> = {
-  PENDING: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400',
-  APPROVED: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
-  REJECTED: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
-  TERMINATED: 'bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-400',
-  ONLINE: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
-  OFFLINE: 'bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400',
-}
+import {
+  DetailLayout,
+  DetailHeader,
+  DetailSection,
+  DetailField,
+  DetailGrid,
+  DetailImage,
+  DetailEmptyState,
+} from '../../../components/detail'
 
 const statusIcons: Record<string, typeof Clock> = {
   PENDING: Clock,
@@ -24,6 +23,15 @@ const statusIcons: Record<string, typeof Clock> = {
   OFFLINE: AlertTriangle,
 }
 
+const statusStyles: Record<string, string> = {
+  PENDING: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400',
+  APPROVED: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
+  REJECTED: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+  TERMINATED: 'bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-400',
+  ONLINE: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400',
+  OFFLINE: 'bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400',
+}
+
 export default function BranchDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -32,7 +40,6 @@ export default function BranchDetailPage() {
   const [branch, setBranch] = useState<Branch | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
-  const [showImage, setShowImage] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -58,190 +65,113 @@ export default function BranchDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-16 text-surface-400">Loading...</div>
+    return (
+      <DetailLayout loading backTo="/branches" backLabel="Back to Branches" />
+    )
   }
 
   if (!branch) {
     return (
-      <div className="text-center py-16 text-surface-500 dark:text-surface-400">
-        <p className="text-lg font-medium">Branch not found</p>
-        <button onClick={() => navigate('/branches')}
-          className="mt-4 text-sm text-surface-600 dark:text-surface-400 hover:underline">
-          Back to Branches
-        </button>
-      </div>
+      <DetailLayout backTo="/branches" backLabel="Back to Branches">
+        <DetailEmptyState
+          
+          title="Branch Not Found"
+          message="The branch record you are looking for could not be found."
+          backLabel="Back to Branches"
+          onBack={() => navigate('/branches')}
+        />
+      </DetailLayout>
     )
   }
 
   const StatusIcon = statusIcons[branch.status] || Clock
 
   return (
-    <div>
-      <button onClick={() => navigate('/branches')}
-        className="flex items-center gap-1.5 text-sm text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 mb-6 transition-colors">
-        <ArrowLeft size={16} /> Back to Branches
-      </button>
+    <DetailLayout backTo="/branches" backLabel="Back to Branches">
+      <DetailHeader
+        title={branch.fullName}
+        subtitle={branch.storeBranch}
+        avatar={branch.fullName.charAt(0)}
+      >
+        <div className="relative">
+          <select
+            value={branch.status}
+            onChange={e => handleStatusChange(e.target.value as BranchStatus)}
+            disabled={updating === 'status'}
+            className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
+          >
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="TERMINATED">Terminated</option>
+          </select>
+        </div>
+        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium ${statusStyles[branch.status]}`}>
+          <StatusIcon size={12} />
+          {branch.status.charAt(0) + branch.status.slice(1).toLowerCase()}
+        </span>
+      </DetailHeader>
 
-      <div>
-        {/* Header */}
-        <div className="px-4 sm:px-6 py-5 border-b border-surface-100 dark:border-surface-700">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 font-bold text-lg shrink-0 uppercase">
-                {branch.fullName.charAt(0)}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <DetailSection title="Verification" >
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-surface-50 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
+                <BadgeCheck size={16} className="text-surface-500 dark:text-surface-400" />
               </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-white">{branch.fullName}</h1>
-                <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">{branch.storeBranch}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Verification ID</p>
+                <p className="text-sm font-mono font-semibold text-surface-600 dark:text-surface-400 bg-surface-50 dark:bg-surface-950/30 px-3 py-1.5 rounded-lg inline-block">{branch.verificationId}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="relative">
-                <select
-                  value={branch.status}
-                  onChange={e => handleStatusChange(e.target.value as BranchStatus)}
-                  disabled={updating === 'status'}
-                  className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
-                >
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
-                  <option value="TERMINATED">Terminated</option>
-                </select>
-              </div>
-              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium ${statusStyles[branch.status]}`}>
-                <StatusIcon size={12} />
+          </DetailSection>
+
+          <DetailSection title="Contact Information" >
+            <DetailGrid cols={2}>
+              <DetailField  label="Email Address" value={branch.email} />
+              <DetailField label="Contact Number" value={branch.contactNumber} />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection title="Address" >
+            <DetailField  label="Registered Address" value={branch.address} />
+          </DetailSection>
+
+          {branch.verificationImage && (
+            <DetailSection title="Verification Image" >
+              <DetailImage
+                src={branch.verificationImage}
+                alt="Verification"
+                label="Verification Image"
+              />
+            </DetailSection>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          <DetailSection title="Store Information" >
+            <div className="text-center py-2">
+              <Store size={36} className="mx-auto mb-3 text-surface-300 dark:text-surface-600" />
+              <p className="text-lg font-bold text-surface-900 dark:text-white">{branch.storeBranch}</p>
+              <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Store Name</p>
+            </div>
+          </DetailSection>
+
+          <DetailSection title="Account Details" >
+            <div className="flex items-center justify-between py-2.5">
+              <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Status</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${statusStyles[branch.status]}`}>
+                <StatusIcon size={10} />
                 {branch.status.charAt(0) + branch.status.slice(1).toLowerCase()}
               </span>
             </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="px-4 sm:px-6 py-5">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Details */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Verification ID */}
-              <div>
-                <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Verification</h3>
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                    <BadgeCheck size={16} className="text-surface-600 dark:text-surface-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Verification ID</p>
-                    <p className="text-sm font-mono font-semibold text-surface-600 dark:text-surface-400 bg-surface-50 dark:bg-surface-950/30 px-3 py-1.5 rounded-lg inline-block">{branch.verificationId}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div>
-                <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Contact Information</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                      <Mail size={16} className="text-surface-600 dark:text-surface-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Email Address</p>
-                      <p className="text-sm font-medium text-surface-800 dark:text-surface-200 break-all">{branch.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                      <Phone size={16} className="text-surface-600 dark:text-surface-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Contact Number</p>
-                      <p className="text-sm font-medium text-surface-800 dark:text-surface-200">{branch.contactNumber}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Address</h3>
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                    <MapPin size={16} className="text-surface-600 dark:text-surface-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Registered Address</p>
-                    <p className="text-sm font-medium text-surface-800 dark:text-surface-200">{branch.address || 'No address on record'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verification Image */}
-              {branch.verificationImage && (
-                <div>
-                  <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Verification Image</h3>
-                  <div className="rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900/50 p-2 max-w-md cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setShowImage(true)}>
-                    <img
-                      src={branch.verificationImage}
-                      alt="Verification"
-                      className="w-full max-h-48 object-contain rounded-lg"
-                      onError={e => {
-                        (e.target as HTMLImageElement).style.display = 'none'
-                        ;(e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden')
-                      }}
-                    />
-                    <p className="hidden text-xs text-surface-500 dark:text-surface-400 py-12 text-center font-medium">Failed to load verification image</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column - Info */}
-            <div className="space-y-6">
-              {/* Store Info */}
-              <div>
-                <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Store Information</h3>
-                <div className="p-6 text-center">
-                  <Store size={32} className="mx-auto mb-3 text-surface-400" />
-                  <p className="text-lg font-bold text-surface-900 dark:text-white">{branch.storeBranch}</p>
-                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">Store Name</p>
-                </div>
-              </div>
-
-              {/* Account Details */}
-              <div>
-                <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Account Details</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2.5 px-4">
-                    <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Status</span>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${statusStyles[branch.status]}`}>
-                      <StatusIcon size={10} />
-                      {branch.status.charAt(0) + branch.status.slice(1).toLowerCase()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2.5 px-4">
-                    <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Registered</span>
-                    <span className="text-xs font-semibold text-surface-700 dark:text-surface-300">
-                      {branch.date ? new Date(branch.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <DetailField inline label="Registered" value={
+              branch.date
+                ? new Date(branch.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                : null
+            } />
+          </DetailSection>
         </div>
       </div>
-      <Modal open={showImage} onClose={() => setShowImage(false)} title="Verification Image" size="lg">
-        <div className="flex items-center justify-center">
-          <img
-            src={branch.verificationImage}
-            alt="Verification"
-            className="max-w-full max-h-[70vh] object-contain rounded-lg"
-            onError={e => {
-              (e.target as HTMLImageElement).style.display = 'none'
-            }}
-          />
-        </div>
-      </Modal>
-    </div>
+    </DetailLayout>
   )
 }

@@ -56,7 +56,7 @@ export default function TasksPage() {
       <TabNav
         tabs={[
           { key: 'agent', label: 'Agent Task', badge: counts.pendingTasks },
-          { key: 'branch', label: 'Branches Task', icon: <Store size={16} /> },
+          { key: 'branch', label: 'Branches Task'},
         ]}
         activeKey={tab}
         onTabChange={key => setTab(key as Tab)}

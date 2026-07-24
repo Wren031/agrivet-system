@@ -1,14 +1,5 @@
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL } from "../../../config/api.config";
-
-async function getSecureToken(): Promise<string | null> {
-  try {
-    if (await SecureStore.isAvailableAsync()) {
-      return await SecureStore.getItemAsync("auth_token");
-    }
-  } catch {}
-  return null;
-}
 
 export const authApi = {
   
@@ -52,7 +43,7 @@ export const authApi = {
   },
 
   async changePassword(currentPassword: string, newPassword: string) {
-    const token = await getSecureToken();
+    const token = await AsyncStorage.getItem("@agrivet_token");
     const response = await fetch(`${API_BASE_URL}/auth/agent/change-password`, {
       method: "PATCH",
       headers: {

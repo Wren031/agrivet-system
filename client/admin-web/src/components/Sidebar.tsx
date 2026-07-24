@@ -48,7 +48,7 @@ const navigationConfig: NavGroup[] = [
     label: 'Transactions',
     items: [
       { to: '/customers', label: 'Customers', icon: UserCircle },
-      { to: '/tasks', label: 'My Task', icon: ClipboardCheck, badge: 'pendingTasks' },
+      { to: '/tasks', label: 'Order Punch', icon: ClipboardCheck, badge: 'pendingTasks' },
       { to: '/verification', label: 'Verification', icon: ShieldCheck },
     ]
   },
@@ -98,19 +98,19 @@ export default function Sidebar() {
     <>
     <aside
       className={`
-        fixed lg:sticky top-0 left-0 h-screen w-64 bg-white dark:bg-surface-950 text-surface-600 dark:text-surface-400 flex flex-col shrink-0
-        border-r border-surface-200 dark:border-surface-800 select-none
+        fixed lg:sticky top-0 left-0 h-screen w-64 bg-surface-900 dark:bg-black text-surface-300 dark:text-surface-400 flex flex-col shrink-0
+        border-r border-surface-700 dark:border-surface-900 select-none
         z-50 lg:z-[41] transition-transform duration-200 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}
     >
       {/* Brand Header */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-surface-100 dark:border-surface-800 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-surface-900 dark:bg-white flex items-center justify-center shrink-0">
-          <Package size={16} className="text-white dark:text-surface-900" />
+      <div className="flex items-center gap-3 px-5 h-16 border-b border-surface-700 dark:border-surface-900 shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-white dark:bg-surface-800 flex items-center justify-center shrink-0">
+          <Package size={16} className="text-surface-900 dark:text-white" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-sm font-semibold text-surface-900 dark:text-white truncate leading-tight">
+          <h1 className="text-sm font-semibold text-white dark:text-white truncate leading-tight">
             {settings?.storeName || 'Enterprise OS'}
           </h1>
           <p className="text-[11px] text-surface-400 dark:text-surface-500 font-medium">Inventory System</p>
@@ -127,14 +127,14 @@ export default function Sidebar() {
               {/* Dropdown Category Trigger Button */}
               <button
                 onClick={() => toggleGroup(group.id)}
-                className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-md hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors group"
+                className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded-md hover:bg-white/5 transition-colors group"
               >
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-surface-400 dark:text-surface-500 group-hover:text-surface-600 dark:group-hover:text-surface-300">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-surface-400 group-hover:text-surface-200">
                   {group.label}
                 </span>
                 <ChevronDown
                   size={14}
-                  className={`text-surface-400 dark:text-surface-500 transition-transform duration-200 ${
+                  className={`text-surface-400 transition-transform duration-200 ${
                     isOpen ? 'transform rotate-0' : 'transform -rotate-90'
                   }`}
                 />
@@ -154,11 +154,11 @@ export default function Sidebar() {
                       key={link.to}
                       to={link.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `
+                        className={({ isActive }) => `
                         group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 w-full text-sm
                         ${isActive
-                          ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white font-medium'
-                          : 'text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800/50 hover:text-surface-700 dark:hover:text-surface-200'
+                          ? 'bg-white/10 text-white font-medium'
+                          : 'text-surface-400 hover:bg-white/5 hover:text-white'
                         }
                       `}
                     >
@@ -168,13 +168,13 @@ export default function Sidebar() {
                             size={18}
                             className={`shrink-0 transition-colors duration-150 ${
                               isActive
-                                ? 'text-surface-700 dark:text-surface-200'
-                                : 'text-surface-400 dark:text-surface-500 group-hover:text-surface-500 dark:group-hover:text-surface-300'
+                                ? 'text-white'
+                                : 'text-surface-400 group-hover:text-white'
                             }`}
                           />
                           <span className="truncate">{link.label}</span>
                           {count > 0 && (
-                            <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-[10px] font-bold leading-none">
+                            <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-white/20 text-white text-[10px] font-bold leading-none">
                               {count > 99 ? '99+' : count}
                             </span>
                           )}
@@ -190,23 +190,23 @@ export default function Sidebar() {
       </nav>
 
       {/* Profile */}
-      <div className="shrink-0 border-t border-surface-100 dark:border-surface-800">
+      <div className="shrink-0 border-t border-surface-700 dark:border-surface-900">
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0">
-              <UserCircle size={14} className="text-surface-400 dark:text-surface-500" />
+            <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+              <UserCircle size={14} className="text-surface-400" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-surface-800 dark:text-surface-200 truncate leading-tight">
+              <p className="text-sm font-medium text-white truncate leading-tight">
                 Administrator
               </p>
-              <p className="text-[11px] text-surface-400 dark:text-surface-500">System Admin</p>
+              <p className="text-[11px] text-surface-400">System Admin</p>
             </div>
           </div>
           <button
             onClick={() => setShowLogoutModal(true)}
             aria-label="Log Out"
-            className="p-1.5 rounded-lg text-surface-400 dark:text-surface-500 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-all duration-150"
+            className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-white/10 transition-all duration-150"
           >
             <LogOut size={15} />
           </button>

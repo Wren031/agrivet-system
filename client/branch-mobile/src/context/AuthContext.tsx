@@ -9,7 +9,6 @@ import React, {
 } from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from "expo-secure-store";
 import { User } from "../types";
 import { authApi } from "../features/auth/services/auth.service";
 
@@ -43,48 +42,7 @@ interface AuthContextType  {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const USER_STORAGE_KEY = "@agrivet_user";
-const LEGACY_TOKEN_KEY = "@agrivet_token";
-const SECURE_TOKEN_KEY = "auth_token";
-const SECURE_MIGRATED_KEY = "@agrivet_token_migrated";
-
-async function getSecureToken(): Promise<string | null> {
-  try {
-    if (await SecureStore.isAvailableAsync()) {
-      return await SecureStore.getItemAsync(SECURE_TOKEN_KEY);
-    }
-  } catch {}
-  return null;
-}
-
-async function setSecureToken(token: string): Promise<void> {
-  try {
-    if (await SecureStore.isAvailableAsync()) {
-      await SecureStore.setItemAsync(SECURE_TOKEN_KEY, token);
-    }
-  } catch {}
-}
-
-async function deleteSecureToken(): Promise<void> {
-  try {
-    if (await SecureStore.isAvailableAsync()) {
-      await SecureStore.deleteItemAsync(SECURE_TOKEN_KEY);
-    }
-  } catch {}
-}
-
-async function migrateLegacyToken(): Promise<void> {
-  try {
-    const migrated = await AsyncStorage.getItem(SECURE_MIGRATED_KEY);
-    if (migrated) return;
-
-    const legacy = await AsyncStorage.getItem(LEGACY_TOKEN_KEY);
-    if (legacy && (await SecureStore.isAvailableAsync())) {
-      await SecureStore.setItemAsync(SECURE_TOKEN_KEY, legacy);
-    }
-    await AsyncStorage.removeItem(LEGACY_TOKEN_KEY);
-    await AsyncStorage.setItem(SECURE_MIGRATED_KEY, "true");
-  } catch {}
-}
+const TOKEN_STORAGE_KEY = "@agrivet_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -94,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        await migrateLegacyToken();
         const saved = await AsyncStorage.getItem(USER_STORAGE_KEY);
         if (saved) {
           setUser(JSON.parse(saved));
@@ -143,7 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(mappedUser);
         setPendingEmail(null);
 
-        await setSecureToken(token ?? "");
+        await AsyncStorage.setItem(
+          TOKEN_STORAGE_KEY,
+          token ?? ""
+        );
 
         if (rememberMe) {
           await AsyncStorage.setItem(
@@ -179,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  // ---------------- REGISTER ----------------
   const register = useCallback(
     async (
       storeName: string,
@@ -200,9 +161,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           address
         );
 
+        // Pending approval
         if (apiUser.status === "PENDING") {
           setPendingEmail(apiUser.email);
-          await setSecureToken(token ?? "");
+
+          await AsyncStorage.setItem(
+            TOKEN_STORAGE_KEY,
+            token ?? ""
+          );
+
           return {
             success: true,
             message: "pending_approval",
@@ -240,7 +207,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           JSON.stringify(mappedUser)
         );
 
-        await setSecureToken(token ?? "");
+        await AsyncStorage.setItem(
+          TOKEN_STORAGE_KEY,
+          token ?? ""
+        );
 
         return {
           success: true,
@@ -257,14 +227,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  // ---------------- LOGOUT ----------------
   const logout = useCallback(async () => {
     setUser(null);
     setPendingEmail(null);
 
     await AsyncStorage.removeItem(USER_STORAGE_KEY);
-    await deleteSecureToken();
+    await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
   }, []);
 
+  // ---------------- UPDATE USER ----------------
   const updateUser = useCallback(
     async (data: Partial<User>) => {
       setUser((prev) => {
@@ -288,6 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  // ---------------- CONTEXT VALUE ----------------
   const value = useMemo(
     () => ({
       user,
@@ -309,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ---------------- HOOK ----------------
 export function useAuth() {
   const context = useContext(AuthContext);
 

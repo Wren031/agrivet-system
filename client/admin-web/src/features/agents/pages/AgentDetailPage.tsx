@@ -1,11 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Mail, Phone, Calendar, Loader2, Trash2, ChevronDown, Building2, MapPin, Navigation, Users, MapPinned, BadgeCheck, XCircle, Clock, UserCheck, UserX, Printer } from 'lucide-react'
+import { Loader2, Trash2, Building2, MapPin, Navigation, Users, Printer } from 'lucide-react'
 import { fetchAgent, fetchAgentCustomers, updateStatus, deleteAgent } from '../services/agentService'
 import { apiFetch } from '../../../config/apiClient'
 import type { Agent, AgentStatus } from '../services/types'
 import Modal from '../../../components/Modal'
 import { useApp } from '../../../context/AppContext'
+import {
+  DetailLayout,
+  DetailHeader,
+  DetailSection,
+  DetailField,
+  DetailGrid,
+  DetailImage,
+  DetailEmptyState,
+} from '../../../components/detail'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -37,6 +46,81 @@ interface AgentLocationData {
   longitude: number
   address: string | null
   updatedAt: string
+}
+
+function LocationTabContent({ location, agentName }: { location: AgentLocationData | null; agentName?: string }) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<L.Map | null>(null)
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstance.current || !location) return
+
+    const map = L.map(mapRef.current, {
+      center: [location.latitude, location.longitude],
+      zoom: 15,
+      zoomControl: true,
+    })
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map)
+
+    const address = location.address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+    const marker = L.marker([location.latitude, location.longitude]).addTo(map)
+    marker.bindPopup(`
+      <div style="font-family: system-ui, sans-serif; text-align: center; min-width: 200px;">
+        <p style="font-weight: 700; margin: 0 0 4px; font-size: 14px; color: #1e293b;">${agentName || 'Agent'}</p>
+        <p style="margin: 0; font-size: 12px; color: #64748b;">${address}</p>
+        <p style="margin: 6px 0 0; font-size: 11px; color: #94a3b8;">Updated: ${new Date(location.updatedAt).toLocaleString()}</p>
+      </div>
+    `).openPopup()
+
+    mapInstance.current = map
+    return () => { map.remove(); mapInstance.current = null }
+  }, [location])
+
+  if (!location) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-surface-500 dark:text-surface-400">
+        <MapPin size={48} className="mb-4 opacity-40" />
+        <p className="text-sm font-semibold">No Location Data</p>
+        <p className="text-xs mt-1">This agent has not reported any location yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Navigation size={16} className="text-surface-500" />
+          <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300">Real-time Location</h3>
+        </div>
+        <span className="text-[11px] text-surface-500 dark:text-surface-400 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          {new Date(location.updatedAt).toLocaleString()}
+        </span>
+      </div>
+      <div className="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+        <div ref={mapRef} className="w-full h-[500px]" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Latitude</p>
+          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5">{location.latitude.toFixed(4)}</p>
+        </div>
+        <div>
+          <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Longitude</p>
+          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5">{location.longitude.toFixed(4)}</p>
+        </div>
+        <div>
+          <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Address</p>
+          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5 truncate">{location.address || 'Not resolved'}</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function AgentDetailPage() {
@@ -103,291 +187,140 @@ export default function AgentDetailPage() {
     }
   }
 
-  function LocationTab() {
-    const mapRef = useRef<HTMLDivElement>(null)
-    const mapInstance = useRef<L.Map | null>(null)
-
-    useEffect(() => {
-      if (!mapRef.current || mapInstance.current || !location) return
-
-      const map = L.map(mapRef.current, {
-        center: [location.latitude, location.longitude],
-        zoom: 15,
-        zoomControl: true,
-      })
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(map)
-
-      const address = location.address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-      const marker = L.marker([location.latitude, location.longitude]).addTo(map)
-      marker.bindPopup(`
-        <div style="font-family: system-ui, sans-serif; text-align: center; min-width: 200px;">
-          <p style="font-weight: 700; margin: 0 0 4px; font-size: 14px; color: #1e293b;">${agent?.fullName || 'Agent'}</p>
-          <p style="margin: 0; font-size: 12px; color: #64748b;">${address}</p>
-          <p style="margin: 6px 0 0; font-size: 11px; color: #94a3b8;">Updated: ${new Date(location.updatedAt).toLocaleString()}</p>
-        </div>
-      `).openPopup()
-
-      mapInstance.current = map
-      return () => { map.remove(); mapInstance.current = null }
-    }, [location])
-
-    if (!location) {
-      return (
-        <div className="p-4 sm:p-6">
-          <div className="flex flex-col items-center justify-center py-20 text-surface-500 dark:text-surface-400">
-            <MapPin size={48} className="mb-4 opacity-40" />
-            <p className="text-sm font-semibold">No Location Data</p>
-            <p className="text-xs mt-1">This agent has not reported any location yet.</p>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <Navigation size={16} className="text-surface-500" />
-            <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300">Real-time Location</h3>
-          </div>
-          <span className="text-[11px] text-surface-500 dark:text-surface-400 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {new Date(location.updatedAt).toLocaleString()}
-          </span>
-        </div>
-        <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
-          <div ref={mapRef} className="w-full h-[500px]" />
-        </div>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Latitude</p>
-            <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5">{location.latitude.toFixed(4)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Longitude</p>
-            <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5">{location.longitude.toFixed(4)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Address</p>
-            <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5 truncate">{location.address || 'Not resolved'}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   if (loading) {
-    return <div className="text-center py-16 text-surface-400">Loading...</div>
+    return <DetailLayout loading backTo="/agents" backLabel="Back to Agents" />
   }
 
   if (!agent) {
     return (
-      <div className="text-center py-16 text-surface-500 dark:text-surface-400">
-        <p className="text-lg font-medium">Agent not found</p>
-        <button onClick={() => navigate('/agents')}
-          className="mt-4 text-sm text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 underline transition-colors">
-          Back to Agents
-        </button>
-      </div>
+      <DetailLayout backTo="/agents" backLabel="Back to Agents">
+        <DetailEmptyState
+          
+          title="Agent Not Found"
+          message="The agent record you are looking for could not be found."
+          backLabel="Back to Agents"
+          onBack={() => navigate('/agents')}
+        />
+      </DetailLayout>
     )
   }
 
   return (
-    <div>
-      <button onClick={() => navigate('/agents')}
-        className="flex items-center gap-1.5 text-sm text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 mb-6 transition-colors">
-        <ArrowLeft size={16} /> Back to Agents
-      </button>
-
-      <div>
-        {/* Header */}
-        <div className="px-4 sm:px-6 py-5 border-b border-surface-100 dark:border-surface-700">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 font-bold text-lg shrink-0 uppercase">
-                {agent.fullName.charAt(0)}
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-surface-900 dark:text-white">{agent.fullName}</h1>
-                <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">Agent Profile</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="relative">
-                <select
-                  value={agent.status}
-                  onChange={e => handleStatusChange(e.target.value as AgentStatus)}
-                  disabled={updating === 'status'}
-                  className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
-                >
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
-                  <option value="TERMINATED">Terminated</option>
-                </select>
-                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              </div>
-              <span className={`px-3 py-1 rounded-md text-xs font-medium ${statusStyles[agent.status]}`}>{agent.status}</span>
-            </div>
-          </div>
+    <DetailLayout backTo="/agents" backLabel="Back to Agents">
+      <DetailHeader
+        title={agent.fullName}
+        subtitle="Agent Profile"
+        avatar={agent.fullName.charAt(0)}
+      >
+        <div className="relative">
+          <select
+            value={agent.status}
+            onChange={e => handleStatusChange(e.target.value as AgentStatus)}
+            disabled={updating === 'status'}
+            className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
+          >
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="TERMINATED">Terminated</option>
+          </select>
         </div>
+        <span className={`px-3 py-1 rounded-md text-xs font-medium ${statusStyles[agent.status]}`}>{agent.status}</span>
+        <button onClick={() => window.print()}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg bg-white dark:bg-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+          <Printer size={14} /> Print
+        </button>
+        <button onClick={() => setShowDelete(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-white dark:bg-surface-800 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+          <Trash2 size={14} /> Delete
+        </button>
+      </DetailHeader>
 
-        {/* Tab Navigation */}
-        <div className="border-b border-surface-200 dark:border-surface-700">
-          <nav className="flex gap-6 px-4 sm:px-6">
-            {tabs.map(tab => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 pb-3 pt-4 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.key
-                      ? 'border-surface-800 text-surface-800 dark:border-white dark:text-white'
-                      : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
-                  }`}
-                >
-                  <Icon size={16} />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'profile' && (
-          <div className="px-4 sm:px-6 py-5">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Contact & Personal Info */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Contact Information */}
-                <div>
-                  <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Contact Information</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                        <Mail size={16} className="text-surface-600 dark:text-surface-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Email Address</p>
-                        <p className="text-sm font-medium text-surface-800 dark:text-surface-200 break-all">{agent.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                        <Phone size={16} className="text-surface-600 dark:text-surface-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Contact Number</p>
-                        <p className="text-sm font-medium text-surface-800 dark:text-surface-200">{agent.contactNumber}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div>
-                  <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Address Information</h3>
-                  {agent.address ? (
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 mt-0.5">
-                        <MapPin size={16} className="text-surface-600 dark:text-surface-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-surface-500 dark:text-surface-400 mb-0.5">Registered Address</p>
-                        <p className="text-sm font-medium text-surface-800 dark:text-surface-200">{agent.address}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-surface-500 dark:text-surface-400">No address on record</p>
-                  )}
-                </div>
-
-                {/* ID Verification */}
-                {agent.idVerificationUrl && (
-                  <div>
-                    <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">ID Verification</h3>
-                    <div className="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden bg-surface-50 dark:bg-surface-900/50 max-w-md">
-                      <img
-                        src={agent.idVerificationUrl}
-                        alt="ID Verification"
-                        className="w-full max-h-48 object-contain"
-                        onError={e => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden')
-                        }}
-                      />
-                      <p className="hidden text-xs text-surface-500 dark:text-surface-400 py-12 text-center font-medium">Failed to load verification document</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column - Stats & Info */}
-              <div className="space-y-6">
-                {/* Customer Count */}
-                <div>
-                  <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Statistics</h3>
-                  <div className="text-center">
-                    <Users size={32} className="mx-auto mb-3 text-surface-400" />
-                    {customerCount === null ? (
-                      <Loader2 size={28} className="mx-auto animate-spin text-surface-400" />
-                    ) : (
-                      <>
-                        <p className="text-3xl font-bold text-surface-900 dark:text-white">{customerCount}</p>
-                        <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-                          {customerCount === 1 ? 'Customer' : 'Customers'}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Account Info */}
-                <div>
-                  <h3 className="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-4">Account Details</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between py-2.5">
-                      <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Status</span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${statusStyles[agent.status]}`}>{agent.status}</span>
-                    </div>
-                    {agent.createdAt && (
-                      <div className="flex items-center justify-between py-2.5">
-                        <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Registered</span>
-                        <span className="text-xs font-semibold text-surface-700 dark:text-surface-300">
-                          {new Date(agent.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between py-2.5">
-                      <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Agent ID</span>
-                      <span className="text-xs font-mono font-semibold text-surface-700 dark:text-surface-300">{agent.id.slice(0, 12)}...</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <button onClick={() => window.print()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-                    <Printer size={14} /> Print
-                  </button>
-
-                  <button onClick={() => setShowDelete(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-                    <Trash2 size={14} /> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'location' && <LocationTab />}
+      {/* Tab Navigation */}
+      <div className="border-b border-surface-200 dark:border-surface-700 mb-6">
+        <nav className="flex gap-6">
+          {tabs.map(tab => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 pb-3 pt-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? 'border-surface-800 text-surface-800 dark:border-white dark:text-white'
+                    : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300'
+                }`}
+              >
+                <Icon size={16} />
+                {tab.label}
+              </button>
+            )
+          })}
+        </nav>
       </div>
+
+      {activeTab === 'profile' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <DetailSection title="Contact Information" >
+              <DetailGrid cols={2}>
+                <DetailField  label="Email Address" value={agent.email} />
+                <DetailField label="Contact Number" value={agent.contactNumber} />
+              </DetailGrid>
+            </DetailSection>
+
+            <DetailSection title="Address Information" >
+              <DetailField  label="Registered Address" value={agent.address} />
+            </DetailSection>
+
+            {agent.idVerificationUrl && (
+              <DetailSection title="ID Verification" >
+                <DetailImage
+                  src={agent.idVerificationUrl}
+                  alt="ID Verification"
+                  label="ID Verification"
+                />
+              </DetailSection>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <DetailSection title="Statistics" >
+              {customerCount === null ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 size={24} className="animate-spin text-surface-400" />
+                </div>
+              ) : (
+                <div className="text-center py-2">
+                  <Users size={36} className="mx-auto mb-3 text-surface-300 dark:text-surface-600" />
+                  <p className="text-3xl font-bold text-surface-900 dark:text-white">{customerCount}</p>
+                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
+                    {customerCount === 1 ? 'Customer' : 'Customers'}
+                  </p>
+                </div>
+              )}
+            </DetailSection>
+
+            <DetailSection title="Account Details" >
+              <div className="flex items-center justify-between py-2.5">
+                <span className="text-xs font-medium text-surface-500 dark:text-surface-400">Status</span>
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${statusStyles[agent.status]}`}>{agent.status}</span>
+              </div>
+              <DetailField inline label="Registered" value={
+                agent.createdAt
+                  ? new Date(agent.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                  : null
+              } />
+              <DetailField inline label="Agent ID" value={`${agent.id.slice(0, 12)}...`} mono />
+            </DetailSection>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'location' && (
+        <DetailSection padding={false}>
+          <LocationTabContent location={location} agentName={agent.fullName} />
+        </DetailSection>
+      )}
 
       <Modal open={showDelete} onClose={() => setShowDelete(false)} title="Delete Agent" size="sm">
         <div className="text-center">
@@ -402,6 +335,6 @@ export default function AgentDetailPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </DetailLayout>
   )
 }
