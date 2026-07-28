@@ -38,6 +38,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
+function createAgentMapIcon(status: string) {
+  const isOnline = status === 'ONLINE'
+  const bgColor = isOnline ? '#10b981' : '#f43f5e'
+  const glow = isOnline ? 'rgba(16, 185, 129, 0.5)' : 'rgba(244, 63, 94, 0.5)'
+  return L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:26px;height:26px;">
+      <div style="position:absolute;inset:0;background:${glow};border-radius:50%;filter:blur(4px);"></div>
+      <div style="position:relative;width:22px;height:22px;margin:2px;background:${bgColor};border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;text-transform:uppercase;box-shadow:0 2px 6px rgba(0,0,0,0.4);">${isOnline ? 'O' : 'F'}</div>
+    </div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  })
+}
+
 function AgentMap({ locations }: { locations: AgentWithLocation[] }) {
   const navigate = useNavigate()
   const mapRef = useRef<HTMLDivElement>(null)
@@ -60,39 +75,55 @@ function AgentMap({ locations }: { locations: AgentWithLocation[] }) {
       zoomControl: true,
     })
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics',
       maxZoom: 19,
+    }).addTo(map)
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      pane: 'overlayPane',
     }).addTo(map)
 
     markers.forEach(({ agent, lat, lng }) => {
       const address = agent.location.address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
       const lastUpdate = new Date(agent.location.updatedAt).toLocaleString()
-      const marker = L.marker([lat, lng]).addTo(map)
+      const isOnline = agent.status === 'ONLINE'
+      const statusColor = isOnline ? '#10b981' : '#f43f5e'
+      const statusBg = isOnline ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)'
+      const statusBorder = isOnline ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'
+      const statusText = isOnline ? '#34d399' : '#fb7185'
+      const avatarGrad = isOnline
+        ? 'linear-gradient(135deg,#10b981,#059669)'
+        : 'linear-gradient(135deg,#f43f5e,#e11d48)'
+      const marker = L.marker([lat, lng], { icon: createAgentMapIcon(agent.status) }).addTo(map)
       marker.bindPopup(`
-        <div style="font-family: system-ui, sans-serif; min-width: 260px;">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #4f46e5; text-transform: uppercase; flex-shrink: 0;">
+        <div style="font-family:'Inter',system-ui,-apple-system,sans-serif;min-width:240px;padding:2px;color:#e2e8f0;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,0.15);">
+            <div style="width:36px;height:36px;border-radius:10px;background:${avatarGrad};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;flex-shrink:0;box-shadow:0 2px 8px ${statusColor}55;">
               ${agent.fullName.charAt(0)}
             </div>
-            <div>
-              <p style="font-weight: 700; margin: 0; font-size: 14px; color: #1e293b;">${agent.fullName}</p>
-              <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">${agent.email}</p>
+            <div style="min-width:0;flex:1;">
+              <p style="font-weight:600;margin:0;font-size:13px;color:#f1f5f9;line-height:1.2;">${agent.fullName}</p>
+              <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;word-break:break-all;">${agent.email}</p>
             </div>
           </div>
-          <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-            <span style="padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #eef2ff; color: #4f46e5;">${agent.status}</span>
-            <span style="padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #f1f5f9; color: #64748b;">${agent.contactNumber}</span>
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:${statusBg};color:${statusText};text-transform:uppercase;letter-spacing:0.5px;border:1px solid ${statusBorder};">
+              <span style="width:5px;height:5px;border-radius:50%;background:${statusColor};display:inline-block;box-shadow:0 0 6px ${statusColor};"></span>
+              ${agent.status}
+            </span>
+            <span style="padding:2px 8px;border-radius:999px;font-size:9px;font-weight:600;background:rgba(148,163,184,0.1);color:#cbd5e1;border:1px solid rgba(148,163,184,0.2);">${agent.contactNumber}</span>
           </div>
-          <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; padding: 8px; background: #f8fafc; border-radius: 8px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 1px; flex-shrink: 0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div>
-              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #1e293b;">Current Location</p>
-              <p style="margin: 2px 0 0; font-size: 11px; color: #64748b; line-height: 1.4;">${address}</p>
-              <p style="margin: 4px 0 0; font-size: 10px; color: #94a3b8;">Updated: ${lastUpdate}</p>
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;padding:8px 10px;background:rgba(15,23,42,0.5);border-radius:8px;border:1px solid rgba(148,163,184,0.1);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div style="min-width:0;flex:1;">
+              <p style="margin:0;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Current Location</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#cbd5e1;font-weight:500;line-height:1.3;word-break:break-word;">${address}</p>
+              <p style="margin:4px 0 0;font-size:10px;color:#64748b;">Updated: ${lastUpdate}</p>
             </div>
           </div>
-          <a href="/agents/${agent.id}" style="display: block; text-align: center; padding: 7px 16px; background: #4f46e5; color: white; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600;">View Profile</a>
+          <a href="/agents/${agent.id}" style="display:block;text-align:center;padding:8px 16px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;border:1px solid rgba(99,102,241,0.5);">View Profile</a>
         </div>
       `)
     })
@@ -112,15 +143,26 @@ function AgentMap({ locations }: { locations: AgentWithLocation[] }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-2">
-          <Navigation size={16} className="text-surface-600" />
-          <h3 className="text-sm font-bold text-surface-700 dark:text-surface-300">Agent Locations</h3>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-sm">
+            <Navigation size={14} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-surface-800 dark:text-surface-100">Agent Locations</h3>
+            <p className="text-[10px] font-medium text-surface-400 dark:text-surface-500">Satellite tracking across the fleet</p>
+          </div>
         </div>
-        <span className="text-xs text-surface-500 dark:text-surface-400">{locations.length} agent{locations.length !== 1 ? 's' : ''} on map</span>
+        <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md rounded-md px-2.5 py-1 border border-indigo-500/20 text-[10px] font-medium text-slate-200">
+          <span className="relative flex items-center">
+            <span className="absolute inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping-soft opacity-75" />
+            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          </span>
+          <span>{locations.length} agent{locations.length !== 1 ? 's' : ''} on map</span>
+        </div>
       </div>
-      <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden">
-        <div ref={mapRef} className="w-full h-[600px]" />
+      <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden bg-slate-950">
+        <div ref={mapRef} className="satellite-map w-full h-[600px]" />
       </div>
     </div>
   )

@@ -56,7 +56,7 @@ export default function DetailLayout({
         <p className="text-sm text-surface-500 dark:text-surface-400 max-w-sm mb-6">{error}</p>
         <button
           onClick={handleBack}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-200 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-750 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-200 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg hover:border-surface-300 dark:hover:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-700 transition-all"
         >
           <ArrowLeft size={16} /> {backLabel}
         </button>
@@ -74,7 +74,7 @@ export default function DetailLayout({
         <p className="text-sm text-surface-500 dark:text-surface-400 max-w-sm mb-6">{notFoundMessage}</p>
         <button
           onClick={handleBack}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-200 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-700 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-750 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-200 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg hover:border-surface-300 dark:hover:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-700 transition-all"
         >
           <ArrowLeft size={16} /> {backLabel}
         </button>

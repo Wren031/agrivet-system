@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './api.config'
 
 const REQUEST_MARKER = '_retry'
-const MAX_RETRIES = 1
+
 
 async function tryRefreshViaCookie(): Promise<boolean> {
   try {

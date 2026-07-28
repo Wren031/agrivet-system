@@ -41,6 +41,6 @@ export async function logout(): Promise<void> {
   try {
     await apiFetch('/auth/logout', { method: 'POST' })
   } catch {
-    // ignore logout errors
+
   }
 }

@@ -19,7 +19,7 @@ export default function BarChart({ data, height = 200, currency }: BarChartProps
             <div className="w-full rounded-lg bg-gradient-to-t from-indigo-500 to-indigo-400 dark:from-indigo-500 dark:to-indigo-400/80 transition-all duration-500 hover:from-indigo-600 hover:to-indigo-500 relative group cursor-pointer"
               style={{ height: `${pct}%`, minHeight: pct > 0 ? 4 : 0 }}
             >
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 dark:bg-slate-700 text-white text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 dark:bg-slate-700 text-white text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10">
                 {currency && `${currency}`}{item.value.toLocaleString()}
               </div>
             </div>

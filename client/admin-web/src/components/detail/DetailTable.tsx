@@ -24,9 +24,9 @@ export default function DetailTable({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-surface-50 dark:bg-surface-800/50 text-left text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">
+            <tr className="bg-surface-50 dark:bg-surface-800/50 text-left border-b border-surface-200 dark:border-surface-700">
               {headers.map((header, i) => (
-                <th key={i} className="px-5 py-3.5">{header}</th>
+                <th key={i} className="px-5 py-3 text-[11px] font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-[0.06em] whitespace-nowrap">{header}</th>
               ))}
             </tr>
           </thead>

@@ -46,26 +46,26 @@ export default function Navbar() {
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 dark:text-surface-500 transition-colors duration-150"
+          className="lg:hidden p-2 rounded-lg border border-transparent hover:border-surface-200 dark:hover:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-900 text-surface-500 dark:text-surface-400 transition-all duration-150"
           aria-label="Toggle menu"
         >
-          <Menu size={20} />
+          <Menu size={19} />
         </button>
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold text-surface-900 dark:text-white tracking-tight truncate">
-            Welcome, {user?.name || 'Admin'}
+          <h2 className="text-[14px] font-semibold text-surface-900 dark:text-white tracking-tight truncate">
+            Welcome back, {user?.name || 'Admin'}
           </h2>
-          <p className="text-[12px] text-surface-400 dark:text-surface-500 mt-0.5">
+          <p className="text-[11px] text-surface-400 dark:text-surface-500 mt-0.5 tabular-nums">
             {formattedDateTime}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Dark Mode Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className="p-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 dark:text-surface-500 transition-colors duration-150"
+          className="p-2 rounded-lg border border-transparent hover:border-surface-200 dark:hover:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-900 text-surface-500 dark:text-surface-400 transition-all duration-150"
           title={darkMode ? 'Disable dark mode' : 'Enable dark mode'}
         >
           {darkMode ? <Sun size={16} /> : <Moon size={16} />}
@@ -75,11 +75,15 @@ export default function Navbar() {
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 dark:text-surface-500 transition-colors duration-150"
+            className={`relative p-2 rounded-lg border transition-all duration-150 ${
+              showNotifications
+                ? 'border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900 text-surface-700 dark:text-surface-200'
+                : 'border-transparent hover:border-surface-200 dark:hover:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-900 text-surface-500 dark:text-surface-400'
+            }`}
           >
             <Bell size={16} />
             {notifications.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-[9px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-surface-950 tabular-nums">
                 {notifications.length}
               </span>
             )}
@@ -88,24 +92,30 @@ export default function Navbar() {
           {showNotifications && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-surface-950 rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden z-50 animate-scale-in">
-                <div className="px-4 py-3 border-b border-surface-100 dark:border-surface-800">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">Notifications</p>
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden z-50 animate-scale-in">
+                <div className="px-4 py-3 border-b border-surface-100 dark:border-surface-800 flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-surface-500 dark:text-surface-400">Notifications</p>
+                  {notifications.length > 0 && (
+                    <span className="text-[10px] font-semibold text-surface-400 dark:text-surface-500 tabular-nums">{notifications.length} new</span>
+                  )}
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-surface-400 dark:text-surface-500 text-sm">No notifications</div>
+                    <div className="p-8 text-center">
+                      <Bell size={20} className="mx-auto mb-2 text-surface-300 dark:text-surface-600" />
+                      <p className="text-sm text-surface-400 dark:text-surface-500">No notifications</p>
+                    </div>
                   ) : (
                     notifications.map(n => (
-                      <div key={n.id} className="flex items-start gap-3 px-4 py-3.5 hover:bg-surface-50 dark:hover:bg-surface-800/40 border-b border-surface-100 dark:border-surface-800/40 last:border-0 transition-colors">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${
+                      <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 border-b border-surface-100 dark:border-surface-800/60 last:border-0 transition-colors">
+                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
                           n.type === 'success' ? 'bg-success' :
                           n.type === 'warning' ? 'bg-warning' :
-                          n.type === 'error' ? 'bg-error' : 'bg-surface-300'
+                          n.type === 'error' ? 'bg-error' : 'bg-info'
                         }`} />
                         <p className="text-xs text-surface-600 dark:text-surface-300 flex-1 leading-relaxed">{n.message}</p>
-                        <button onClick={() => removeNotification(n.id)} className="text-surface-300 dark:text-surface-600 hover:text-surface-500 dark:hover:text-surface-400 shrink-0 transition-colors">
-                          <X size={14} />
+                        <button onClick={() => removeNotification(n.id)} className="p-0.5 rounded text-surface-300 dark:text-surface-600 hover:text-surface-500 dark:hover:text-surface-400 shrink-0 transition-colors">
+                          <X size={13} />
                         </button>
                       </div>
                     ))
@@ -120,9 +130,13 @@ export default function Navbar() {
         <div className="relative">
           <button
             onClick={() => setShowProfile(!showProfile)}
-            className="flex items-center pl-3 border-l border-surface-200 dark:border-surface-800 py-1"
+            className="flex items-center ml-1.5 pl-3 border-l border-surface-200 dark:border-surface-800 py-1"
           >
-            <div className="w-8 h-8 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-300 text-xs font-semibold transition-colors duration-150">
+            <div className={`w-8 h-8 rounded-lg border flex items-center justify-center text-xs font-semibold transition-all duration-150 ${
+              showProfile
+                ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white'
+                : 'bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600'
+            }`}>
               {user?.name?.charAt(0).toUpperCase() || 'A'}
             </div>
           </button>
@@ -130,15 +144,15 @@ export default function Navbar() {
           {showProfile && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-surface-950 rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden z-50 animate-scale-in">
+              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden z-50 animate-scale-in">
                 <div className="px-4 py-3 border-b border-surface-100 dark:border-surface-800">
-                  <p className="text-[11px] font-medium text-surface-400 dark:text-surface-500 uppercase tracking-wider">Account</p>
+                  <p className="text-[10px] font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-[0.08em]">Signed in as</p>
                   <p className="text-sm font-semibold text-surface-800 dark:text-surface-200 truncate mt-0.5">{user?.name || 'Admin'}</p>
                 </div>
                 <div className="p-1.5">
                   <button
                     onClick={() => { setShowProfile(false); setShowLogoutModal(true) }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
                   >
                     <LogOut size={14} />
                     Sign out

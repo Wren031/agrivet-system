@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+﻿import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users, UserCircle, ShoppingCart, Landmark, Clock, TrendingUp,
   ChevronDown, Navigation, MapPin, RefreshCw, Search, Package,
-  Store, Eye, Activity,
+  Store, Eye,
 } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -32,11 +32,15 @@ L.Icon.Default.mergeOptions({
 function createAgentIcon(status: string) {
   const isOnline = status === 'ONLINE'
   const bgColor = isOnline ? '#10b981' : '#f43f5e'
+  const glow = isOnline ? 'rgba(16, 185, 129, 0.5)' : 'rgba(244, 63, 94, 0.5)'
   return L.divIcon({
     className: '',
-    html: `<div style="width:22px;height:22px;background:${bgColor};border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;text-transform:uppercase;">${isOnline ? 'O' : 'F'}</div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
+    html: `<div style="position:relative;width:26px;height:26px;">
+      <div style="position:absolute;inset:0;background:${glow};border-radius:50%;filter:blur(4px);"></div>
+      <div style="position:relative;width:22px;height:22px;margin:2px;background:${bgColor};border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;text-transform:uppercase;">${isOnline ? 'O' : 'F'}</div>
+    </div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
   })
 }
 
@@ -58,7 +62,7 @@ function StatCard({ title, value, icon, color, bgColor }: StatCardProps) {
         </div>
       </div>
       <div className="mt-2">
-        <h3 className="text-xl font-bold text-surface-900 dark:text-white tracking-tight leading-none">
+        <h3 className="text-xl font-bold text-surface-900 dark:text-white tracking-tight leading-none tabular-nums">
           {value}
         </h3>
       </div>
@@ -110,9 +114,14 @@ function MapSection() {
       attributionControl: false,
     })
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics',
       maxZoom: 19,
+    }).addTo(map)
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      pane: 'overlayPane',
     }).addTo(map)
 
     L.control.attribution({ position: 'bottomleft' }).addTo(map)
@@ -140,40 +149,38 @@ function MapSection() {
       const isOnline = agent.status === 'ONLINE'
       const statusLabel = isOnline ? 'Online' : 'Offline'
       const statusDot = isOnline ? '#10b981' : '#f43f5e'
-      const statusBg = isOnline ? '#ecfdf5' : '#fff1f2'
-      const statusText = isOnline ? '#065f46' : '#9f1239'
       const lastUpdate = new Date(agent.location.updatedAt).toLocaleString()
       const locationAddress = agent.location.address
       const addressDisplay = locationAddress && locationAddress.trim() ? locationAddress : null
 
       const marker = L.marker([latitude, longitude], { icon: createAgentIcon(agent.status) }).addTo(map)
       marker.bindPopup(`
-        <div style="font-family:system-ui,-apple-system,sans-serif;min-width:220px;padding:2px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
-            <div style="width:32px;height:32px;border-radius:6px;background:${isOnline ? '#e6f4ea' : '#fce8e6'};display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:${isOnline ? '#137333' : '#c5221f'};text-transform:uppercase;flex-shrink:0;">
+        <div style="font-family:'Inter',system-ui,-apple-system,sans-serif;min-width:220px;padding:2px;color:#e2e8f0;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,0.15);">
+            <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,${isOnline ? '#10b981' : '#f43f5e'},${isOnline ? '#059669' : '#e11d48'});display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;flex-shrink:0;">
               ${agent.fullName.charAt(0)}
             </div>
-            <div>
-              <p style="font-weight:600;margin:0;font-size:13px;color:#1e293b;line-height:1.2;">${agent.fullName}</p>
-              <p style="margin:1px 0 0;font-size:10px;color:#64748b;word-break:break-all;">${agent.email}</p>
+            <div style="min-width:0;flex:1;">
+              <p style="font-weight:600;margin:0;font-size:13px;color:#f1f5f9;line-height:1.2;">${agent.fullName}</p>
+              <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;word-break:break-all;">${agent.email}</p>
             </div>
           </div>
-          <div style="display:flex;align-items:center;margin-bottom:6px;">
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:${statusBg};color:${statusText};text-transform:uppercase;">
-              <span style="width:4px;height:4px;border-radius:50%;background:${statusDot};display:inline-block;"></span>
+          <div style="display:flex;align-items:center;margin-bottom:8px;">
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:${isOnline ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)'};color:${isOnline ? '#34d399' : '#fb7185'};text-transform:uppercase;letter-spacing:0.5px;border:1px solid ${isOnline ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'};">
+              <span style="width:5px;height:5px;border-radius:50%;background:${statusDot};display:inline-block;"></span>
               ${statusLabel}
             </span>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;padding:6px 8px;background:#f8fafc;border-radius:4px;border:1px solid #f1f5f9;">
+          <div style="display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:rgba(15,23,42,0.5);border-radius:6px;border:1px solid rgba(148,163,184,0.1);">
             ${addressDisplay ? `
             <div>
-              <p style="margin:0;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;">Location</p>
-              <p style="margin:0;font-size:10px;color:#334155;font-weight:500;">${addressDisplay}</p>
+              <p style="margin:0;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Location</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#cbd5e1;font-weight:500;line-height:1.3;">${addressDisplay}</p>
             </div>
             ` : ''}
             <div>
-              <p style="margin:0;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;">Last Update</p>
-              <p style="margin:0;font-size:10px;color:#334155;font-weight:500;">${lastUpdate}</p>
+              <p style="margin:0;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Last Update</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#cbd5e1;font-weight:500;">${lastUpdate}</p>
             </div>
           </div>
         </div>
@@ -187,27 +194,38 @@ function MapSection() {
   }, [agentsWithLoc])
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden">
+    <div className="relative w-full h-full rounded-xl overflow-hidden bg-slate-950">
       {latestUpdate && (
-        <div className="absolute top-2 left-2 z-[999] flex items-center gap-1 bg-white/95 dark:bg-surface-900/95 backdrop-blur-md rounded-md px-2 py-1 border border-surface-200 dark:border-surface-800 text-[10px] font-medium text-surface-500 dark:text-surface-400">
-          <RefreshCw size={10} className="shrink-0 text-indigo-500" />
+        <div className="absolute top-2 left-2 z-[999] flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md rounded-md px-2.5 py-1 border border-indigo-500/20 text-[10px] font-medium text-slate-200">
+          <span className="relative flex items-center">
+            <span className="absolute inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping-soft opacity-75" />
+            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          </span>
+          <RefreshCw size={10} className="shrink-0 text-indigo-300" />
           <span>Sync: {latestUpdate}</span>
         </div>
       )}
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapRef} className="satellite-map w-full h-full" />
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-surface-50 dark:bg-surface-950 z-[1000]">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm z-[1000]">
           <div className="text-center">
-            <Navigation size={24} className="mx-auto mb-1 text-indigo-500 dark:text-indigo-400 animate-pulse" />
-            <p className="text-[11px] font-semibold text-surface-500 dark:text-surface-400 tracking-wide">Loading Telemetry...</p>
+            <div className="relative inline-flex mb-3">
+              <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-xl animate-pulse" />
+              <Navigation size={28} className="relative mx-auto text-indigo-300 animate-pulse" />
+            </div>
+            <p className="text-[11px] font-semibold text-slate-300 tracking-wide">Acquiring Satellite Telemetry...</p>
+            <p className="text-[9px] text-slate-500 mt-1 tracking-wider uppercase">Establishing Uplink</p>
           </div>
         </div>
       )}
       {!loading && agentsWithLoc.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-surface-50 dark:bg-surface-950 z-[1000]">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm z-[1000]">
           <div className="text-center">
-            <MapPin size={24} className="mx-auto mb-1 text-surface-400 dark:text-surface-600" />
-            <p className="text-[11px] font-semibold text-surface-500 dark:text-surface-400 tracking-wide">No Spatial Data</p>
+            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center">
+              <MapPin size={20} className="text-slate-500" />
+            </div>
+            <p className="text-[11px] font-semibold text-slate-300 tracking-wide">No Spatial Data</p>
+            <p className="text-[9px] text-slate-500 mt-1 tracking-wider uppercase">No Agents in Sector</p>
           </div>
         </div>
       )}
@@ -306,7 +324,7 @@ function GlobalSearchBar() {
         )}
       </div>
       {focused && query && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl shadow-lg z-50 overflow-hidden animate-fade-in-up">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl z-50 overflow-hidden animate-fade-in-up">
           <div className="px-4 py-2 border-b border-surface-100 dark:border-surface-800">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">
               {results.length} result{results.length !== 1 ? 's' : ''} found
@@ -333,7 +351,7 @@ function GlobalSearchBar() {
         </div>
       )}
       {focused && query && results.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl shadow-lg z-50 overflow-hidden animate-fade-in-up">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl z-50 overflow-hidden animate-fade-in-up">
           <div className="px-4 py-6 text-center">
             <Search size={24} className="mx-auto mb-2 text-surface-300 dark:text-surface-600" />
             <p className="text-sm text-surface-500 dark:text-surface-400">No results found for "{query}"</p>
@@ -343,142 +361,6 @@ function GlobalSearchBar() {
     </div>
   )
 }
-
-function FulfillmentMonitor() {
-  const { agentOrders: orders } = useOrders()
-  const { agents } = useAgents()
-  const { settings } = useApp()
-  const currency = settings.currencySymbol
-
-  const recentOrders = useMemo(() =>
-    [...orders].sort((a, b) => b.orderDate.localeCompare(a.orderDate)).slice(0, 5),
-    [orders]
-  )
-
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    orders.forEach(o => {
-      counts[o.status] = (counts[o.status] || 0) + 1
-    })
-    return counts
-  }, [orders])
-
-  const activeOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Process').length
-  const completedOrders = orders.filter(o => o.status === 'Completed').length
-  const pendingFulfillment = orders.filter(o => o.status === 'Pending').length
-  const onlineAgents = agents.filter(a => a.status === 'ONLINE').length
-
-  const statusColorMap: Record<string, string> = {
-    Pending: 'bg-amber-500',
-    Process: 'bg-blue-500',
-    Approved: 'bg-emerald-500',
-    Completed: 'bg-surface-400',
-    Cancelled: 'bg-rose-500',
-  }
-
-  return (
-    <div className="border border-surface-200 dark:border-surface-800 rounded-xl bg-white dark:bg-surface-900 overflow-hidden">
-      <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-surface-100 dark:border-surface-800">
-        <div className="flex items-center gap-3">
-
-          <div>
-            <h2 className="text-xs font-bold text-surface-800 dark:text-surface-100 tracking-tight">Fulfillment Realtime Monitor</h2>
-            <p className="text-[10px] font-medium text-surface-400 dark:text-surface-500">Real-time fulfillment tracking</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-surface-400 dark:text-surface-500">
-          <RefreshCw size={12} className="animate-spin-slow" />
-          <span>Auto-refreshing</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-surface-100 dark:divide-surface-800">
-        <div className="px-5 py-4">
-          <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-1">Active Orders</p>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-surface-900 dark:text-white">{activeOrders}</span>
-            <span className="text-[10px] text-surface-400 dark:text-surface-500">in progress</span>
-          </div>
-        </div>
-        <div className="px-5 py-4">
-          <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-1">Pending Actions</p>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{pendingFulfillment}</span>
-            <span className="text-[10px] text-surface-400 dark:text-surface-500">need attention</span>
-          </div>
-        </div>
-        <div className="px-5 py-4">
-          <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-1">Online Agents</p>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{onlineAgents}</span>
-            <span className="text-[10px] text-surface-400 dark:text-surface-500">available</span>
-          </div>
-        </div>
-        <div className="px-5 py-4">
-          <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-wider mb-1">Completed</p>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-surface-900 dark:text-white">{completedOrders}</span>
-            <span className="text-[10px] text-surface-400 dark:text-surface-500">total</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-5 py-3 border-t border-surface-100 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/30">
-        <div className="flex items-center gap-4">
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <div key={status} className="flex items-center gap-1.5">
-              <div className={`w-2 h-2 rounded-full ${statusColorMap[status] || 'bg-surface-400'}`} />
-              <span className="text-[10px] font-medium text-surface-500 dark:text-surface-400">{status}: {count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr className="text-xs font-bold text-surface-400 dark:text-surface-500 bg-surface-50/50 dark:bg-surface-800/30">
-              <th className="px-5 py-2.5 text-[9px] uppercase tracking-wider">Reference ID</th>
-              <th className="px-5 py-2.5 text-[9px] uppercase tracking-wider">Customer</th>
-              <th className="px-5 py-2.5 text-[9px] uppercase tracking-wider">Agent</th>
-              <th className="px-5 py-2.5 text-[9px] uppercase tracking-wider">Timestamp</th>
-              <th className="px-5 py-2.5 text-[9px] uppercase tracking-wider">Gross Value</th>
-              <th className="px-5 py-2.5 text-[9px] uppercase tracking-wider">State Matrix</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
-            {recentOrders.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-surface-400 dark:text-surface-500">
-                  <ShoppingCart size={28} className="mx-auto mb-1 text-surface-300 dark:text-surface-700" />
-                  <p className="text-xs font-semibold">Zero transactions captured</p>
-                </td>
-              </tr>
-            ) : (
-              recentOrders.map(order => (
-                <tr key={order.id} className="hover:bg-surface-50/40 dark:hover:bg-surface-800/20 transition-colors">
-                  <td className="px-5 py-3 font-mono text-xs font-semibold text-surface-600 dark:text-surface-300">{order.id}</td>
-                  <td className="px-5 py-3 text-xs font-semibold text-surface-800 dark:text-surface-200">{order.customerName}</td>
-                  <td className="px-5 py-3 text-xs font-medium text-surface-500 dark:text-surface-400">{order.agentName}</td>
-                  <td className="px-5 py-3 text-xs font-medium text-surface-400 dark:text-surface-500">
-                    {new Date(order.orderDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </td>
-                  <td className="px-5 py-3 text-xs text-surface-900 dark:text-surface-100 font-bold">
-                    {currency}{order.totalAmount.toFixed(2)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <StatusBadge status={order.status} />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
 function OrderManagementSection() {
   const { agentOrders, branchOrders } = useOrders()
   const { settings, counts } = useApp()
@@ -550,7 +432,7 @@ function OrderManagementSection() {
                         <div className="font-medium text-surface-800 dark:text-surface-200">{order.customerName}</div>
                         <div className="text-xs text-surface-500 dark:text-surface-400">{order.customerPhone}</div>
                       </td>
-                      <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{order.agentName || '—'}</td>
+                      <td className="py-3 px-4 text-surface-600 dark:text-surface-300">{order.agentName || 'â€”'}</td>
                       <td className="py-3 px-4 text-surface-500 dark:text-surface-400">
                         {new Date(order.orderDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
@@ -662,7 +544,70 @@ export default function DashboardPage() {
   }, [orders, selectedYear])
 
   const yearTotal = yearlySales.reduce((s, m) => s + m.value, 0)
-  const maxMonthValue = Math.max(...yearlySales.map(m => m.value), 1)
+
+  const [hoveredMonth, setHoveredMonth] = useState<number | null>(null)
+
+  const formatCompact = (v: number) => {
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+    if (v >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`
+    return v.toFixed(0)
+  }
+
+  // Chart geometry
+  const W = 800
+  const H = 220
+  const PAD = { top: 16, right: 16, bottom: 28, left: 56 }
+  const innerW = W - PAD.left - PAD.right
+  const innerH = H - PAD.top - PAD.bottom
+
+  const niceMax = (v: number) => {
+    if (v <= 0) return 100
+    const mag = Math.pow(10, Math.floor(Math.log10(v)))
+    const norm = v / mag
+    const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10
+    return nice * mag
+  }
+  const yMax = niceMax(Math.max(...yearlySales.map(m => m.value), 0))
+  const ySteps = 4
+
+  const xFor = (i: number) => PAD.left + (yearlySales.length === 1 ? innerW / 2 : (i / (yearlySales.length - 1)) * innerW)
+  const yFor = (v: number) => PAD.top + innerH - (v / yMax) * innerH
+
+  function buildSmoothPath(values: number[]): string {
+    if (values.length === 0) return ''
+    const pts = values.map((v, i) => ({ x: xFor(i), y: yFor(v) }))
+    if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`
+    let d = `M ${pts[0].x} ${pts[0].y}`
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i]
+      const p1 = pts[i]
+      const p2 = pts[i + 1]
+      const p3 = pts[i + 2] || p2
+      const tension = 0.35
+      const cp1x = p1.x + (p2.x - p0.x) * tension
+      const cp1y = p1.y + (p2.y - p0.y) * tension
+      const cp2x = p2.x - (p3.x - p1.x) * tension
+      const cp2y = p2.y - (p3.y - p1.y) * tension
+      d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`
+    }
+    return d
+  }
+
+  const linePath = buildSmoothPath(yearlySales.map(m => m.value))
+  const lastX = xFor(yearlySales.length - 1)
+  const firstX = xFor(0)
+  const baseY = PAD.top + innerH
+  const areaPath = linePath ? `${linePath} L ${lastX} ${baseY} L ${firstX} ${baseY} Z` : ''
+
+  const yAxisTicks = Array.from({ length: ySteps + 1 }, (_, i) => (yMax / ySteps) * i)
+
+  const handleChartMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (yearlySales.length === 0) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * W
+    const idx = Math.round(((x - PAD.left) / innerW) * (yearlySales.length - 1))
+    setHoveredMonth(Math.max(0, Math.min(yearlySales.length - 1, idx)))
+  }
 
   const statsValues = [agents.length, customers.length, branches.length, pendingOrders]
 
@@ -673,7 +618,7 @@ export default function DashboardPage() {
       <GlobalSearchBar />
 
       <div className="grid grid-cols-1 lg:grid-cols-[2.6fr_1.4fr] gap-5 lg:items-stretch">
-        <div className="min-h-[220px] lg:h-auto rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden bg-surface-50 dark:bg-surface-950 relative z-0">
+        <div className="min-h-[220px] lg:h-auto rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden bg-surface-100 dark:bg-surface-900 relative z-0">
           <MapSection />
         </div>
 
@@ -695,7 +640,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[2.6fr_1.4fr] gap-5">
-<div className="border border-surface-200/80 dark:border-surface-800/80 rounded-xl p-6 bg-white dark:bg-surface-950 flex flex-col justify-between tracking-tight">
+<div className="border border-surface-200 dark:border-surface-800 rounded-xl p-6 bg-white dark:bg-surface-900 flex flex-col justify-between tracking-tight">
   {/* Header Section */}
   <div className="flex items-start justify-between mb-8">
     <div>
@@ -724,38 +669,136 @@ export default function DashboardPage() {
 
   {/* Chart Section */}
   {yearlySales.length > 0 ? (
-    <div className="h-[160px] pb-5 relative px-1">
-      <div className="flex items-end gap-2 h-full relative z-10">
-        {yearlySales.map((m) => {
-          const pct = maxMonthValue > 0 ? (m.value / maxMonthValue) * 100 : 0;
+    <div className="relative h-[240px] pb-2">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        className="w-full h-[220px] overflow-visible"
+        onMouseMove={handleChartMove}
+        onMouseLeave={() => setHoveredMonth(null)}
+      >
+        <defs>
+          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="revenueLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#818cf8" />
+            <stop offset="100%" stopColor="#6366f1" />
+          </linearGradient>
+        </defs>
+
+        {/* Y grid */}
+        {yAxisTicks.map((tick, i) => {
+          const y = yFor(tick)
           return (
-            <div key={m.label} className="flex-1 flex flex-col items-center h-full justify-end group relative cursor-pointer">
-              
-              {/* Floating Inline Value */}
-              <span className="text-[10px] font-mono font-semibold text-surface-800 dark:text-surface-200 opacity-0 group-hover:opacity-100 transition-all duration-200 absolute -top-5 z-20 whitespace-nowrap">
-                {currency}{m.value.toLocaleString()}
-              </span>
-
-              {/* Background Track - Set to a clean mid-width (w-6) */}
-              <div className="w-6 bg-surface-50 dark:bg-surface-900/60 group-hover:bg-surface-100/80 dark:group-hover:bg-surface-900 rounded-t-md transition-colors duration-200 absolute bottom-0 top-0 left-1/2 -translate-x-1/2" />
-
-              {/* Active Bar - Matches the track width exactly (w-6) */}
-              <div
-                className="w-6 bg-surface-800 dark:bg-surface-200 rounded-t-md transition-all duration-300 ease-out relative z-10 group-hover:bg-indigo-600 dark:group-hover:bg-indigo-500"
-                style={{ height: `${Math.max(pct, 4)}%` }}
+            <g key={i}>
+              <line
+                x1={PAD.left}
+                x2={W - PAD.right}
+                y1={y}
+                y2={y}
+                stroke="currentColor"
+                className="text-surface-200 dark:text-surface-800"
+                strokeWidth={1}
+                strokeDasharray={i === 0 ? '0' : '3 4'}
               />
-
-              {/* X Axis Label */}
-              <span className="text-[10px] font-medium text-surface-400 dark:text-surface-500 absolute -bottom-5 transition-colors duration-150 group-hover:text-surface-900 dark:group-hover:text-surface-100">
-                {m.label}
-              </span>
-            </div>
-          );
+              <text
+                x={PAD.left - 10}
+                y={y + 4}
+                textAnchor="end"
+                className="fill-surface-400 dark:fill-surface-500 text-[10px] font-mono"
+              >
+                {currency}{formatCompact(tick)}
+              </text>
+            </g>
+          )
         })}
-      </div>
+
+        {/* X axis labels */}
+        {yearlySales.map((m, i) => (
+          <text
+            key={m.label}
+            x={xFor(i)}
+            y={H - PAD.bottom + 18}
+            textAnchor="middle"
+            className="fill-surface-400 dark:fill-surface-500 text-[10px] font-medium"
+          >
+            {m.label}
+          </text>
+        ))}
+
+        {/* Area fill */}
+        <path d={areaPath} fill="url(#revenueGrad)" className="animate-fade-area" />
+
+        {/* Line */}
+        <path
+          d={linePath}
+          fill="none"
+          stroke="url(#revenueLine)"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="animate-draw-line"
+          style={{ '--line-length': 2000 } as React.CSSProperties}
+        />
+
+        {/* Data points */}
+        {yearlySales.map((m, i) => {
+          const isHover = hoveredMonth === i
+          return (
+            <circle
+              key={m.label}
+              cx={xFor(i)}
+              cy={yFor(m.value)}
+              r={isHover ? 5 : 3}
+              fill="#6366f1"
+              stroke="white"
+              strokeWidth={isHover ? 2.5 : 1.5}
+              className="transition-all duration-150 dark:stroke-surface-900"
+            />
+          )
+        })}
+
+        {/* Crosshair */}
+        {hoveredMonth !== null && yearlySales[hoveredMonth] && (
+          <line
+            x1={xFor(hoveredMonth)}
+            x2={xFor(hoveredMonth)}
+            y1={PAD.top}
+            y2={H - PAD.bottom}
+            stroke="currentColor"
+            className="text-surface-400 dark:text-surface-500"
+            strokeWidth={1}
+            strokeDasharray="2 3"
+          />
+        )}
+      </svg>
+
+      {/* Tooltip */}
+      {hoveredMonth !== null && yearlySales[hoveredMonth] && (
+        <div
+          className="absolute pointer-events-none z-10 animate-fade-in"
+          style={{
+            left: `${(xFor(hoveredMonth) / W) * 100}%`,
+            top: `${(yFor(yearlySales[hoveredMonth].value) / H) * 100}%`,
+            transform: 'translate(-50%, calc(-100% - 12px))',
+          }}
+        >
+          <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg px-3 py-2 min-w-[140px]">
+            <p className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider mb-1">
+              {yearlySales[hoveredMonth].label} {selectedYear}
+            </p>
+            <p className="text-sm font-bold font-mono text-surface-900 dark:text-white">
+              {currency}{yearlySales[hoveredMonth].value.toLocaleString()}
+            </p>
+          </div>
+          <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-white dark:bg-surface-900 border-r border-b border-surface-200 dark:border-surface-700" />
+        </div>
+      )}
     </div>
   ) : (
-    <div className="h-[160px] flex items-center justify-center border border-dashed border-surface-200 dark:border-surface-800 rounded-xl">
+    <div className="h-[220px] flex items-center justify-center border border-dashed border-surface-200 dark:border-surface-800 rounded-xl">
       <p className="text-xs font-medium text-surface-400 dark:text-surface-500">No logs found for {selectedYear}</p>
     </div>
   )}
@@ -819,8 +862,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      <FulfillmentMonitor />
 
       <OrderManagementSection />
     </div>

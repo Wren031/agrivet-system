@@ -19,7 +19,7 @@ export default function DetailSection({
 }: DetailSectionProps) {
   return (
     <div
-      className={`bg-white dark:bg-surface-900 rounded-xl border border-surface-200/60 dark:border-surface-800 ${className}`}
+      className={`bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-800 ${className}`}
     >
       {(title || actions) && (
         <div className={`flex items-center justify-between gap-3 ${padding ? 'px-5 sm:px-6 py-4' : 'px-0 py-0'} border-b border-surface-100 dark:border-surface-800`}>

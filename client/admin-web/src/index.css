@@ -35,6 +35,56 @@
   --color-info: #2563eb;
 }
 
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-feature-settings: 'cv11', 'ss01', 'liga';
+    letter-spacing: -0.005em;
+  }
+
+  /* Consistent, professional focus ring for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid var(--color-surface-400);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .dark :focus-visible {
+    outline-color: var(--color-surface-500);
+  }
+
+  /* Inputs manage their own focus treatment */
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--color-surface-900);
+    color: #fff;
+  }
+
+  .dark ::selection {
+    background: #fff;
+    color: var(--color-surface-900);
+  }
+
+  /* Data-dense elements read better with tabular figures */
+  th, td {
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type='number'] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #d4d4d4 transparent;
@@ -45,8 +95,8 @@
 }
 
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -55,11 +105,19 @@
 
 ::-webkit-scrollbar-thumb {
   background: #d4d4d4;
-  border-radius: 2px;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
 }
 
 .dark ::-webkit-scrollbar-thumb {
   background: #404040;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #525252;
 }
 
 @keyframes fade-in {
@@ -102,8 +160,111 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes draw-line {
+  from { stroke-dashoffset: var(--line-length, 2000); }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-area {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes live-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+    opacity: 0.6;
+  }
+}
+
+@keyframes ping-soft {
+  0% { transform: scale(1); opacity: 0.6; }
+  80%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
 .animate-spin-slow {
   animation: spin-slow 2s linear infinite;
+}
+
+.animate-draw-line {
+  stroke-dasharray: var(--line-length, 2000);
+  stroke-dashoffset: var(--line-length, 2000);
+  animation: draw-line 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.animate-fade-area {
+  opacity: 0;
+  animation: fade-area 0.8s ease-out 0.4s forwards;
+}
+
+.animate-ping-soft {
+  animation: ping-soft 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Satellite map styling */
+.satellite-map .leaflet-tile {
+  filter: saturate(1.08) contrast(1.06) brightness(0.92);
+}
+
+.satellite-map .leaflet-control-zoom a {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.15s ease;
+}
+
+.satellite-map .leaflet-control-zoom a:hover {
+  background: rgba(30, 41, 59, 0.95) !important;
+  color: #fff !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+.satellite-map .leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.7) !important;
+  color: rgba(226, 232, 240, 0.6) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 4px 0 0 0;
+  padding: 2px 6px !important;
+}
+
+.satellite-map .leaflet-control-attribution a {
+  color: rgba(165, 180, 252, 0.8) !important;
+}
+
+.satellite-map .leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+  padding: 4px !important;
+}
+
+.satellite-map .leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  line-height: 1.5 !important;
+}
+
+.satellite-map .leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(99, 102, 241, 0.25) !important;
+  box-shadow: none !important;
+}
+
+.satellite-map .leaflet-popup-close-button {
+  color: rgba(226, 232, 240, 0.6) !important;
+  padding: 8px 8px 0 0 !important;
+}
+
+.satellite-map .leaflet-popup-close-button:hover {
+  color: #fff !important;
 }
 
 .animate-fade-in {

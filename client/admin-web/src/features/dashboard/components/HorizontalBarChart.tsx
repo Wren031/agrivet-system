@@ -31,7 +31,7 @@ export default function HorizontalBarChart({ data, currency }: HorizontalBarChar
           <div key={i} className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2 min-w-0">
-                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold text-white ${rankBadges[i % rankBadges.length]} shrink-0 shadow-sm`}>
+                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold text-white ${rankBadges[i % rankBadges.length]} shrink-0`}>
                   {i + 1}
                 </span>
                 <span className="text-slate-600 dark:text-slate-300 font-medium truncate">{item.label}</span>

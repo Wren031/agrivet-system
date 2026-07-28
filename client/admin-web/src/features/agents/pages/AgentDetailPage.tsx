@@ -41,6 +41,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
+function createAgentDetailIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:32px;height:32px;">
+      <div style="position:absolute;inset:0;background:rgba(99,102,241,0.5);border-radius:50%;filter:blur(5px);"></div>
+      <div style="position:relative;width:26px;height:26px;margin:3px;background:linear-gradient(135deg,#818cf8,#4f46e5);border:2.5px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 3px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+        <div style="width:8px;height:8px;background:#fff;border-radius:50%;transform:rotate(45deg);box-shadow:0 0 6px rgba(255,255,255,0.8);"></div>
+      </div>
+    </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 30],
+  })
+}
+
 interface AgentLocationData {
   latitude: number
   longitude: number
@@ -61,18 +75,38 @@ function LocationTabContent({ location, agentName }: { location: AgentLocationDa
       zoomControl: true,
     })
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics',
       maxZoom: 19,
     }).addTo(map)
 
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      pane: 'overlayPane',
+    }).addTo(map)
+
     const address = location.address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-    const marker = L.marker([location.latitude, location.longitude]).addTo(map)
+    const lastUpdate = new Date(location.updatedAt).toLocaleString()
+    const marker = L.marker([location.latitude, location.longitude], { icon: createAgentDetailIcon() }).addTo(map)
     marker.bindPopup(`
-      <div style="font-family: system-ui, sans-serif; text-align: center; min-width: 200px;">
-        <p style="font-weight: 700; margin: 0 0 4px; font-size: 14px; color: #1e293b;">${agentName || 'Agent'}</p>
-        <p style="margin: 0; font-size: 12px; color: #64748b;">${address}</p>
-        <p style="margin: 6px 0 0; font-size: 11px; color: #94a3b8;">Updated: ${new Date(location.updatedAt).toLocaleString()}</p>
+      <div style="font-family:'Inter',system-ui,-apple-system,sans-serif;min-width:220px;padding:2px;color:#e2e8f0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,0.15);">
+          <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#818cf8,#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;flex-shrink:0;box-shadow:0 2px 8px rgba(99,102,241,0.4);">
+            ${(agentName || 'A').charAt(0)}
+          </div>
+          <div style="min-width:0;flex:1;">
+            <p style="font-weight:600;margin:0;font-size:13px;color:#f1f5f9;line-height:1.2;">${agentName || 'Agent'}</p>
+            <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;display:inline-flex;align-items:center;gap:4px;">
+              <span style="width:5px;height:5px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 6px #10b981;"></span>
+              Live
+            </p>
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(15,23,42,0.5);border-radius:6px;border:1px solid rgba(148,163,184,0.1);">
+          <p style="margin:0;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Current Location</p>
+          <p style="margin:3px 0 0;font-size:11px;color:#cbd5e1;font-weight:500;line-height:1.3;word-break:break-word;">${address}</p>
+          <p style="margin:6px 0 0;font-size:10px;color:#64748b;">Updated: ${lastUpdate}</p>
+        </div>
       </div>
     `).openPopup()
 
@@ -83,7 +117,9 @@ function LocationTabContent({ location, agentName }: { location: AgentLocationDa
   if (!location) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-surface-500 dark:text-surface-400">
-        <MapPin size={48} className="mb-4 opacity-40" />
+        <div className="w-16 h-16 rounded-full bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mb-4">
+          <MapPin size={28} className="text-slate-500" />
+        </div>
         <p className="text-sm font-semibold">No Location Data</p>
         <p className="text-xs mt-1">This agent has not reported any location yet.</p>
       </div>
@@ -92,27 +128,35 @@ function LocationTabContent({ location, agentName }: { location: AgentLocationDa
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Navigation size={16} className="text-surface-500" />
-          <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300">Real-time Location</h3>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-sm">
+            <Navigation size={14} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-surface-800 dark:text-surface-100">Real-time Location</h3>
+            <p className="text-[10px] font-medium text-surface-400 dark:text-surface-500">Live position on satellite</p>
+          </div>
         </div>
-        <span className="text-[11px] text-surface-500 dark:text-surface-400 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          {new Date(location.updatedAt).toLocaleString()}
-        </span>
+        <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md rounded-md px-2.5 py-1 border border-indigo-500/20 text-[10px] font-medium text-slate-200">
+          <span className="relative flex items-center">
+            <span className="absolute inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping-soft opacity-75" />
+            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          </span>
+          <span>{new Date(location.updatedAt).toLocaleString()}</span>
+        </div>
       </div>
-      <div className="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
-        <div ref={mapRef} className="w-full h-[500px]" />
+      <div className="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden bg-slate-950">
+        <div ref={mapRef} className="satellite-map w-full h-[500px]" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Latitude</p>
-          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5">{location.latitude.toFixed(4)}</p>
+          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5 font-mono">{location.latitude.toFixed(4)}</p>
         </div>
         <div>
           <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Longitude</p>
-          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5">{location.longitude.toFixed(4)}</p>
+          <p className="text-sm font-semibold text-surface-700 dark:text-surface-200 mt-0.5 font-mono">{location.longitude.toFixed(4)}</p>
         </div>
         <div>
           <p className="text-[11px] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider">Address</p>

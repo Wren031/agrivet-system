@@ -52,7 +52,7 @@ export default function ToastContainer() {
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg ${
+            className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border ${
               colors[toast.type]
             } ${
               toast.exiting ? 'animate-fade-out-right' : 'animate-slide-in-right'
