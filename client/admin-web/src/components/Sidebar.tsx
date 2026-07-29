@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, Users2, UserCircle, Settings,
   Tags, LogOut, Store, ClipboardCheck, ShieldCheck,
-  TrendingUp, CalendarDays, Sliders, ChevronDown
+  TrendingUp, CalendarDays, Sliders
 } from 'lucide-react' 
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../features/auth/context/AuthContext'
@@ -68,22 +68,6 @@ export default function Sidebar() {
   const { signOut } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   
-  // Track open/collapsed status of navigation categories
-  // CHANGED: users_management is now false so it starts closed
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    operations: true,
-    users_management: false,
-    transactions: true,
-    administration: true,
-  })
-
-  const toggleGroup = (groupId: string) => {
-    setOpenGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }))
-  }
-
   function confirmLogout() {
     setShowLogoutModal(false)
     apiLogout().finally(() => {
@@ -119,81 +103,59 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-5">
-        {navigationConfig.map((group) => {
-          const isOpen = !!openGroups[group.id]
-
-          return (
-            <div key={group.id} className="space-y-1">
-              {/* Dropdown Category Trigger Button */}
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className="w-full flex items-center justify-between px-3 py-1 text-left rounded-md transition-colors group"
-              >
-                <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-surface-500 group-hover:text-surface-300 transition-colors">
-                  {group.label}
-                </span>
-                <ChevronDown
-                  size={13}
-                  className={`text-surface-500 group-hover:text-surface-300 transition-all duration-200 ${
-                    isOpen ? 'transform rotate-0' : 'transform -rotate-90'
-                  }`}
-                />
-              </button>
-
-              {/* Collapsible Dropdown Items Container */}
-              <div
-                className={`space-y-0.5 overflow-hidden transition-all duration-200 origin-top ${
-                  isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-                }`}
-              >
-                {group.items.map((link) => {
-                  const Icon = link.icon
-                  const count = link.badge ? counts[link.badge] : 0
-                  return (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      onClick={() => setSidebarOpen(false)}
-                        className={({ isActive }) => `
-                        group relative flex items-center gap-3 pl-3.5 pr-3 py-2 rounded-lg transition-all duration-150 w-full text-[13px]
-                        ${isActive
-                          ? 'bg-white/10 text-white font-medium'
-                          : 'text-surface-400 hover:bg-white/5 hover:text-surface-100'
-                        }
-                      `}
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <span
-                            className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-150 ${
-                              isActive ? 'h-4 bg-white' : 'h-0 bg-transparent group-hover:h-2.5 group-hover:bg-surface-600'
-                            }`}
-                          />
-                          <Icon
-                            size={17}
-                            className={`shrink-0 transition-colors duration-150 ${
-                              isActive
-                                ? 'text-white'
-                                : 'text-surface-500 group-hover:text-surface-200'
-                            }`}
-                          />
-                          <span className="truncate">{link.label}</span>
-                          {count > 0 && (
-                            <span className={`ml-auto min-w-[20px] h-[18px] px-1.5 flex items-center justify-center rounded-full text-[10px] font-bold leading-none tabular-nums ${
-                              isActive ? 'bg-white text-surface-900' : 'bg-white/15 text-white'
-                            }`}>
-                              {count > 99 ? '99+' : count}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  )
-                })}
-              </div>
+        {navigationConfig.map((group) => (
+          <div key={group.id} className="space-y-1">
+            <span className="block px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-surface-500">
+              {group.label}
+            </span>
+            <div className="space-y-0.5">
+              {group.items.map((link) => {
+                const Icon = link.icon
+                const count = link.badge ? counts[link.badge] : 0
+                return (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) => `
+                      group relative flex items-center gap-3 pl-3.5 pr-3 py-2 rounded-lg transition-all duration-150 w-full text-[13px]
+                      ${isActive
+                        ? 'bg-white/10 text-white font-medium'
+                        : 'text-surface-400 hover:bg-white/5 hover:text-surface-100'
+                      }
+                    `}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span
+                          className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-150 ${
+                            isActive ? 'h-4 bg-white' : 'h-0 bg-transparent group-hover:h-2.5 group-hover:bg-surface-600'
+                          }`}
+                        />
+                        <Icon
+                          size={17}
+                          className={`shrink-0 transition-colors duration-150 ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-surface-500 group-hover:text-surface-200'
+                          }`}
+                        />
+                        <span className="truncate">{link.label}</span>
+                        {count > 0 && (
+                          <span className={`ml-auto min-w-[20px] h-[18px] px-1.5 flex items-center justify-center rounded-full text-[10px] font-bold leading-none tabular-nums ${
+                            isActive ? 'bg-white text-surface-900' : 'bg-white/15 text-white'
+                          }`}>
+                            {count > 99 ? '99+' : count}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                )
+              })}
             </div>
-          )
-        })}
+          </div>
+        ))}
       </nav>
 
       {/* Profile */}

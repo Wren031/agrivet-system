@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, Trash2, Building2, MapPin, Navigation, Users, Printer } from 'lucide-react'
+import { Loader2, Trash2, Building2, MapPin, Navigation, Users, MoreVertical, Check, X, Ban } from 'lucide-react'
 import { fetchAgent, fetchAgentCustomers, updateStatus, deleteAgent } from '../services/agentService'
 import { apiFetch } from '../../../config/apiClient'
 import type { Agent, AgentStatus } from '../services/types'
@@ -177,6 +177,9 @@ export default function AgentDetailPage() {
   const [updating, setUpdating] = useState<string | null>(null)
   const [showDelete, setShowDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [customerCount, setCustomerCount] = useState<number | null>(null)
   const [location, setLocation] = useState<AgentLocationData | null>(null)
   const [activeTab, setActiveTab] = useState<TabKey>('profile')
@@ -203,6 +206,17 @@ export default function AgentDetailPage() {
       .then(data => { if (data?.latitude) setLocation(data) })
       .catch(() => {})
   }, [id])
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+        setShowStatusMenu(false)
+      }
+    }
+    if (menuOpen) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [menuOpen])
 
   async function handleStatusChange(status: AgentStatus) {
     if (!agent) return
@@ -256,27 +270,60 @@ export default function AgentDetailPage() {
         subtitle="Agent Profile"
         avatar={agent.fullName.charAt(0)}
       >
-        <div className="relative">
-          <select
-            value={agent.status}
-            onChange={e => handleStatusChange(e.target.value as AgentStatus)}
-            disabled={updating === 'status'}
-            className="appearance-none pl-3 pr-8 py-1.5 rounded-lg text-xs font-medium border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-surface-300 dark:focus:ring-surface-600 disabled:opacity-40 cursor-pointer"
-          >
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="TERMINATED">Terminated</option>
-          </select>
-        </div>
         <span className={`px-3 py-1 rounded-md text-xs font-medium ${statusStyles[agent.status]}`}>{agent.status}</span>
-        <button onClick={() => window.print()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-600 dark:text-surface-400 border border-surface-200 dark:border-surface-700 rounded-lg bg-white dark:bg-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-          <Printer size={14} /> Print
-        </button>
-        <button onClick={() => setShowDelete(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-white dark:bg-surface-800 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
-          <Trash2 size={14} /> Delete
-        </button>
+        <div className="relative" ref={menuRef}>
+          <button onClick={() => { setMenuOpen(!menuOpen); setShowStatusMenu(false) }}
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-surface-500 dark:text-surface-400 border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors">
+            <MoreVertical size={15} />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl shadow-lg shadow-surface-950/10 z-50 py-1.5 animate-fade-in origin-top-right">
+              <button
+                onClick={() => setShowStatusMenu(!showStatusMenu)}
+                className="w-full flex items-center justify-between px-3.5 py-2 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors"
+              >
+                <span className="flex items-center gap-2.5">
+                  <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                  Update Status
+                </span>
+                <svg className={`w-3.5 h-3.5 text-surface-400 transition-transform ${showStatusMenu ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              {showStatusMenu && (
+                <div className="mx-2 mb-1 bg-surface-50 dark:bg-surface-900/50 rounded-lg overflow-hidden">
+                  {(['APPROVED', 'REJECTED', 'TERMINATED'] as AgentStatus[]).map(s => (
+                    <button
+                      key={s}
+                      onClick={() => { handleStatusChange(s); setMenuOpen(false); setShowStatusMenu(false) }}
+                      disabled={updating === 'status' || s === agent.status}
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition-colors ${
+                        s === agent.status
+                          ? 'text-surface-400 dark:text-surface-500 cursor-not-allowed'
+                          : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800'
+                      }`}
+                    >
+                      {s === 'APPROVED' && <Check size={13} className="text-emerald-500" />}
+                      {s === 'REJECTED' && <X size={13} className="text-red-500" />}
+                      {s === 'TERMINATED' && <Ban size={13} className="text-surface-500" />}
+                      <span>{s.charAt(0) + s.slice(1).toLowerCase()}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="h-px bg-surface-100 dark:bg-surface-700 mx-3 my-1" />
+              <button
+                onClick={() => { setShowDelete(true); setMenuOpen(false) }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              >
+                <Trash2 size={15} />
+                Delete Agent
+              </button>
+            </div>
+          )}
+        </div>
       </DetailHeader>
 
       {/* Tab Navigation */}

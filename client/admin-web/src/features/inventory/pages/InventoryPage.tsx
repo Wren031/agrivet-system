@@ -1,42 +1,19 @@
 import { useState, useMemo } from 'react'
-import { Plus, Edit2, Trash2, Search, AlertTriangle, Clock, Eye, Package, CheckSquare, Square, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Edit2, Trash2, Search, AlertTriangle, Clock, Eye, Package, CheckSquare, Square } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useItems } from '../hooks/useItems'
 import { useCategories } from '../../categories/hooks/useCategories'
-import { createItem, updateItem, deleteItem } from '../services/itemService'
-import { uploadFile } from '../../../config/apiClient'
+import { deleteItem } from '../services/itemService'
 import { useApp } from '../../../context/AppContext'
-import Drawer from '../../../components/Drawer'
 import Modal from '../../../components/Modal'
 import { SkeletonCards } from '../../../components/Skeleton'
 import PageHeader from '../../../components/PageHeader'
 import Pagination from '../../../components/Pagination'
-import ItemForm from '../components/ItemForm'
 import type { Item } from '../services/types'
 
 import { getUnitLabel, getExpiryStatus } from '../services/types'
 
 const PAGE_SIZE = 8
-
-const CATEGORY_SKU_MAP: Record<string, string> = {
-  'Feeds & Nutrition': 'FED',
-  'Veterinary Drugs & Biologics': 'VET',
-  'Agricultural Inputs': 'AGR',
-  'Farm Equipment & Hardware': 'EQP',
-}
-
-function generateSku(category: string, existing: Item[]): string {
-  const prefix = CATEGORY_SKU_MAP[category] || 'GEN'
-  const nums = existing
-    .filter(i => i.sku?.startsWith(prefix))
-    .map(i => {
-      const parts = i.sku.split('-')
-      return parseInt(parts[1], 10)
-    })
-    .filter(n => !isNaN(n))
-  const next = nums.length ? Math.max(...nums) + 1 : 1
-  return `${prefix}-${String(next).padStart(3, '0')}`
-}
 
 export default function InventoryPage() {
   const navigate = useNavigate()
@@ -46,13 +23,6 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [page, setPage] = useState(1)
-  const [showDrawer, setShowDrawer] = useState(false)
-
-  const [editingItem, setEditingItem] = useState<Item | null>(null)
-  const [form, setForm] = useState<Partial<Item>>({})
-  const [imageFile, setImageFile] = useState<File | null>(null)
-
-  const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
@@ -86,62 +56,11 @@ export default function InventoryPage() {
   }
 
   function openAdd() {
-    setEditingItem(null)
-    setForm({})
-    setImageFile(null)
-    setShowDrawer(true)
+    navigate('/inventory/add')
   }
 
   function openEdit(item: Item) {
-    setEditingItem(item)
-    setForm({ ...item })
-    setImageFile(null)
-    setShowDrawer(true)
-  }
-
-  async function handleSave() {
-    if (!form.name?.trim()) return
-    setSaving(true)
-    try {
-      let imageUrl = form.image || ''
-      if (imageFile) {
-        imageUrl = await uploadFile(imageFile)
-      }
-
-      const categoryId = form.category?.[0]?.id
-      const selectedCategory = categories.find(c => c.id === categoryId)
-      const subcategoryId = selectedCategory?.subcategories?.find(s => s.name === form.subcategory)?.id
-
-      if (editingItem) {
-        const { id, createdAt, category, subcategory, sku, ...updates } = form
-        await updateItem(editingItem.id, { ...updates, image: imageUrl, categoryId, subcategoryId })
-        addNotification({ message: 'Item updated', type: 'success' })
-      } else {
-        const categoryName = form.category?.[0]?.name || ''
-        await createItem({
-          name: form.name || '',
-          sku: form.sku || generateSku(categoryName, items),
-          category: form.category || [],
-          subcategory: form.subcategory || '',
-          packagingUnit: form.packagingUnit || '',
-          costPrice: form.costPrice || 0,
-          expiryDate: form.expiryDate || null,
-          reorderLevel: form.reorderLevel || 0,
-          price: form.price || 0,
-          stock: form.stock || 0,
-          image: imageUrl,
-          categoryId,
-          subcategoryId,
-        })
-        addNotification({ message: 'Item created', type: 'success' })
-      }
-      setShowDrawer(false)
-      reload()
-    } catch {
-      addNotification({ message: 'Failed to save item', type: 'error' })
-    } finally {
-      setSaving(false)
-    }
+    navigate(`/inventory/${item.id}`)
   }
 
   async function handleDelete() {
@@ -286,20 +205,6 @@ export default function InventoryPage() {
           </>
         )}
       </div>
-
-      <Drawer open={showDrawer} onClose={() => setShowDrawer(false)} title={editingItem ? 'Edit Product' : 'Add Product'} className="max-w-[700px]">
-        <ItemForm form={form} onChange={setForm} categories={categories} currencySymbol={settings.currencySymbol} onImageFileChange={setImageFile} />
-        <div className="flex gap-3 mt-6">
-          <button onClick={handleSave} disabled={saving}
-            className="flex-1 py-2.5 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-lg hover:bg-surface-800 dark:hover:bg-surface-200 transition-colors text-sm font-medium disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-          <button onClick={() => setShowDrawer(false)}
-            className="px-4 py-2.5 border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors text-sm font-medium">
-            Cancel
-          </button>
-        </div>
-      </Drawer>
 
       <Modal open={deleteId !== null} onClose={() => setDeleteId(null)} title="Delete Product" size="sm">
         <div className="text-center">

@@ -1,5 +1,5 @@
 
-const BASE_IP = "192.168.100.182:3000";
+const BASE_IP = "192.168.1.44:3000";
 
 export const API_BASE_URL = `http://${BASE_IP}/api`;
 export const IMAGE_BASE_URL = `http://${BASE_IP}`;

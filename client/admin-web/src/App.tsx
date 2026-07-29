@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './features/auth/pages/LoginPage'
 import DashboardPage from './features/dashboard/pages/DashboardPage'
 import InventoryPage from './features/inventory/pages/InventoryPage'
+import AddProductPage from './features/inventory/pages/AddProductPage'
 import InventoryDetailPage from './features/inventory/pages/InventoryDetailPage'
 import CategoriesPage from './features/categories/pages/CategoriesPage'
 import AgentsPage from './features/agents/pages/AgentsPage'
@@ -40,6 +41,7 @@ export default function App() {
             }>
               <Route index element={<DashboardPage />} />
               <Route path="inventory" element={<InventoryPage />} />
+              <Route path="inventory/add" element={<AddProductPage />} />
               <Route path="inventory/:id" element={<InventoryDetailPage />} />
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="agents" element={<AgentsPage />} />
